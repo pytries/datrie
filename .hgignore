@@ -1,0 +1,6 @@
+^build
+^MANIFEST$
+^dist
+\.so$
+\.o$
+\.lo$
