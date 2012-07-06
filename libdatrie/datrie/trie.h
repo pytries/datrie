@@ -49,6 +49,7 @@ typedef struct _Trie   Trie;
  *
  * @param key  : the key of the entry
  * @param data : the data of the entry
+ * @param user_data : the user-supplied data on enumerate call
  *
  * @return TRUE to continue enumeration, FALSE to stop
  */

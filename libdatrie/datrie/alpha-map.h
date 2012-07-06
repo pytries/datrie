@@ -32,6 +32,10 @@
 #include "typedefs.h"
 #include "triedefs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @file alpha-map.h
  * @brief AlphaMap data type and functions
@@ -53,6 +57,10 @@ int         alpha_map_add_range (AlphaMap  *alpha_map,
                                  AlphaChar  end);
 
 int         alpha_char_strlen (const AlphaChar *str);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __ALPHA_MAP_H */
 

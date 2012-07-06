@@ -1,5 +1,10 @@
 libdatrie
 
+0.2.5 (2011-11-04)
+=====
+- Fix missing 'extern "C"' in header file. [Patch from Aurimas Černius]
+- Minor documentation fix.
+
 0.2.4 (2010-06-30)
 =====
 - Close file on saving trie. [Bug report from Xu Jiandong]

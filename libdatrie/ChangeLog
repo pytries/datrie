@@ -1,3 +1,20 @@
+2011-11-04  Theppitak Karoonboonyanan  <thep@linux.thai.net>
+
+	* NEWS, configure.ac:
+	=== Version 0.2.5 ===
+
+2011-08-04  Theppitak Karoonboonyanan  <thep@linux.thai.net>
+
+	* datrie/alpha-map.h: Add missing 'extern "C"' for export functions
+	to fix problem with C++ compiler.
+	Thanks Aurimas Černius <aurisc4@gmail.com> for the patch.
+
+2011-03-13  Theppitak Karoonboonyanan  <thep@linux.thai.net>
+
+	* configure.ac: Post-release version suffix added.
+	* datrie/trie.h: Add missing documentation for "user_data" parameter
+	in TrieEnumFunc.
+
 2010-06-30  Theppitak Karoonboonyanan  <thep@linux.thai.net>
 
 	* NEWS, configure.ac:
