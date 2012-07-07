@@ -1,0 +1,62 @@
+#cdef extern from "stdio.h" nogil:
+#    ctypedef struct FILE
+#    FILE *fdopen(int fd, char *mode)
+#
+
+cdef extern from "../libdatrie/datrie/triedefs.h":
+    ctypedef int AlphaChar # it should be utf32 letter
+    ctypedef int TrieChar  # 1 byte
+    ctypedef int TrieIndex
+    ctypedef int TrieData  # int
+
+cdef extern from "../libdatrie/datrie/alpha-map.h":
+
+    ctypedef struct AlphaMap:
+        pass
+
+    AlphaMap * alpha_map_new()
+    void alpha_map_free (AlphaMap *alpha_map)
+    AlphaMap * alpha_map_clone (AlphaMap *a_map)
+
+    int alpha_map_add_range (AlphaMap *alpha_map, AlphaChar begin, AlphaChar end)
+    int alpha_char_strlen (AlphaChar *str)
+
+
+cdef extern from "../libdatrie/datrie/trie.h":
+    ctypedef struct Trie:
+        pass
+    ctypedef struct TrieState:
+        pass
+
+    ctypedef int TrieData
+
+
+    # ========== GENERAL FUNCTIONS ==========
+
+    Trie * trie_new (AlphaMap *alpha_map)
+
+    Trie * trie_new_from_file (char *path)
+
+    Trie * trie_fread (void *file) # FILE?
+
+    void trie_free (Trie *trie)
+
+    int trie_save (Trie *trie, char *path)
+
+    int trie_fwrite (Trie *trie, void *file) # FILE?
+
+    bint trie_is_dirty (Trie *trie)
+
+
+    # =========== GENERAL QUERY OPERATIONS =========
+
+    bint trie_retrieve (Trie *trie, AlphaChar *key, TrieData *o_data)
+
+    bint trie_store (Trie *trie, AlphaChar *key, TrieData data)
+
+    bint trie_store_if_absent (Trie *trie, AlphaChar *key, TrieData data)
+
+    bint trie_delete (Trie *trie, AlphaChar *key)
+
+    # bint trie_enumerate (Trie *trie, TrieEnumFunc enum_func, void *user_data)
+
