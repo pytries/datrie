@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals
-import _datrie
+import datrie
 import tempfile
 import string
 import zipfile
 import random
 
 def _get_trie():
-    alpha_map = _datrie.AlphaMap()
+    alpha_map = datrie.AlphaMap()
     #alpha_map.add_chars(string.printable)
     alpha_map._add_range(20, 5000)
-    return _datrie.Trie.create(alpha_map)
+    return datrie.create(alpha_map)
 
 
 def test_trie():
@@ -45,7 +45,7 @@ def test_trie_save_load():
     trie.save(fname)
     del trie
 
-    trie2 = _datrie.Trie.load(fname)
+    trie2 = datrie.load(fname)
     assert trie2['foobar'] == 1
     assert trie2['baz'] == 3
     assert trie2['fo'] == 4
@@ -54,9 +54,6 @@ def test_trie_save_load():
 
 
 def test_trie_unicode():
-#    alpha_map = _datrie.AlphaMap()
-#    alpha_map.add_range('а', 'в')
-#    trie = _datrie.Trie.create(alpha_map)
     trie = _get_trie()
     trie['а'] = 1
     trie['б'] = 2
@@ -80,23 +77,25 @@ def test_trie_ascii():
 
 def test_trie_fuzzy():
     russian = 'абвгдеёжзиклмнопрстуфхцчъыьэюя'
-    alphabet = russian #.upper() # + string.ascii_lowercase
+    alphabet = russian.upper() + string.ascii_lowercase
     words = list(set([
         "".join([random.choice(alphabet) for x in range(random.randint(2,10))])
-        for y in range(1000)
+        for y in range(10000)
     ]))
 
-    alpha_map = _datrie.AlphaMap()
-    alpha_map.add_range('а', 'я')
-    #alpha_map.add_range('ё', 'ё')
-    #alpha_map.add_chars(alphabet)
-    trie = _datrie.Trie.create(alpha_map)
+    alpha_map = datrie.AlphaMap()
+    alpha_map.add_alphabet(alphabet)
+    trie = datrie.create(alpha_map)
 
-    for index, word in enumerate(words):
+    enumerated_words = list(enumerate(words))
+
+    for index, word in enumerated_words:
         trie[word] = index
 
-    for index, word in enumerate(words):
-        assert trie[word] == index
+    random.shuffle(enumerated_words)
+    for index, word in enumerated_words:
+        assert word in trie, word
+        assert trie[word] == index, (word, index)
 
 #def test_large_trie():
 #    zf = zipfile.ZipFile('words100k.txt.zip')

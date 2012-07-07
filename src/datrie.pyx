@@ -1,4 +1,7 @@
-cimport stdio
+from libc.stdlib cimport malloc, free
+from libc cimport stdio
+from libc cimport string
+
 cimport cdatrie
 import sys
 
@@ -17,12 +20,12 @@ cdef class AlphaMap:
         if self._c_alpha_map is not NULL:
             cdatrie.alpha_map_free(self._c_alpha_map)
 
-#    def add_chars(self, iterable):
-#        """
-#        Adds all chars from iterable to the alphabet set.
-#        """
-#        for symb in iterable:
-#            self._add_range(ord(symb), ord(symb))
+    def add_alphabet(self, alphabet):
+        """
+        Adds all chars from iterable to the alphabet set.
+        """
+        for symb in alphabet:
+            self.add_range(symb, symb)
 
     def add_range(self, begin, end):
         """
@@ -53,17 +56,36 @@ cdef (cdatrie.Trie*) _load_from_file(path) except NULL:
 
     return c_trie
 
+cdef (cdatrie.AlphaChar*) new_alpha_char_from_unicode(unicode txt):
+    txt_len = len(txt)
+    cdef int size = (txt_len+1) * sizeof(cdatrie.AlphaChar)
+
+    py_str = txt.encode('utf_32_le')
+    cdef char* c_str = py_str
+
+    cdef cdatrie.AlphaChar* data = <cdatrie.AlphaChar*> malloc(size)
+    if data is NULL:
+        raise MemoryError()
+    string.memcpy(data, c_str, size)
+    data[txt_len] = 0
+    return data
+
+
+def create(AlphaMap alpha_map):
+    """
+    Creates a new Trie using ``alpha_map``.
+    """
+    return Trie(path=None, alpha_map=alpha_map)
+
+def load(path):
+    """
+    Loads a Trie from file.
+    """
+    return Trie(path=path, alpha_map=None)
+
 
 cdef class Trie:
     cdef cdatrie.Trie *_c_trie
-
-    @classmethod
-    def create(cls, AlphaMap alpha_map):
-        return cls(path=None, alpha_map=alpha_map)
-
-    @classmethod
-    def load(cls, path):
-        return cls(path=path, alpha_map=None)
 
     def __init__(self, path=None, AlphaMap alpha_map=None):
         if self._c_trie is not NULL:
@@ -83,28 +105,31 @@ cdef class Trie:
         return cdatrie.trie_is_dirty(self._c_trie)
 
     def __setitem__(self, unicode key, cdatrie.TrieData value):
-        py_str = key.encode('utf_32_le')
-        cdef char* c_key = py_str
-        cdatrie.trie_store(self._c_trie, <cdatrie.AlphaChar*> c_key, value)
+        cdef cdatrie.AlphaChar* chars = new_alpha_char_from_unicode(key)
+        try:
+            cdatrie.trie_store(self._c_trie, chars, value)
+        finally:
+            free(chars)
 
     def __getitem__(self, unicode key):
         cdef cdatrie.TrieData data = 0
-        py_str = key.encode('utf_32_le')
-        cdef char* c_key = py_str
+        cdef cdatrie.AlphaChar* chars = new_alpha_char_from_unicode(key)
 
-        cdef cdatrie.AlphaChar* arr
-        arr = <cdatrie.AlphaChar*> c_key
+        try:
+            found = cdatrie.trie_retrieve(self._c_trie, chars, &data)
+        finally:
+            free(chars)
 
-        found = cdatrie.trie_retrieve(self._c_trie, arr, &data)
         if not found:
             raise KeyError()
-        # print(tmp, key)
         return data
 
     def __contains__(self, unicode key):
-        py_str = key.encode('utf_32_le')
-        cdef char* c_key = py_str
-        return cdatrie.trie_retrieve(self._c_trie, <cdatrie.AlphaChar*> c_key, NULL)
+        cdef cdatrie.AlphaChar* chars = new_alpha_char_from_unicode(key)
+        try:
+            return cdatrie.trie_retrieve(self._c_trie, chars, NULL)
+        finally:
+            free(chars)
 
     def save(self, path):
         str_path = path.encode(sys.getfilesystemencoding())

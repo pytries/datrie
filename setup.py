@@ -17,16 +17,35 @@ setup(
     long_description = open('README.rst').read(),
     author='Mikhail Korobov',
     author_email='kmike84@gmail.com',
-    packages = ['datrie'],
+    #packages = ['datrie'],
     cmdclass = {'build_ext': build_ext},
 
     ext_modules = [
         Extension(
-            "_datrie",
-            ['ext/_datrie.pyx', 'ext/cdatrie.pxd'] + LIBDATRIE_FILES,
+            "datrie",
+            ['src/datrie.pyx', 'src/cdatrie.pxd'] + LIBDATRIE_FILES,
             include_dirs=['libdatrie'],
         )
-    ]
+    ],
+
+    classifiers=[
+        'Development Status :: 2 - Alpha',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+        'Programming Language :: Cython',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        'Topic :: Scientific/Engineering :: Information Analysis',
+        'Topic :: Text Processing :: Linguistic',
+    ],
+
 )
 
 
