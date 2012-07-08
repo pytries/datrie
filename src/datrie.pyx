@@ -88,6 +88,20 @@ cdef class Trie:
         finally:
             free(c_key)
 
+    def __delitem__(self, unicode key):
+        self._delete(key)
+
+    cpdef bint _delete(self, unicode key):
+        """
+        Deletes an entry for the given key from the trie. Returns
+        boolean value indicating whether the key exists and is removed.
+        """
+        cdef cdatrie.AlphaChar* c_key = new_alpha_char_from_unicode(key)
+        try:
+            return cdatrie.trie_delete(self._c_trie, c_key)
+        finally:
+            free(c_key)
+
     def save(self, path):
         str_path = path.encode(sys.getfilesystemencoding())
         cdef char* c_path = str_path

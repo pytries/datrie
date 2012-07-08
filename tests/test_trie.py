@@ -19,6 +19,11 @@ def test_trie():
     trie['Foo'] = 10
     assert trie['Foo'] == 10
     assert trie['foo'] == 5
+    del trie['foo']
+
+    assert 'foo' not in trie
+    assert 'Foo' in trie
+    assert trie['Foo'] == 10
 
     try:
         x = trie['bar']
