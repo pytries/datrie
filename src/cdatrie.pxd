@@ -1,7 +1,4 @@
-#cdef extern from "stdio.h" nogil:
-#    ctypedef struct FILE
-#    FILE *fdopen(int fd, char *mode)
-#
+# cython: profile=False
 
 cdef extern from "../libdatrie/datrie/triedefs.h":
     ctypedef int AlphaChar # it should be utf32 letter

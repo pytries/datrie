@@ -23,5 +23,9 @@ $libdatrie/
 ^libdatrie/datrie/libdatrie.la$
 ^libdatrie/tools/trietool-0.2$
 
+^src/.*\.html$
+
 \.pyc$
 ^.tox
+\.orig$
+\.prof$

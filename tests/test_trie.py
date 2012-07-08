@@ -3,18 +3,10 @@ from __future__ import absolute_import, unicode_literals
 import datrie
 import tempfile
 import string
-import zipfile
 import random
 
-def _get_trie():
-    alpha_map = datrie.AlphaMap()
-    #alpha_map.add_chars(string.printable)
-    alpha_map._add_range(20, 5000)
-    return datrie.create(alpha_map)
-
-
 def test_trie():
-    trie = _get_trie()
+    trie = datrie.new(alphabet=string.printable)
     assert trie.is_dirty() == True
 
     assert 'foo' not in trie
@@ -36,7 +28,7 @@ def test_trie():
 
 def test_trie_save_load():
     fd, fname = tempfile.mkstemp()
-    trie = _get_trie()
+    trie = datrie.new(alphabet=string.printable)
     trie['foobar'] = 1
     trie['foovar'] = 2
     trie['baz'] = 3
@@ -54,7 +46,8 @@ def test_trie_save_load():
 
 
 def test_trie_unicode():
-    trie = _get_trie()
+    # trie for lowercase Russian characters
+    trie = datrie.new(ranges=[('а', 'я')])
     trie['а'] = 1
     trie['б'] = 2
     trie['аб'] = 3
@@ -64,7 +57,7 @@ def test_trie_unicode():
     assert trie['аб'] == 3
 
 def test_trie_ascii():
-    trie = _get_trie()
+    trie = datrie.new(string.ascii_letters)
     trie['x'] = 1
     trie['y'] = 3
     trie['xx'] = 2
@@ -74,18 +67,15 @@ def test_trie_ascii():
     assert trie['xx'] == 2
 
 
-
 def test_trie_fuzzy():
     russian = 'абвгдеёжзиклмнопрстуфхцчъыьэюя'
     alphabet = russian.upper() + string.ascii_lowercase
     words = list(set([
         "".join([random.choice(alphabet) for x in range(random.randint(2,10))])
-        for y in range(10000)
+        for y in range(1000)
     ]))
 
-    alpha_map = datrie.AlphaMap()
-    alpha_map.add_alphabet(alphabet)
-    trie = datrie.create(alpha_map)
+    trie = datrie.new(alphabet)
 
     enumerated_words = list(enumerate(words))
 
@@ -96,6 +86,7 @@ def test_trie_fuzzy():
     for index, word in enumerated_words:
         assert word in trie, word
         assert trie[word] == index, (word, index)
+
 
 #def test_large_trie():
 #    zf = zipfile.ZipFile('words100k.txt.zip')

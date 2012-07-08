@@ -1,14 +1,47 @@
+# cython: profile=True
+
 from libc.stdlib cimport malloc, free
 from libc cimport stdio
 from libc cimport string
-
 cimport cdatrie
+
 import sys
+import itertools
 
 class DatrieError(Exception):
     pass
 
+def to_ranges(lst):
+    """
+    Converts a list of numbers to a list of ranges::
+
+    >>> numbers = [1,2,3,5,6]
+    >>> list(to_ranges(numbers))
+    [(1, 3), (5, 6)]
+
+    """
+    for a, b in itertools.groupby(enumerate(lst), lambda t: t[1] - t[0]):
+        b = list(b)
+        yield b[0][1], b[-1][1]
+
+def alphabet_to_ranges(alphabet):
+    for begin, end in to_ranges(sorted(map(ord, iter(alphabet)))):
+        yield begin, end
+
 cdef class AlphaMap:
+    """
+    Alphabet map.
+
+    For sparse data compactness, the trie alphabet set should
+    be continuous, but that is usually not the case in general
+    character sets. Therefore, a map between the input character
+    and the low-level alphabet set for the trie is created in the
+    middle. You will have to define your input character set by
+    listing their continuous ranges of character codes creating a
+    trie. Then, each character will be automatically assigned
+    internal codes of continuous values.
+    """
+
     cdef cdatrie.AlphaMap *_c_alpha_map
 
     def __cinit__(self):
@@ -20,12 +53,20 @@ cdef class AlphaMap:
         if self._c_alpha_map is not NULL:
             cdatrie.alpha_map_free(self._c_alpha_map)
 
+    def __init__(self, alphabet=None, ranges=None):
+        if ranges is not None:
+            for range in ranges:
+                self.add_range(*range)
+
+        if alphabet is not None:
+            self.add_alphabet(alphabet)
+
     def add_alphabet(self, alphabet):
         """
         Adds all chars from iterable to the alphabet set.
         """
-        for symb in alphabet:
-            self.add_range(symb, symb)
+        for begin, end in alphabet_to_ranges(alphabet):
+            self._add_range(begin, end)
 
     def add_range(self, begin, end):
         """
@@ -57,25 +98,52 @@ cdef (cdatrie.Trie*) _load_from_file(path) except NULL:
     return c_trie
 
 cdef (cdatrie.AlphaChar*) new_alpha_char_from_unicode(unicode txt):
-    txt_len = len(txt)
-    cdef int size = (txt_len+1) * sizeof(cdatrie.AlphaChar)
+    """
+    Converts Python unicode string to libdatrie's AlphaChar* format.
+    libdatrie wants null-terminated array of 4-byte LE symbols.
+    """
+    cdef int txt_len = len(txt)
+    cdef int size = (txt_len + 1) * sizeof(cdatrie.AlphaChar)
 
-    py_str = txt.encode('utf_32_le')
-    cdef char* c_str = py_str
-
+    # allocate buffer
     cdef cdatrie.AlphaChar* data = <cdatrie.AlphaChar*> malloc(size)
     if data is NULL:
         raise MemoryError()
-    string.memcpy(data, c_str, size)
+
+    # Copy text contents to buffer.
+    # XXX: is it safe? The safe alternative is to decode txt
+    # to utf32_le and then use memcpy to copy the content:
+    #
+    #    py_str = txt.encode('utf_32_le')
+    #    cdef char* c_str = py_str
+    #    string.memcpy(data, c_str, size-1)
+    #
+    # but the following is much (say 10x) faster and this
+    # function is really in a hot spot.
+    cdef int i = 0
+    for char in txt:
+        data[i] = <cdatrie.AlphaChar> char
+        i+=1
+
+    # Buffer must be null-terminated (last 4 bytes must be zero).
     data[txt_len] = 0
     return data
 
 
-def create(AlphaMap alpha_map):
+def new(alphabet=None, ranges=None, AlphaMap alpha_map=None):
     """
-    Creates a new Trie using ``alpha_map``.
+    Creates a new Trie.
+
+    For efficiency trie needs to know what unicode symbols
+    it should be able to store so this constructor requires
+    either ``alphabet`` (a string/iterable with all allowed characters),
+    ``ranges`` (a list of (begin, end) pairs, e.g. ('a', 'z'))
+    or ``alpha_map`` (AlphaMap instance).
     """
+    if alpha_map is None:
+        alpha_map = AlphaMap(alphabet, ranges)
     return Trie(path=None, alpha_map=alpha_map)
+
 
 def load(path):
     """
