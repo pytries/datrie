@@ -12,11 +12,12 @@ LIBDATRIE_FILES = [os.path.join(LIBDATRIE_DIR, name) for name in LIBDATRIE_FILE_
 
 setup(
     name="datrie",
-    version="0.1",
+    version="0.0.1",
     description="A Python wrapper for libdatrie",
     long_description = open('README.rst').read(),
     author='Mikhail Korobov',
     author_email='kmike84@gmail.com',
+    url='https://github.com/kmike/datrie/',
     #packages = ['datrie'],
     cmdclass = {'build_ext': build_ext},
 
@@ -29,7 +30,7 @@ setup(
     ],
 
     classifiers=[
-        'Development Status :: 2 - Alpha',
+        'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',

@@ -1,7 +1,8 @@
 datrie
 ======
 
-Super-fast, efficiently stored Trie for Python. Uses `libdatrie`_.
+Super-fast, efficiently stored Trie for Python (2.x and 3.x).
+Uses `libdatrie`_.
 
 .. _libdatrie: http://linux.thai.net/~thep/datrie/datrie.html
 
@@ -55,7 +56,6 @@ Load a trie::
 
     >>> trie2 = datrie.load('my.trie')
 
-
 TODO: implement useful trie methods.
 
 Performance
@@ -65,7 +65,7 @@ Performance is measured against Python's dict with 100k unique words
 (English and Russian) as keys and '1' numbers as values.
 
 This trie implementation is 2-3 times slower than python's dict
-on __getitem__. Benchmark results (macbook air i5 1.7GHz):
+on __getitem__. Benchmark results (macbook air i5 1.7GHz)::
 
     Python 2.6:
 
@@ -83,6 +83,17 @@ on __getitem__. Benchmark results (macbook air i5 1.7GHz):
 ``datrie.Trie`` uses about 4.6M memory for 100k words; Python's dict
 uses about 22M for this according to my unscientific tests.
 
+Current Limitations
+===================
+
+* Most useful trie methods (e.g. prefix search) are not yet implemented;
+* pypy is currently unsupported (because `libdatrie`_ wrapper is
+  implemented in Cython);
+* keys must be unicode (no implicit conversion for byte strings
+  under Python 2.x, sorry);
+* values must be integers;
+* library is not tested under Windows.
+
 Contributing
 ============
 
@@ -93,10 +104,11 @@ Development happens at github and bitbucket:
 
 The main issue tracker is at github.
 
-Feel free to submit ideas, bugs, pull requests (git or hg) or regular patches.
+Feel free to submit ideas, bugs, pull requests (git or hg) or
+regular patches.
 
-Running tests
--------------
+Running tests and benchmarks
+----------------------------
 
 Make sure `tox <http://tox.testrun.org>`_ is installed and run
 
@@ -104,13 +116,30 @@ Make sure `tox <http://tox.testrun.org>`_ is installed and run
 
     $ tox
 
-from the source checkout. Tests should pass under python 2.6..3.2
-and pypy > 1.8.
+from the source checkout. Tests should pass under python 2.6, 2.7
+and 3.2; benchmarks should look reasonable.
+
+Please note that tests are not included in the release tar.gz's
+(test data is large and this saves a lot of bandwidth);
+please use source checkouts from github or bitbucket.
 
 Authors & Contributors
 ----------------------
 
-- Mikhail Korobov <kmike84@gmail.com>
+* Mikhail Korobov <kmike84@gmail.com>
+
+This module is based on `libdatrie`_ C library and
+inspired by `fast_trie`_ Ruby bindings.
+
+.. note::
+
+    The implementation is however totally different from
+    fast_trie's. ``fast_trie`` bundles libdatrie 0.1.x
+    (modified to make it C Ruby extension);
+    ``datrie`` bundles libdatrie 0.2.x unmodified (for easier
+    upstream updates) and provides a Cython wrapper.
+
+.. _fast_trie: https://github.com/tyler/trie
 
 License
 =======

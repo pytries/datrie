@@ -7,7 +7,7 @@ import os
 import zipfile
 import pstats
 import cProfile
-import psutil
+#import psutil
 import datrie
 
 def _get_memory(pid):
