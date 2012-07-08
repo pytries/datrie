@@ -71,6 +71,15 @@ def test_trie_ascii():
     assert trie['y'] == 3
     assert trie['xx'] == 2
 
+def test_trie_items():
+    trie = datrie.new(string.ascii_lowercase)
+    trie['x'] = 10
+    trie['y'] = 20
+    trie['xy'] = 30
+    assert trie.items() == [('x', 10), ('xy', 30), ('y', 20)]
+    assert trie.keys() == ['x', 'xy', 'y']
+    assert trie.values() == [10, 30, 20]
+
 
 def test_trie_fuzzy():
     russian = 'абвгдеёжзиклмнопрстуфхцчъыьэюя'

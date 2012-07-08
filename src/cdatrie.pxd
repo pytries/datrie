@@ -27,6 +27,15 @@ cdef extern from "../libdatrie/datrie/trie.h":
 
     ctypedef int TrieData
 
+    # Trie enumeration function
+    #
+    # @param key  : the key of the entry
+    # @param data : the data of the entry
+    # @param user_data : the user-supplied data on enumerate call
+    #
+    # @return TRUE to continue enumeration, FALSE to stop
+    ctypedef bint (*TrieEnumFunc) (AlphaChar *key, TrieData key_data, void *user_data)
+
 
     # ========== GENERAL FUNCTIONS ==========
 
@@ -55,5 +64,4 @@ cdef extern from "../libdatrie/datrie/trie.h":
 
     bint trie_delete (Trie *trie, AlphaChar *key)
 
-    # bint trie_enumerate (Trie *trie, TrieEnumFunc enum_func, void *user_data)
-
+    bint trie_enumerate (Trie *trie, TrieEnumFunc enum_func, void *user_data)

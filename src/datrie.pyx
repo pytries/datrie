@@ -102,6 +102,37 @@ cdef class Trie:
         finally:
             free(c_key)
 
+    def items(self):
+        _items = []
+        def callback(key, value):
+            _items.append((key, value))
+            return True
+        self._enumerate(callback)
+        return _items
+
+    def keys(self):
+        _keys = []
+        def callback(key, value):
+            _keys.append(key)
+            return True
+        self._enumerate(callback)
+        return _keys
+
+    def values(self):
+        _values = []
+        def callback(key, value):
+            _values.append(value)
+            return True
+        self._enumerate(callback)
+        return _values
+
+    cpdef _enumerate(self, callback):
+        return cdatrie.trie_enumerate(
+            self._c_trie,
+            trie_enum_helper,
+            <void*> callback
+        )
+
     def save(self, path):
         str_path = path.encode(sys.getfilesystemencoding())
         cdef char* c_path = str_path
@@ -198,6 +229,21 @@ cdef (cdatrie.AlphaChar*) new_alpha_char_from_unicode(unicode txt):
     # Buffer must be null-terminated (last 4 bytes must be zero).
     data[txt_len] = 0
     return data
+
+cdef unicode unicode_from_alpha_char(cdatrie.AlphaChar* key):
+    """
+    Converts libdatrie's AlphaChar* to Python unicode.
+    """
+    cdef char* c_str = <char*> key
+    cdef int length = cdatrie.alpha_char_strlen(key)*sizeof(cdatrie.AlphaChar)
+    #cdef bytes py_str = c_str
+    return c_str[:length].decode('utf_32_le')
+
+cdef bint trie_enum_helper(cdatrie.AlphaChar *key, cdatrie.TrieData key_data, void *py_func):
+    cdef unicode py_key = unicode_from_alpha_char(key)
+    cdef int py_data = <int>key_data
+    res = (<object>py_func)(py_key, py_data)
+    return res
 
 def to_ranges(lst):
     """
