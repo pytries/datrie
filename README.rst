@@ -56,8 +56,6 @@ Load a trie::
 
     >>> trie2 = datrie.load('my.trie')
 
-TODO: implement useful trie methods.
-
 Performance
 ===========
 
@@ -88,11 +86,14 @@ Current Limitations
 
 * Most useful trie methods (e.g. prefix search) are not yet implemented;
 * pypy is currently unsupported (because `libdatrie`_ wrapper is
-  implemented in Cython);
+  implemented in Cython and pypy's cpyext doesn't understand the generated
+  code);
 * keys must be unicode (no implicit conversion for byte strings
   under Python 2.x, sorry);
 * values must be integers;
-* library is not tested under Windows.
+* ``keys()``, ``values()`` and ``items()`` trie methods return
+  lists, not iterators;
+* the library is not tested under Windows.
 
 Contributing
 ============

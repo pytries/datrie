@@ -103,6 +103,7 @@ cdef class Trie:
             free(c_key)
 
     def items(self):
+        # XXX: this implementation is ugly and inefficient
         _items = []
         def callback(key, value):
             _items.append((key, value))
@@ -111,6 +112,7 @@ cdef class Trie:
         return _items
 
     def keys(self):
+        # XXX: this implementation is ugly and inefficient
         _keys = []
         def callback(key, value):
             _keys.append(key)
@@ -119,6 +121,7 @@ cdef class Trie:
         return _keys
 
     def values(self):
+        # XXX: this implementation is ugly and inefficient
         _values = []
         def callback(key, value):
             _values.append(value)
@@ -127,6 +130,12 @@ cdef class Trie:
         return _values
 
     cpdef _enumerate(self, callback):
+        """
+        Enumerates all entries in trie. For each entry, the user-supplied
+        callback function is called, with the entry key and data.
+        Return True from the callback to continue the enumeration,
+        returning False from such callback will stop enumeration.
+        """
         return cdatrie.trie_enumerate(
             self._c_trie,
             trie_enum_helper,
@@ -234,9 +243,8 @@ cdef unicode unicode_from_alpha_char(cdatrie.AlphaChar* key):
     """
     Converts libdatrie's AlphaChar* to Python unicode.
     """
-    cdef char* c_str = <char*> key
     cdef int length = cdatrie.alpha_char_strlen(key)*sizeof(cdatrie.AlphaChar)
-    #cdef bytes py_str = c_str
+    cdef char* c_str = <char*> key
     return c_str[:length].decode('utf_32_le')
 
 cdef bint trie_enum_helper(cdatrie.AlphaChar *key, cdatrie.TrieData key_data, void *py_func):
