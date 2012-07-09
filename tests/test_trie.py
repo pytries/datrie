@@ -73,12 +73,19 @@ def test_trie_ascii():
 
 def test_trie_items():
     trie = datrie.new(string.ascii_lowercase)
-    trie['x'] = 10
-    trie['y'] = 20
-    trie['xy'] = 30
-    assert trie.items() == [('x', 10), ('xy', 30), ('y', 20)]
-    assert trie.keys() == ['x', 'xy', 'y']
-    assert trie.values() == [10, 30, 20]
+    trie['foo'] = 10
+    trie['bar'] = 20
+    trie['foobar'] = 30
+    assert trie.items() == [('bar', 20), ('foo', 10), ('foobar', 30)]
+    assert trie.keys() == ['bar', 'foo', 'foobar']
+    assert trie.values() == [20, 10, 30]
+
+def test_trie_len():
+    trie = datrie.new(string.ascii_lowercase)
+    words = ['foo', 'f', 'faa', 'bar', 'foobar']
+    for word in words:
+        trie[word] = 1
+    assert len(trie) == len(words)
 
 
 def test_trie_fuzzy():

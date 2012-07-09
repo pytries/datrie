@@ -129,6 +129,15 @@ cdef class Trie:
         self._enumerate(callback)
         return _values
 
+    def __len__(self):
+        cdef int counter=0
+        cdatrie.trie_enumerate(
+            self._c_trie,
+            _trie_counter,
+            &counter
+        )
+        return counter
+
     cpdef _enumerate(self, callback):
         """
         Enumerates all entries in trie. For each entry, the user-supplied
@@ -247,11 +256,17 @@ cdef unicode unicode_from_alpha_char(cdatrie.AlphaChar* key):
     cdef char* c_str = <char*> key
     return c_str[:length].decode('utf_32_le')
 
+
 cdef bint trie_enum_helper(cdatrie.AlphaChar *key, cdatrie.TrieData key_data, void *py_func):
     cdef unicode py_key = unicode_from_alpha_char(key)
     cdef int py_data = <int>key_data
     res = (<object>py_func)(py_key, py_data)
     return res
+
+cdef bint _trie_counter(cdatrie.AlphaChar *key, cdatrie.TrieData key_data, void *counter):
+    (<int *>counter)[0] += 1
+    return 1
+
 
 def to_ranges(lst):
     """
