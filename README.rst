@@ -84,7 +84,9 @@ uses about 22M for this according to my unscientific tests.
 Current Limitations
 ===================
 
-* Most useful trie methods (e.g. prefix search) are not yet implemented;
+* It requires Cython for installation (this requirement will be removed
+  in release);
+* most useful trie methods (e.g. prefix search) are not yet implemented;
 * pypy is currently unsupported (because `libdatrie`_ wrapper is
   implemented in Cython and pypy's cpyext doesn't understand the generated
   code);
@@ -111,18 +113,27 @@ regular patches.
 Running tests and benchmarks
 ----------------------------
 
-Make sure `tox <http://tox.testrun.org>`_ is installed and run
+Make sure `cython`_ and `tox <http://tox.testrun.org>`_ are installed and run
 
 ::
 
     $ tox
 
 from the source checkout. Tests should pass under python 2.6, 2.7
-and 3.2; benchmarks should look reasonable.
+and 3.2.
 
-Please note that tests are not included in the release tar.gz's
-(test data is large and this saves a lot of bandwidth);
-please use source checkouts from github or bitbucket.
+::
+
+    $ tox -c tox-bench.ini
+
+runs benchmarks.
+
+Please note that tests and benchmarks are not included
+in the release tar.gz's (test/benchmark data is large and this
+saves a lot of bandwidth); please use source checkouts from
+github or bitbucket.
+
+.. _cython: http://cython.org
 
 Authors & Contributors
 ----------------------

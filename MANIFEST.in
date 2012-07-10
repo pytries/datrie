@@ -1,5 +1,6 @@
 include README.rst
 include tox.ini
+include tox-bench.ini
 recursive-include libdatrie *.h
 recursive-include libdatrie *.c
 include tests/words100k.txt.zip
