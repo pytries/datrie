@@ -36,6 +36,7 @@ def load(path):
     """
     return Trie(path=path, alpha_map=None)
 
+RAISE_KEY_ERROR=object()
 
 cdef class Trie:
     cdef cdatrie.Trie *_c_trie
@@ -78,7 +79,7 @@ cdef class Trie:
             free(c_key)
 
         if not found:
-            raise KeyError()
+            raise KeyError(key)
         return data
 
     def __contains__(self, unicode key):
@@ -101,6 +102,183 @@ cdef class Trie:
             return cdatrie.trie_delete(self._c_trie, c_key)
         finally:
             free(c_key)
+
+    def iter_prefixes(self, unicode key):
+        '''
+        Returns an iterator over the keys of this trie that are prefixes
+        of ``key``.
+        '''
+        cdef cdatrie.TrieState* state = cdatrie.trie_root(self._c_trie)
+        if state == NULL:
+            raise MemoryError()
+
+        cdef int index = 1
+        try:
+            for char in key:
+                if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
+                    return
+                if cdatrie.trie_state_is_terminal(state):
+                    yield key[:index]
+                index += 1
+        finally:
+            cdatrie.trie_state_free(state)
+
+    def iter_prefix_items(self, unicode key):
+        '''
+        Returns an iterator over the items (``(key,value)`` tuples)
+        of this trie that are associated with keys that are prefixes of ``key``.
+        '''
+        cdef cdatrie.TrieState* state = cdatrie.trie_root(self._c_trie)
+        cdef cdatrie.TrieState* tmp_state = cdatrie.trie_state_clone(state)
+
+        if state == NULL or tmp_state == NULL:
+            raise MemoryError()
+
+        cdef int index = 1
+        try:
+            for char in key:
+                if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
+                    return
+                if cdatrie.trie_state_is_terminal(state): # word is found
+                    yield key[:index], _terminal_state_data(state, tmp_state)
+                index += 1
+        finally:
+            cdatrie.trie_state_free(state)
+            cdatrie.trie_state_free(tmp_state)
+
+
+    def prefixes(self, unicode key):
+        '''
+        Returns a list with keys of this trie that are prefixes of ``key``.
+        '''
+        cdef cdatrie.TrieState* state = cdatrie.trie_root(self._c_trie)
+        if state == NULL:
+            raise MemoryError()
+
+        cdef list result = []
+        cdef int index = 1
+        try:
+            for char in key:
+                if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
+                    break
+                if cdatrie.trie_state_is_terminal(state):
+                    result.append(key[:index])
+                index += 1
+            return result
+        finally:
+            cdatrie.trie_state_free(state)
+
+
+    def prefix_items(self, unicode key):
+        '''
+        Returns a list of the items (``(key,value)`` tuples)
+        of this trie that are associated with keys that are
+        prefixes of ``key``.
+        '''
+        cdef cdatrie.TrieState* state = cdatrie.trie_root(self._c_trie)
+        cdef cdatrie.TrieState* tmp_state = cdatrie.trie_state_clone(state)
+
+        if state == NULL or tmp_state == NULL:
+            raise MemoryError()
+
+        cdef list result = []
+        cdef int index = 1
+        try:
+            for char in key:
+                if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
+                    break
+                if cdatrie.trie_state_is_terminal(state): # word is found
+                    result.append(
+                        (key[:index],
+                         _terminal_state_data(state, tmp_state))
+                    )
+                index += 1
+            return result
+        finally:
+            cdatrie.trie_state_free(state)
+            cdatrie.trie_state_free(tmp_state)
+
+    def longest_prefix(self, unicode key, default=RAISE_KEY_ERROR):
+        """
+        Returns the longest key in this trie that is a prefix of ``key``.
+
+        If the trie doesn't contain any prefix of ``key``:
+          - if ``default`` is given, returns it,
+          - otherwise raises ``KeyError``.
+        """
+        cdef cdatrie.TrieState* state = cdatrie.trie_root(self._c_trie)
+        if state == NULL:
+            raise MemoryError()
+
+        cdef int index = 0
+        try:
+            for char in key:
+                if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
+                    if cdatrie.trie_state_is_terminal(state):
+                        return key[:index]
+                    else:
+                        if default is RAISE_KEY_ERROR:
+                            raise KeyError(key)
+                        return default
+                index += 1
+            if cdatrie.trie_state_is_terminal(state):
+                return key
+            if default is RAISE_KEY_ERROR:
+                raise KeyError(key)
+        finally:
+            cdatrie.trie_state_free(state)
+
+
+    def longest_prefix_item(self, unicode key, default=RAISE_KEY_ERROR):
+        """
+        Return the item (``(key,value)`` tuple) associated with the longest
+        key in this trie that is a prefix of ``key``.
+
+        If the trie doesn't contain any prefix of ``key``:
+          - if ``default`` is given, returns it,
+          - otherwise raises ``KeyError``.
+        """
+        cdef cdatrie.TrieState* state = cdatrie.trie_root(self._c_trie)
+        cdef cdatrie.TrieState* tmp_state = cdatrie.trie_state_clone(state)
+
+        if state == NULL or tmp_state == NULL:
+            raise MemoryError()
+
+        cdef int index = 0
+        try:
+            for char in key:
+                if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
+                    if cdatrie.trie_state_is_terminal(state):
+                        return key[:index], _terminal_state_data(state, tmp_state)
+                    else:
+                        if default is RAISE_KEY_ERROR:
+                            raise KeyError(key)
+                        return default
+                index += 1
+            if cdatrie.trie_state_is_terminal(state):
+                return key
+            if default is RAISE_KEY_ERROR:
+                raise KeyError(key)
+        finally:
+            cdatrie.trie_state_free(state)
+            cdatrie.trie_state_free(tmp_state)
+
+
+    def has_keys_with_prefix(self, unicode prefix):
+        """
+        Returns True if any key in the trie begins with ``prefix``.
+        """
+        cdef cdatrie.TrieState* state = cdatrie.trie_root(self._c_trie)
+        if state == NULL:
+            raise MemoryError()
+        try:
+            for char in prefix:
+                if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
+                    return False
+            return True
+        finally:
+            cdatrie.trie_state_free(state)
+
 
     def items(self):
         # XXX: this implementation is ugly and inefficient
@@ -129,7 +307,9 @@ cdef class Trie:
         self._enumerate(callback)
         return _values
 
+
     def __len__(self):
+        # XXX: this is very slow
         cdef int counter=0
         cdatrie.trie_enumerate(
             self._c_trie,
@@ -157,6 +337,19 @@ cdef class Trie:
         cdef int res = cdatrie.trie_save(self._c_trie, c_path)
         if res == -1:
             raise IOError("Can't write to file")
+
+
+cdef cdatrie.TrieData _terminal_state_data(cdatrie.TrieState* state, cdatrie.TrieState* tmp_state):
+    """
+    Wrapper for cdatrie.trie_state_get_data that
+    handle non-leaf nodes.
+    """
+    if cdatrie.trie_state_is_single(state): # leaf
+        return cdatrie.trie_state_get_data(state)
+    else: # non-leaf terminal, data is not available here
+        cdatrie.trie_state_copy(tmp_state, state)
+        cdatrie.trie_state_walk(tmp_state, cdatrie.TRIE_CHAR_TERM)
+        return cdatrie.trie_state_get_data(tmp_state)
 
 
 cdef class AlphaMap:
@@ -248,11 +441,13 @@ cdef (cdatrie.AlphaChar*) new_alpha_char_from_unicode(unicode txt):
     data[txt_len] = 0
     return data
 
-cdef unicode unicode_from_alpha_char(cdatrie.AlphaChar* key):
+cdef unicode unicode_from_alpha_char(cdatrie.AlphaChar* key, int len=0):
     """
     Converts libdatrie's AlphaChar* to Python unicode.
     """
-    cdef int length = cdatrie.alpha_char_strlen(key)*sizeof(cdatrie.AlphaChar)
+    cdef int length = len
+    if length == 0:
+        length = cdatrie.alpha_char_strlen(key)*sizeof(cdatrie.AlphaChar)
     cdef char* c_str = <char*> key
     return c_str[:length].decode('utf_32_le')
 

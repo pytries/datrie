@@ -65,3 +65,32 @@ cdef extern from "../libdatrie/datrie/trie.h":
     bint trie_delete (Trie *trie, AlphaChar *key)
 
     bint trie_enumerate (Trie *trie, TrieEnumFunc enum_func, void *user_data)
+
+    # ======== STEPWISE QUERY OPERATIONS ========
+
+    TrieState * trie_root (Trie *trie)
+
+
+    # ========= TRIE STATE ===============
+
+    TrieState * trie_state_clone (TrieState *s)
+
+    void trie_state_copy (TrieState *dst, TrieState *src)
+
+    void trie_state_free (TrieState *s)
+
+    void trie_state_rewind (TrieState *s)
+
+    bint trie_state_walk (TrieState *s, AlphaChar c)
+
+    bint trie_state_is_walkable (TrieState *s, AlphaChar c)
+
+    int TRIE_CHAR_TERM
+
+    bint trie_state_is_terminal(TrieState * s)
+
+    bint trie_state_is_single (TrieState *s)
+
+    bint trie_state_is_leaf(TrieState* s)
+
+    TrieData trie_state_get_data (TrieState *s)

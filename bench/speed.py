@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals, division
-import gc
+import random
+import string
 import timeit
 import os
 import zipfile
@@ -23,6 +24,23 @@ def words100k():
     txt = zf.open(zf.namelist()[0]).read().decode('utf8')
     return txt.splitlines()
 
+def random_words(num):
+    russian = 'абвгдеёжзиклмнопрстуфхцчъыьэюя'
+    alphabet = russian + string.ascii_letters
+    return [
+        "".join([random.choice(alphabet) for x in range(random.randint(1,15))])
+        for y in range(num)
+    ]
+
+def truncated_words(words):
+    return [word[:4] for word in words]
+
+WORDS100k = words100k()
+MIXED_WORDS100k = truncated_words(WORDS100k)
+NON_WORDS100k = random_words(100000)
+
+
+
 def _alphabet(words):
     chars = set()
     for word in words:
@@ -30,21 +48,23 @@ def _alphabet(words):
             chars.add(ch)
     return "".join(sorted(list(chars)))
 
-def bench(name, timer, words_count, repeats=3, runs=5):
+def bench(name, timer, descr='M ops/sec', op_count=0.1, repeats=3, runs=5):
     times = []
     for x in range(runs):
         times.append(timer.timeit(repeats))
 
-    def word_time(time):
-        return words_count*repeats / time
+    def op_time(time):
+        return op_count*repeats / time
 
     min_time = min(times)
     mean_time = times[int((runs-1)/2)]
 
-    print("%s: max=%0.0fK words/sec, mean=%0.0fK words/sec" % (
+    print("%s: max=%0.3f%s, mean=%0.3f%s" % (
         name,
-        word_time(min_time)/1000,
-        word_time(mean_time)/1000,
+        op_time(min_time),
+        descr,
+        op_time(mean_time),
+        descr,
     ))
 
 def create_trie():
@@ -68,31 +88,145 @@ def check_trie(trie, words):
         raise Exception()
 
 def benchmark():
-    print('\n====== Benchmark =======\n')
+    print('\n====== Benchmarks (100k unique unicode words) =======\n')
 
-    test = "for word in WORDS: container[word]"
+    tests = [
+        ('__getitem__ (hits)', "for word in words: data[word]", 'M ops/sec', 0.1, 3),
+        ('__contains__ (hits)', "for word in words: word in data", 'M ops/sec', 0.1, 3),
+        ('__contains__ (misses)', "for word in words2: word in data", 'M ops/sec', 0.1, 3),
+        ('__len__', 'len(data)', ' ops/sec', 1, 1),
+        ('items()', 'list(data.items())', ' ops/sec', 1, 1),
+        ('keys()', 'list(data.keys())', ' ops/sec', 1, 1),
+        ('values()', 'list(data.values())', ' ops/sec', 1, 1),
+    ]
+
     common_setup = """
-from __main__ import words100k, create_trie
-WORDS = words100k()
+from __main__ import create_trie, WORDS100k, NON_WORDS100k, MIXED_WORDS100k
+words = WORDS100k
+words2 = NON_WORDS100k
+words3 = MIXED_WORDS100k
 """
-    dict_setup = common_setup + 'container = dict((word, 1) for word in WORDS);'
-    trie_setup = common_setup + 'container = create_trie();'
+    dict_setup = common_setup + 'data = dict((word, 1) for word in words);'
+    trie_setup = common_setup + 'data = create_trie();'
 
-    t_dict = timeit.Timer(test, dict_setup)
-    t_trie = timeit.Timer(test, trie_setup)
+    for test_name, test, descr, op_count, repeats in tests:
+        t_dict = timeit.Timer(test, dict_setup)
+        t_trie = timeit.Timer(test, trie_setup)
 
-    bench('dict __getitem__', t_dict, 100000)
-    bench('trie __getitem__', t_trie, 100000)
+        bench('dict '+test_name, t_dict, descr, op_count, repeats)
+        bench('trie '+test_name, t_trie, descr, op_count, repeats)
+
+
+    # trie-specific benchmarks
+
+    bench(
+        'trie.iter_prefix_items (hits)',
+        timeit.Timer(
+            "for word in words:\n"
+            "   for it in data.iter_prefix_items(word):\n"
+            "       pass",
+            trie_setup
+        ),
+    )
+
+    bench(
+        'trie.prefix_items (hits)',
+        timeit.Timer(
+            "for word in words: data.prefix_items(word)",
+            trie_setup
+        )
+    )
+
+    bench(
+        'trie.prefix_items loop (hits)',
+        timeit.Timer(
+            "for word in words:\n"
+            "    for it in data.prefix_items(word):pass",
+            trie_setup
+        )
+    )
+
+    bench(
+        'trie.iter_prefixes (hits)',
+        timeit.Timer(
+            "for word in words:\n"
+            "   for it in data.iter_prefixes(word): pass",
+            trie_setup
+        )
+    )
+
+    bench(
+        'trie.iter_prefixes (misses)',
+        timeit.Timer(
+            "for word in words2:\n"
+            "   for it in data.iter_prefixes(word): pass",
+            trie_setup
+        )
+    )
+
+    bench(
+        'trie.iter_prefixes (mixed)',
+        timeit.Timer(
+            "for word in words3:\n"
+            "   for it in data.iter_prefixes(word): pass",
+            trie_setup
+        )
+    )
+
+    bench(
+        'trie.has_keys_with_prefix (hits)',
+        timeit.Timer(
+            "for word in words: data.has_keys_with_prefix(word)",
+            trie_setup
+        )
+    )
+
+    bench(
+        'trie.has_keys_with_prefix (misses)',
+        timeit.Timer(
+            "for word in words2: data.has_keys_with_prefix(word)",
+            trie_setup
+        )
+    )
+
+    bench(
+        'trie.longest_prefix (hits)',
+        timeit.Timer(
+            "for word in words: data.longest_prefix(word)",
+            trie_setup
+        )
+    )
+
+    bench(
+        'trie.longest_prefix (misses)',
+        timeit.Timer(
+            "for word in words2: data.longest_prefix(word, default=None)",
+            trie_setup
+        )
+    )
+
+    bench(
+        'trie.longest_prefix (mixed)',
+        timeit.Timer(
+            "for word in words3: data.longest_prefix(word, default=None)",
+            trie_setup
+        )
+    )
 
 def profiling():
     print('\n====== Profiling =======\n')
     trie = create_trie()
     WORDS = words100k()
-    #cProfile.run("trie = create_trie(); check_trie(trie, WORDS)")
+
+#    def check_prefixes(trie, words):
+#        for word in words:
+#            for item in trie.iter_prefixes(word):
+#                pass
+#    cProfile.runctx("check_prefixes(trie, WORDS)", globals(), locals(), "Profile.prof")
+
     cProfile.runctx("check_trie(trie, WORDS)", globals(), locals(), "Profile.prof")
 
     s = pstats.Stats("Profile.prof")
-    #s.print_stats()
     s.strip_dirs().sort_stats("time").print_stats(10)
 
 #def memory():

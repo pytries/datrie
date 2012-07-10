@@ -5,6 +5,7 @@ import tempfile
 import string
 import random
 
+
 def test_trie():
     trie = datrie.new(alphabet=string.printable)
     assert trie.is_dirty() == True
@@ -86,6 +87,88 @@ def test_trie_len():
     for word in words:
         trie[word] = 1
     assert len(trie) == len(words)
+
+def test_trie_iter_prefixes():
+    trie = datrie.new(string.ascii_lowercase)
+    words = ['producers', 'producersz', 'pr', 'pool', 'prepare', 'preview', 'prize', 'produce', 'producer', 'progress']
+    for index, word in enumerate(words, 1):
+        trie[word] = index
+
+    prefixes = trie.iter_prefixes('producers')
+    assert list(prefixes) == ['pr', 'produce', 'producer', 'producers']
+
+    no_prefixes = trie.iter_prefixes('vasia')
+    assert list(no_prefixes) == []
+
+    items = trie.iter_prefix_items('producers')
+    assert next(items) == ('pr', 3)
+    assert next(items) == ('produce', 8)
+    assert next(items) == ('producer', 9)
+    assert next(items) == ('producers', 1)
+
+    no_prefixes = trie.iter_prefix_items('vasia')
+    assert list(no_prefixes) == []
+
+
+def test_trie_prefixes():
+    trie = datrie.new(string.ascii_lowercase)
+    words = ['producers', 'producersz', 'pr', 'pool', 'prepare', 'preview', 'prize', 'produce', 'producer', 'progress']
+    for index, word in enumerate(words, 1):
+        trie[word] = index
+
+    prefixes = trie.prefixes('producers')
+    assert prefixes == ['pr', 'produce', 'producer', 'producers']
+
+
+    items = trie.prefix_items('producers')
+    assert items == [('pr', 3), ('produce', 8), ('producer', 9), ('producers', 1)]
+
+    assert trie.prefixes('vasia') == []
+    assert trie.prefix_items('vasia') == []
+
+
+def test_has_keys_with_prefix():
+    trie = datrie.new(string.ascii_lowercase)
+    words = ['pool', 'prepare', 'preview', 'prize', 'produce', 'producer', 'progress']
+    for word in words:
+        trie[word] = 1
+
+    for word in words:
+        assert trie.has_keys_with_prefix(word)
+        assert trie.has_keys_with_prefix(word[:-1])
+
+    assert trie.has_keys_with_prefix('p')
+    assert trie.has_keys_with_prefix('poo')
+    assert trie.has_keys_with_prefix('pr')
+    assert trie.has_keys_with_prefix('priz')
+
+    assert not trie.has_keys_with_prefix('prizey')
+    assert not trie.has_keys_with_prefix('ops')
+    assert not trie.has_keys_with_prefix('progn')
+
+
+def test_longest_prefix():
+    trie = datrie.new(string.ascii_lowercase)
+    words = ['pool', 'prepare', 'preview', 'prize', 'produce', 'producer', 'progress']
+    for word in words:
+        trie[word] = 1
+
+    for word in words:
+        assert trie.longest_prefix(word) == word
+    assert trie.longest_prefix('pooler') == 'pool'
+    assert trie.longest_prefix('producers') == 'producer'
+    assert trie.longest_prefix('progressor') == 'progress'
+
+    assert trie.longest_prefix('prview', default=None) == None
+    assert trie.longest_prefix('p', default=None) == None
+    assert trie.longest_prefix('z', default=None) == None
+
+    try:
+        trie.longest_prefix('z')
+        assert False
+    except KeyError:
+        pass
+
 
 
 def test_trie_fuzzy():
