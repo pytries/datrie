@@ -162,7 +162,7 @@ Current Limitations
   implemented in Cython and pypy's cpyext doesn't understand the generated
   code);
 * the library doesn't compile under Windows + MSVC2008 because of
-  missing stdint header.
+  missing ``<stdint.h>`` header.
 
 Contributing
 ============
@@ -180,7 +180,7 @@ regular patches.
 Running tests and benchmarks
 ----------------------------
 
-Make sure `cython`_ and `tox <http://tox.testrun.org>`_ are installed and run
+Make sure `cython`_ and `tox`_ are installed and run
 
 ::
 
@@ -201,6 +201,7 @@ saves a lot of bandwidth; please use source checkouts from
 github or bitbucket for the benchmarks.
 
 .. _cython: http://cython.org
+.. _tox: http://tox.testrun.org
 
 Authors & Contributors
 ----------------------
