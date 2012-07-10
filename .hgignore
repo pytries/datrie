@@ -25,6 +25,8 @@ $libdatrie/
 
 ^src/.*\.html$
 
+^stuff/
+\.rej$
 \.pyc$
 ^.tox
 \.orig$
