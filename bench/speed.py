@@ -110,7 +110,7 @@ from __main__ import PREFIXES_3_1k, PREFIXES_5_1k, PREFIXES_8_1k, PREFIXES_15_1k
 words = WORDS100k
 words2 = NON_WORDS100k
 words3 = MIXED_WORDS100k
-NON_WORDS_1k = NON_WORDS100k[::100]
+NON_WORDS_1k = ['ыва', 'xyz', 'соы', 'Axx', 'avы']*200
 """
     dict_setup = common_setup + 'data = dict((word, 1) for word in words);'
     trie_setup = common_setup + 'data = create_trie();'
@@ -245,14 +245,13 @@ def profiling():
 
 #    def check_prefixes(trie, words):
 #        for word in words:
-#            for item in trie.iter_prefixes(word):
-#                pass
-#    cProfile.runctx("check_prefixes(trie, WORDS)", globals(), locals(), "Profile.prof")
-
+#            trie.keys(word)
+#    cProfile.runctx("check_prefixes(trie, NON_WORDS_1k)", globals(), locals(), "Profile.prof")
+#
     cProfile.runctx("check_trie(trie, WORDS)", globals(), locals(), "Profile.prof")
 
     s = pstats.Stats("Profile.prof")
-    s.strip_dirs().sort_stats("time").print_stats(10)
+    s.strip_dirs().sort_stats("time").print_stats(20)
 
 #def memory():
 #    gc.collect()

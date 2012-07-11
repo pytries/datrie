@@ -335,7 +335,7 @@ cdef class Trie:
             <void*> callback
         )
 
-    cdef _walk_prefixes(self, unicode prefix, cdatrie.TrieEnumFunc enum_func):
+    cdef list _walk_prefixes(self, unicode prefix, cdatrie.TrieEnumFunc enum_func):
         """
         Calls ``enum_func`` for each node which key starts with ``prefix``.
         Passes result list to ``enum_func`` as ``user_data`` argument.
@@ -395,6 +395,9 @@ cdef class Trie:
             enum_data.enum_func = enum_func
             enum_data.user_data = <void*> result
 
+            # This can be optimized: most time is spent in utf_32_le
+            # decoding from AlphaChar* inside enum functions; at least
+            # prefix may be decoded only once.
             cdatrie.da_enumerate_recursive(
                 _state.trie.da,
                 _state.index,

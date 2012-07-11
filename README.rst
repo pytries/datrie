@@ -156,14 +156,13 @@ Python 2.x on my machine)::
     trie.longest_prefix (mixed):        1.642M ops/sec
 
 Looking for all words starting with a given prefix is mostly limited
-by overall result count; also it isn't optimized for misses::
+by overall result count (this can be improved in future because a
+lot of time is spent decoding strings from utf_32_le to Python's
+unicode)::
 
     trie.items(prefix="xxx"), avg_len(res)==415:        0.699K ops/sec
     trie.keys(prefix="xxx"), avg_len(res)==415:         0.708K ops/sec
     trie.values(prefix="xxx"), avg_len(res)==415:       2.165K ops/sec
-    trie.items(prefix="xxx"), NON_EXISTING:             4.307K ops/sec
-    trie.keys(prefix="xxx"), NON_EXISTING:              4.430K ops/sec
-    trie.values(prefix="xxx"), NON_EXISTING:            13.417K ops/sec
     trie.items(prefix="xxxxx"), avg_len(res)==17:       16.227K ops/sec
     trie.keys(prefix="xxxxx"), avg_len(res)==17:        16.434K ops/sec
     trie.values(prefix="xxxxx"), avg_len(res)==17:      45.806K ops/sec
@@ -173,6 +172,9 @@ by overall result count; also it isn't optimized for misses::
     trie.items(prefix="xxxxx..xx"), avg_len(res)==1.4:  124.003K ops/sec
     trie.keys(prefix="xxxxx..xx"), avg_len(res)==1.4:   124.709K ops/sec
     trie.values(prefix="xxxxx..xx"), avg_len(res)==1.4: 210.586K ops/sec
+    trie.items(prefix="xxx"), NON_EXISTING:             1779.258K ops/sec
+    trie.keys(prefix="xxx"), NON_EXISTING:              1827.053K ops/sec
+    trie.values(prefix="xxx"), NON_EXISTING:            1793.204K ops/sec
 
 Please take this benchmark results with a grain of salt; this
 is a very simple benchmark and may not cover your use case.
