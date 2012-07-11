@@ -156,7 +156,7 @@ Python 2.x on my machine)::
     trie.longest_prefix (mixed):        1.642M ops/sec
 
 Looking for all words starting with a given prefix is mostly limited
-by overall result count; also it isn't optimized for misses.
+by overall result count; also it isn't optimized for misses::
 
     trie.items(prefix="xxx"), avg_len(res)==415:        0.699K ops/sec
     trie.keys(prefix="xxx"), avg_len(res)==415:         0.708K ops/sec
