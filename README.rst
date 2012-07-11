@@ -37,8 +37,8 @@ case, finding the longest-prefix item is also supported.
     ranges at runtime, so be careful! Invalid keys are OK at lookup time
     but values won't be stored correctly for such keys.
 
-Add some values to it (datrie keys must be unicode; the example
-is for Python 2.x)::
+Add some values to it (datrie keys must be unicode; the examples
+are for Python 2.x)::
 
     >>> trie[u'foo'] = 5
     >>> trie[u'foobar'] = 10
@@ -101,6 +101,17 @@ Check if the trie has keys with a given prefix::
     >>> trie.has_keys_with_prefix(u'FO')
     False
 
+Get all items with a given prefix from a trie::
+
+    >>> trie.keys(u'fo')
+    [u'foo', u'foobar']
+
+    >>> trie.items(u'ba')
+    [(u'bar', 20)]
+
+    >>> trie.values(u'foob')
+    [10]
+
 
 Performance
 ===========
@@ -128,20 +139,40 @@ on __getitem__. Benchmark results (macbook air i5 1.7GHz,
     dict __getitem__: 3.628M ops/sec
     trie __getitem__: 1.980M ops/sec
 
-Prefix methods are almost as fast as __getitem__ (results are for Python 3.2,
-they are even faster under Python 2.x on my machine)::
+Looking for prefixes of a given word is almost as fast as
+__getitem__ (results are for Python 3.2, they are even faster under
+Python 2.x on my machine)::
 
-    trie.iter_prefix_items (hits):      0.738M ops/sec
-    trie.prefix_items (hits):           0.883M ops/sec
-    trie.prefix_items loop (hits):      0.705M ops/sec
-    trie.iter_prefixes (hits):          0.857M ops/sec
-    trie.iter_prefixes (misses):        1.628M ops/sec
-    trie.iter_prefixes (mixed):         1.412M ops/sec
-    trie.has_keys_with_prefix (hits):   1.960M ops/sec
-    trie.has_keys_with_prefix (misses): 2.712M ops/sec
-    trie.longest_prefix (hits):         1.791M ops/sec
-    trie.longest_prefix (misses):       1.616M ops/sec
-    trie.longest_prefix (mixed):        1.634M ops/sec
+    trie.iter_prefix_items (hits):      0.697M ops/sec
+    trie.prefix_items (hits):           0.856M ops/sec
+    trie.prefix_items loop (hits):      0.708M ops/sec
+    trie.iter_prefixes (hits):          0.854M ops/sec
+    trie.iter_prefixes (misses):        1.585M ops/sec
+    trie.iter_prefixes (mixed):         1.463M ops/sec
+    trie.has_keys_with_prefix (hits):   1.896M ops/sec
+    trie.has_keys_with_prefix (misses): 2.623M ops/sec
+    trie.longest_prefix (hits):         1.788M ops/sec
+    trie.longest_prefix (misses):       1.552M ops/sec
+    trie.longest_prefix (mixed):        1.642M ops/sec
+
+Looking for all words starting with a given prefix is mostly limited
+by overall result count; also it isn't optimized for misses.
+
+    trie.items(prefix="xxx"), avg_len(res)==415:        0.699K ops/sec
+    trie.keys(prefix="xxx"), avg_len(res)==415:         0.708K ops/sec
+    trie.values(prefix="xxx"), avg_len(res)==415:       2.165K ops/sec
+    trie.items(prefix="xxx"), NON_EXISTING:             4.307K ops/sec
+    trie.keys(prefix="xxx"), NON_EXISTING:              4.430K ops/sec
+    trie.values(prefix="xxx"), NON_EXISTING:            13.417K ops/sec
+    trie.items(prefix="xxxxx"), avg_len(res)==17:       16.227K ops/sec
+    trie.keys(prefix="xxxxx"), avg_len(res)==17:        16.434K ops/sec
+    trie.values(prefix="xxxxx"), avg_len(res)==17:      45.806K ops/sec
+    trie.items(prefix="xxxxxxxx"), avg_len(res)==3:     74.912K ops/sec
+    trie.keys(prefix="xxxxxxxx"), avg_len(res)==3:      73.857K ops/sec
+    trie.values(prefix="xxxxxxxx"), avg_len(res)==3:    170.833K ops/sec
+    trie.items(prefix="xxxxx..xx"), avg_len(res)==1.4:  124.003K ops/sec
+    trie.keys(prefix="xxxxx..xx"), avg_len(res)==1.4:   124.709K ops/sec
+    trie.values(prefix="xxxxx..xx"), avg_len(res)==1.4: 210.586K ops/sec
 
 Please take this benchmark results with a grain of salt; this
 is a very simple benchmark and may not cover your use case.
@@ -154,9 +185,6 @@ Current Limitations
 * keys must be unicode (no implicit conversion for byte strings
   under Python 2.x, sorry);
 * values must be integers 0 <= x <= 2147483647;
-* **searching for the items for a given prefix is not supported yet**;
-* ``.keys()``, ``.values()`` and ``.items()`` trie methods return
-  lists, not iterators; they (+ ``len(trie)``) are very slow;
 * insertion time is not benchmarked and optimized (but it shouldn't be slow);
 * pypy is currently unsupported (because `libdatrie`_ wrapper is
   implemented in Cython and pypy's cpyext doesn't understand the generated
@@ -208,18 +236,10 @@ Authors & Contributors
 
 * Mikhail Korobov <kmike84@gmail.com>
 
-This module is based on `libdatrie`_ C library and
-inspired by `fast_trie`_ Ruby bindings; API is inspired by
-`PyTrie`_ and `Tree::Trie`_; some docs are borrowed from
+This module is based on `libdatrie`_ C library and is inspired by
+`fast_trie`_ Ruby bindings, `PyTrie`_ pure Python implementation
+and `Tree::Trie`_ Perl implementation; some docs are borrowed from
 these projects.
-
-.. note::
-
-    The implementation is however totally different from
-    fast_trie's. ``fast_trie`` bundles libdatrie 0.1.x
-    (modified to make it C Ruby extension);
-    ``datrie`` bundles libdatrie 0.2.x unmodified (for easier
-    upstream updates) and provides a Cython wrapper.
 
 .. _fast_trie: https://github.com/tyler/trie
 .. _PyTrie: https://bitbucket.org/gsakkis/pytrie

@@ -33,12 +33,21 @@ def random_words(num):
     ]
 
 def truncated_words(words):
-    return [word[:4] for word in words]
+    return [word[:3] for word in words]
+
+def prefixes1k(words, prefix_len):
+    words = [w for w in words if len(w) >= prefix_len]
+    every_nth = int(len(words)/1000)
+    _words = [w[:prefix_len] for w in words[::every_nth]]
+    return _words[:1000]
 
 WORDS100k = words100k()
 MIXED_WORDS100k = truncated_words(WORDS100k)
 NON_WORDS100k = random_words(100000)
-
+PREFIXES_3_1k = prefixes1k(WORDS100k, 3)
+PREFIXES_5_1k = prefixes1k(WORDS100k, 5)
+PREFIXES_8_1k = prefixes1k(WORDS100k, 8)
+PREFIXES_15_1k = prefixes1k(WORDS100k, 15)
 
 
 def _alphabet(words):
@@ -56,14 +65,9 @@ def bench(name, timer, descr='M ops/sec', op_count=0.1, repeats=3, runs=5):
     def op_time(time):
         return op_count*repeats / time
 
-    min_time = min(times)
-    mean_time = times[int((runs-1)/2)]
-
-    print("%s: max=%0.3f%s, mean=%0.3f%s" % (
+    print("%55s:\t%0.3f%s" % (
         name,
-        op_time(min_time),
-        descr,
-        op_time(mean_time),
+        op_time(min(times)),
         descr,
     ))
 
@@ -102,9 +106,11 @@ def benchmark():
 
     common_setup = """
 from __main__ import create_trie, WORDS100k, NON_WORDS100k, MIXED_WORDS100k
+from __main__ import PREFIXES_3_1k, PREFIXES_5_1k, PREFIXES_8_1k, PREFIXES_15_1k
 words = WORDS100k
 words2 = NON_WORDS100k
 words3 = MIXED_WORDS100k
+NON_WORDS_1k = NON_WORDS100k[::100]
 """
     dict_setup = common_setup + 'data = dict((word, 1) for word in words);'
     trie_setup = common_setup + 'data = create_trie();'
@@ -213,6 +219,25 @@ words3 = MIXED_WORDS100k
         )
     )
 
+    prefix_data = [
+        ('xxx', 'avg_len(res)==415', 'PREFIXES_3_1k'),
+        ('xxxxx', 'avg_len(res)==17', 'PREFIXES_5_1k'),
+        ('xxxxxxxx', 'avg_len(res)==3', 'PREFIXES_8_1k'),
+        ('xxxxx..xx', 'avg_len(res)==1.4', 'PREFIXES_15_1k'),
+        ('xxx', 'NON_EXISTING', 'NON_WORDS_1k'),
+    ]
+    for xxx, avg, data in prefix_data:
+        for meth in ('items', 'keys', 'values'):
+            bench(
+                'trie.%s(prefix="%s"), %s' % (meth, xxx, avg),
+                timeit.Timer(
+                    "for word in %s: data.%s(word)" % (data, meth),
+                    trie_setup
+                ),
+                'K ops/sec',
+                op_count=1,
+            )
+
 def profiling():
     print('\n====== Profiling =======\n')
     trie = create_trie()
@@ -253,7 +278,15 @@ def profiling():
 #    ))
 
 if __name__ == '__main__':
-    create_trie()
+#    trie = create_trie()
+#    def check_pref(prefixes):
+#        cntr = 0
+#        for w in prefixes:
+#            cntr += len(trie.keys(w))
+#        print(len(prefixes), cntr, cntr / len(prefixes))
+#    check_pref(prefixes1k(WORDS100k, 15))
+
+
     benchmark()
     #profiling()
     #memory()

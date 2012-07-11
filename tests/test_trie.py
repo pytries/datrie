@@ -5,7 +5,6 @@ import tempfile
 import string
 import random
 
-
 def test_trie():
     trie = datrie.new(alphabet=string.printable)
     assert trie.is_dirty() == True
@@ -80,6 +79,48 @@ def test_trie_items():
     assert trie.items() == [('bar', 20), ('foo', 10), ('foobar', 30)]
     assert trie.keys() == ['bar', 'foo', 'foobar']
     assert trie.values() == [20, 10, 30]
+
+def test_trie_keys_prefix():
+    trie = datrie.new(string.ascii_lowercase)
+    trie['foo'] = 10
+    trie['bar'] = 20
+    trie['foobar'] = 30
+    trie['foovar'] = 40
+    trie['foobarzartic'] = 50
+    assert trie.keys('foobarz') == ['foobarzartic']
+    assert trie.keys('foobarzart') == ['foobarzartic']
+    assert trie.keys('foo') == ['foo', 'foobar', 'foobarzartic', 'foovar']
+    assert trie.keys('foobar') == ['foobar', 'foobarzartic']
+    assert trie.keys('') == ['bar', 'foo', 'foobar', 'foobarzartic', 'foovar']
+    assert trie.keys('x') == []
+
+def test_trie_items_prefix():
+    trie = datrie.new(string.ascii_lowercase)
+    trie['foo'] = 10
+    trie['bar'] = 20
+    trie['foobar'] = 30
+    trie['foovar'] = 40
+    trie['foobarzartic'] = 50
+    assert trie.items('foobarz') == [('foobarzartic', 50)]
+    assert trie.items('foobarzart') == [('foobarzartic', 50)]
+    assert trie.items('foo') == [('foo', 10), ('foobar', 30), ('foobarzartic', 50), ('foovar', 40)]
+    assert trie.items('foobar') == [('foobar', 30), ('foobarzartic', 50)]
+    assert trie.items('') == [('bar', 20), ('foo', 10), ('foobar', 30), ('foobarzartic', 50), ('foovar', 40)]
+    assert trie.items('x') == []
+
+def test_trie_values_prefix():
+    trie = datrie.new(string.ascii_lowercase)
+    trie['foo'] = 10
+    trie['bar'] = 20
+    trie['foobar'] = 30
+    trie['foovar'] = 40
+    trie['foobarzartic'] = 50
+    assert trie.values('foobarz') == [50]
+    assert trie.values('foobarzart') == [50]
+    assert trie.values('foo') == [10, 30, 50, 40]
+    assert trie.values('foobar') == [30, 50]
+    assert trie.values('') == [20, 10, 30, 50, 40]
+    assert trie.values('x') == []
 
 def test_trie_len():
     trie = datrie.new(string.ascii_lowercase)
