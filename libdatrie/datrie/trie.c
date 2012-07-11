@@ -573,7 +573,7 @@ typedef struct {
     void           *user_data;
 } _TrieEnumData;
 
-static Bool
+Bool
 trie_da_enum_func (const TrieChar *key, TrieIndex sep_node, void *user_data)
 {
     _TrieEnumData  *enum_data;
