@@ -1,4 +1,4 @@
-# cython: profile=True
+# cython: profile=False
 """
 Cython wrapper for libdatrie.
 """

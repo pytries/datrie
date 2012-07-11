@@ -182,15 +182,11 @@ is a very simple benchmark and may not cover your use case.
 Current Limitations
 ===================
 
-* It requires Cython for installation (this requirement will be removed
-  in release);
 * keys must be unicode (no implicit conversion for byte strings
   under Python 2.x, sorry);
 * values must be integers 0 <= x <= 2147483647;
 * insertion time is not benchmarked and optimized (but it shouldn't be slow);
-* pypy is currently unsupported (because `libdatrie`_ wrapper is
-  implemented in Cython and pypy's cpyext doesn't understand the generated
-  code);
+* it doesn't work under pypy+MacOS X (some obscure error);
 * the library doesn't compile under Windows + MSVC2008 because of
   missing ``<stdint.h>`` header.
 
@@ -210,7 +206,7 @@ regular patches.
 Running tests and benchmarks
 ----------------------------
 
-Make sure `cython`_ and `tox`_ are installed and run
+Make sure `tox`_ is installed and run
 
 ::
 
@@ -225,9 +221,18 @@ and 3.2.
 
 runs benchmarks.
 
+If you've changed anything in the source code then
+make sure `cython`_ is installed and run
+
+::
+
+    $ update_c.sh
+
+before each ``tox`` command.
+
 Please note that benchmarks are not included in the release
 tar.gz's because benchmark data is large and this
-saves a lot of bandwidth; please use source checkouts from
+saves a lot of bandwidth; use source checkouts from
 github or bitbucket for the benchmarks.
 
 .. _cython: http://cython.org

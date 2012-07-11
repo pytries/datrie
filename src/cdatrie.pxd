@@ -138,9 +138,6 @@ cdef extern from "../libdatrie/datrie/trie.h":
     bint trie_da_enum_func (TrieChar *key, TrieIndex sep_node, void *user_data)
 
 
-cdef inline TrieIndex trie_da_get_tail_index(DArray *d, TrieIndex s):
-    return -da_get_base(d, s)
-
 cdef struct _TrieEnumData:
     Trie *trie
     TrieEnumFunc enum_func
