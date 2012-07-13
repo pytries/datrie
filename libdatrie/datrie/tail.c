@@ -26,7 +26,9 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <stdint.h>
+#ifndef _MSC_VER /* for SIZE_MAX */
+# include <stdint.h>
+#endif
 #include <stdio.h>
 
 #include "tail.h"
@@ -251,10 +253,11 @@ tail_fwrite (const Tail *t, FILE *file)
  * @param t     : the tail data
  * @param index : the index of the suffix
  *
- * @return an allocated string of the indexed suffix.
+ * @return pointer to the indexed suffix string.
  *
- * Get suffix from tail with given @a index. The returned string is allocated.
- * The caller should free it with free().
+ * Get suffix from tail with given @a index. The returned string is a pointer
+ * to internal storage, which should be accessed read-only by the caller.
+ * No need to free() it.
  */
 const TrieChar *
 tail_get_suffix (const Tail *t, TrieIndex index)

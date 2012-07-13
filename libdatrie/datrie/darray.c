@@ -26,7 +26,9 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <stdint.h>
+#ifndef _MSC_VER /* for SIZE_MAX */
+# include <stdint.h>
+#endif
 #include <stdio.h>
 
 #include "trie-private.h"
@@ -426,7 +428,7 @@ da_walk (const DArray *d, TrieIndex *s, TrieChar c)
  *
  * @return the index of the new node
  *
- * Insert a new arc labelled with character @a c from the trie node 
+ * Insert a new arc labelled with character @a c from the trie node
  * represented by index @a s in double-array structure @a d.
  * Note that it assumes that no such arc exists before inserting.
  */
@@ -719,7 +721,7 @@ da_extend_pool     (DArray         *d,
  * @param s : the dangling state to prune off
  *
  * Prune off a non-separate path up from the final state @a s.
- * If @a s still has some children states, it does nothing. Otherwise, 
+ * If @a s still has some children states, it does nothing. Otherwise,
  * it deletes the node and all its parents which become non-separate.
  */
 void
@@ -794,7 +796,7 @@ da_free_cell       (DArray         *d,
  *
  * @return boolean value indicating whether all the keys are visited
  *
- * Enumerate all keys stored in double-array structure. For each entry, the 
+ * Enumerate all keys stored in double-array structure. For each entry, the
  * user-supplied @a enum_func callback function is called, with the entry key,
  * the separate node, and user-supplied data. Returning FALSE from such
  * callback will stop enumeration and return FALSE.
