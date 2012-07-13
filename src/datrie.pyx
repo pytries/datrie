@@ -366,9 +366,6 @@ cdef class Trie:
 
             if cdatrie.trie_state_is_single(state):
                 # state is in the tail pool
-
-                # XXX: docstring says the caller should free the result of
-                # ``tail_get_suffix``, but it seems that's not the case.
                 tail_suffix = cdatrie.alpha_map_trie_to_char_str(
                     _state.trie.alpha_map,
                     cdatrie.tail_get_suffix(_state.trie.tail, _state.index)

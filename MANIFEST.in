@@ -1,4 +1,6 @@
 include README.rst
+include CHANGES.rst
+include COPYING
 include tox.ini
 include tox-bench.ini
 include update_c.sh

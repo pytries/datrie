@@ -187,8 +187,6 @@ Current Limitations
 * values must be integers 0 <= x <= 2147483647;
 * insertion time is not benchmarked and optimized (but it shouldn't be slow);
 * it doesn't work under pypy+MacOS X (some obscure error);
-* the library doesn't compile under Windows + MSVC2008 because of
-  missing ``<stdint.h>`` header.
 
 Contributing
 ============
@@ -255,4 +253,4 @@ these projects.
 License
 =======
 
-Licensed under LGPL v3.
+Licensed under LGPL v2.1.
