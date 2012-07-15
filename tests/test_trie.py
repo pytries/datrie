@@ -89,6 +89,15 @@ def test_trie_len():
     assert len(trie) == len(words)
 
 
+def test_setdefault():
+    trie = datrie.new(string.ascii_lowercase)
+    assert trie.setdefault('foo', 5) == 5
+    assert trie.setdefault('foo', 4) == 5
+    assert trie.setdefault('bar', 3) == 3
+    assert trie.setdefault('bar', 3) == 3
+    assert trie.setdefault('bar', 7) == 3
+
+
 class TestPrefixLookups(object):
     def _trie(self):
         trie = datrie.new(string.ascii_lowercase)

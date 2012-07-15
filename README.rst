@@ -176,6 +176,17 @@ unicode)::
     trie.keys(prefix="xxx"), NON_EXISTING:              1827.053K ops/sec
     trie.values(prefix="xxx"), NON_EXISTING:            1793.204K ops/sec
 
+Build time is worse than dict's::
+
+    dict __setitem__ (updates):	3.520M ops/sec
+    trie __setitem__ (updates):	1.846M ops/sec
+    dict __setitem__ (inserts):	3.512M ops/sec
+    trie __setitem__ (inserts):	0.051M ops/sec
+    dict setdefault (updates):	2.587M ops/sec
+    trie setdefault (updates):	1.579M ops/sec
+    dict setdefault (inserts):	2.613M ops/sec
+    trie setdefault (inserts):	0.051M ops/sec
+
 Please take this benchmark results with a grain of salt; this
 is a very simple benchmark and may not cover your use case.
 
@@ -185,7 +196,6 @@ Current Limitations
 * keys must be unicode (no implicit conversion for byte strings
   under Python 2.x, sorry);
 * values must be integers 0 <= x <= 2147483647;
-* insertion time is not benchmarked and optimized (but it shouldn't be slow);
 * it doesn't work under pypy+MacOS X (some obscure error);
 
 Contributing

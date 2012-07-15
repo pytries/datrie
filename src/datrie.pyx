@@ -103,6 +103,21 @@ cdef class Trie:
         finally:
             free(c_key)
 
+    cpdef cdatrie.TrieData setdefault(self, unicode key, cdatrie.TrieData value):
+        cdef cdatrie.AlphaChar* c_key = new_alpha_char_from_unicode(key)
+        cdef cdatrie.TrieData data = 0
+
+        try:
+            found = cdatrie.trie_retrieve(self._c_trie, c_key, &data)
+            if found:
+                return data
+            else:
+                cdatrie.trie_store(self._c_trie, c_key, value)
+                return value
+        finally:
+            free(c_key)
+
+
     def iter_prefixes(self, unicode key):
         '''
         Returns an iterator over the keys of this trie that are prefixes
