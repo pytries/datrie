@@ -200,29 +200,31 @@ NON_WORDS_1k = ['ыва', 'xyz', 'соы', 'Axx', 'avы']*200
         )
     )
 
-    bench(
-        'trie.longest_prefix (hits)',
-        timeit.Timer(
-            "for word in words: data.longest_prefix(word)",
-            trie_setup
+    for meth in ('longest_prefix', 'longest_prefix_item'):
+        bench(
+            'trie.%s (hits)' % meth,
+            timeit.Timer(
+                "for word in words: data.%s(word)" % meth,
+                trie_setup
+            )
         )
-    )
 
-    bench(
-        'trie.longest_prefix (misses)',
-        timeit.Timer(
-            "for word in words2: data.longest_prefix(word, default=None)",
-            trie_setup
+        bench(
+            'trie.%s (misses)' % meth,
+            timeit.Timer(
+                "for word in words2: data.%s(word, default=None)" % meth,
+                trie_setup
+            )
         )
-    )
 
-    bench(
-        'trie.longest_prefix (mixed)',
-        timeit.Timer(
-            "for word in words3: data.longest_prefix(word, default=None)",
-            trie_setup
+        bench(
+            'trie.%s (mixed)' % meth,
+            timeit.Timer(
+                "for word in words3: data.%s(word, default=None)" % meth,
+                trie_setup
+            )
         )
-    )
+
 
     prefix_data = [
         ('xxx', 'avg_len(res)==415', 'PREFIXES_3_1k'),

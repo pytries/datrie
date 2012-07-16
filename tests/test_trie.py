@@ -263,6 +263,26 @@ class TestPrefixSearch(object):
         except KeyError:
             pass
 
+    def test_longest_prefix_item(self):
+        trie = self._trie()
+
+        for index, word in enumerate(self.WORDS, 1):
+            assert trie.longest_prefix_item(word) == (word, index)
+
+        assert trie.longest_prefix_item('pooler') == ('pool', 4)
+        assert trie.longest_prefix_item('producers') == ('producers', 1)
+        assert trie.longest_prefix_item('progressor') == ('progress', 10)
+
+        assert trie.longest_prefix_item('paol', default=(None, None)) == (None, None)
+        assert trie.longest_prefix_item('p', default=(None, None)) == (None, None)
+        assert trie.longest_prefix_item('z', default=(None, None)) == (None, None)
+
+        try:
+            trie.longest_prefix_item('z')
+            assert False
+        except KeyError:
+            pass
+
 
 
 def test_trie_fuzzy():

@@ -170,6 +170,9 @@ Python 2.x on my machine)::
     trie.longest_prefix (hits):         1.750M ops/sec
     trie.longest_prefix (misses):       1.569M ops/sec
     trie.longest_prefix (mixed):        1.662M ops/sec
+    trie.longest_prefix_item (hits):    1.075M ops/sec
+    trie.longest_prefix_item (misses):  1.058M ops/sec
+    trie.longest_prefix_item (mixed):   1.083M ops/sec
 
 Looking for all words starting with a given prefix is mostly limited
 by overall result count (this can be improved in future because a

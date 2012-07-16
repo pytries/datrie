@@ -33,7 +33,9 @@ def new(alphabet=None, ranges=None, AlphaMap alpha_map=None):
 
 
 RAISE_KEY_ERROR = object()
+RERAISE_KEY_ERROR = object()
 DELETED_OBJECT = object()
+
 
 
 cdef class BaseTrie:
@@ -319,6 +321,7 @@ cdef class BaseTrie:
                 return key
             if default is RAISE_KEY_ERROR:
                 raise KeyError(key)
+            return default
         finally:
             cdatrie.trie_state_free(state)
 
@@ -353,11 +356,12 @@ cdef class BaseTrie:
                         return default
                 index += 1
 
-            # FIXME!!
             if cdatrie.trie_state_is_terminal(state):
-                return key
+                return key, _terminal_state_data(state, tmp_state)
+
             if default is RAISE_KEY_ERROR:
                 raise KeyError(key)
+            return default
         finally:
             cdatrie.trie_state_free(state)
             cdatrie.trie_state_free(tmp_state)
@@ -575,8 +579,13 @@ cdef class Trie(BaseTrie):
           - if ``default`` is given, returns it,
           - otherwise raises ``KeyError``.
         """
-        _key, _value = self._longest_prefix_item(key, default)
-        return _key, self._values[_value]
+        cdef res = self._longest_prefix_item(key, RERAISE_KEY_ERROR)
+        if res is RERAISE_KEY_ERROR: # error
+            if default is RAISE_KEY_ERROR:
+                raise KeyError(key)
+            return default
+
+        return res[0], self._values[res[1]]
 
     def prefix_items(self, unicode key):
         '''
