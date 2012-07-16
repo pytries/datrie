@@ -592,58 +592,6 @@ cdef bint _values_enum_func(cdatrie.AlphaChar *key, cdatrie.TrieData key_data, v
     (<list> user_data).append(<int> key_data)
     return True
 
-
-
-cdef class TrieState:
-    """
-    Experimental TrieState wrapper. It can be used for custom trie traversal.
-    It is not used by ``datrie.Trie`` for performance reasons.
-    """
-    cdef cdatrie.TrieState* _state
-
-    def __cinit__(self, BaseTrie trie):
-        self._state = cdatrie.trie_root(trie._c_trie)
-        if self._state is NULL:
-            raise MemoryError()
-
-    def __dealloc__(self):
-        if self._state is not NULL:
-            cdatrie.trie_state_free(self._state)
-
-    cpdef bint walk(self, cdatrie.AlphaChar char):
-        """
-        Walks the trie stepwise, using a given character ``char``.
-        On return, the state is updated to the new state if successfully walked.
-        Returns boolean value indicating the success of the walk.
-        """
-        return cdatrie.trie_state_walk(self._state, char)
-
-    cpdef copy_to(self, TrieState state):
-        """ Copies trie state to another """
-        cdatrie.trie_state_copy(state._state, self._state)
-
-    cpdef rewind(self):
-        """ Puts the state at root """
-        cdatrie.trie_state_rewind(self._state)
-
-    cpdef bint is_terminal(self):
-        return cdatrie.trie_state_is_terminal(self._state)
-
-    cpdef bint is_leaf(self):
-        return cdatrie.trie_state_is_leaf(self._state)
-
-    cpdef int get_data(self):
-        cdef int data
-        cdef cdatrie.TrieState* tmp_state = cdatrie.trie_state_clone(self._state)
-        try:
-            data = _terminal_state_data(self._state, tmp_state)
-#            if data == cdatrie.TRIE_DATA_ERROR:
-#                raise IndexError()
-            return data
-        finally:
-            cdatrie.trie_state_free(tmp_state)
-
-
 cdef cdatrie.TrieData _terminal_state_data(cdatrie.TrieState* state, cdatrie.TrieState* tmp_state):
     """ Wrapper for cdatrie.trie_state_get_data that handle non-leaf nodes. """
     if cdatrie.trie_state_is_single(state): # leaf
