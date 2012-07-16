@@ -115,7 +115,7 @@ Save & load a trie (values must be picklable)::
 Trie and BaseTrie
 =================
 
-There are 2 Trie classes in datrie package: ``datrie.Trie`` and
+There are two Trie classes in datrie package: ``datrie.Trie`` and
 ``datrie.BaseTrie``. ``datrie.BaseTrie`` is slightly faster and uses less
 memory but it can store only integer numbers 0 <= x <= 2147483647.
 ``datrie.Trie`` is a bit slower but can store any Python object as a value;
@@ -159,7 +159,7 @@ Looking for prefixes of a given word is almost as fast as
 __getitem__ (results are for Python 3.2, they are even faster under
 Python 2.x on my machine)::
 
-    trie.iter_prefix_items (hits):      0.373M ops/sec
+    trie.iter_prefix_items (hits):      0.431M ops/sec
     trie.prefix_items (hits):           0.685M ops/sec
     trie.prefix_items loop (hits):      0.601M ops/sec
     trie.iter_prefixes (hits):          0.814M ops/sec
@@ -218,7 +218,8 @@ Current Limitations
 * there are no iterator versions of keys/values/items (this is a current
   limitation of libdatrie);
 * it doesn't work under pypy+MacOS X (some obscure error which I don't
-  understand).
+  understand);
+* library is not tested with narrow Python builds.
 
 Contributing
 ============

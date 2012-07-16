@@ -12,7 +12,7 @@ LIBDATRIE_FILES = [os.path.join(LIBDATRIE_DIR, name) for name in LIBDATRIE_FILE_
 
 setup(
     name="datrie",
-    version="0.1.1",
+    version="0.2",
     description="Super-fast, efficiently stored Trie for Python",
     long_description = open('README.rst').read() + open('CHANGES.rst').read(),
     author='Mikhail Korobov',
@@ -30,7 +30,7 @@ setup(
     ],
 
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',
@@ -48,6 +48,3 @@ setup(
     ],
 
 )
-
-
-
