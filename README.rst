@@ -16,14 +16,14 @@ Installation
 Usage
 =====
 
-Create a new trie capable of storing lower-case ascii letters::
+Create a new trie capable of storing items with lower-case ascii keys::
 
     >>> import string
     >>> import datrie
     >>> trie = datrie.new(string.ascii_lowercase)
 
 ``trie`` variable is a dict-like object that can have unicode keys of
-certain ranges and integer values.
+certain ranges and Python objects as values.
 
 In addition to implementing the mapping interface, tries facilitate
 finding the items for a given prefix, and vice versa, finding the
@@ -42,7 +42,9 @@ are for Python 2.x)::
 
     >>> trie[u'foo'] = 5
     >>> trie[u'foobar'] = 10
-    >>> trie[u'bar'] = 20
+    >>> trie[u'bar'] = 'bar value'
+    >>> trie.setdefault(u'foobar', 15)
+    10
 
 Check if u'foo' is in trie::
 
@@ -53,14 +55,6 @@ Get a value::
 
     >>> trie[u'foo']
     5
-
-Save a trie to disk::
-
-    >>> trie.save('my.trie')
-
-Load a trie::
-
-    >>> trie2 = datrie.load('my.trie')
 
 Find all prefixes of a word::
 
@@ -107,19 +101,42 @@ Get all items with a given prefix from a trie::
     [u'foo', u'foobar']
 
     >>> trie.items(u'ba')
-    [(u'bar', 20)]
+    [(u'bar', 'bar value')]
 
     >>> trie.values(u'foob')
     [10]
 
 
+Trie and BaseTrie
+=================
+
+There are 2 Trie classes in datrie package: ``datrie.Trie`` and
+``datrie.BaseTrie``. ``datrie.BaseTrie`` is slightly faster and uses less
+memory but it can store only integer numbers 0 <= x <= 2147483647.
+``datrie.Trie`` is a bit slower but can store any Python object as a value;
+it is the trie created by ``datrie.new`` by default.
+
+If you don't need values or integer values are OK then use ``datrie.BaseTrie``::
+
+    import datrie
+    import string
+    alpha_map = datrie.AlphaMap(alphabet=string.ascii_lowercase)
+    trie = datrie.BaseTrie(alpha_map=alpha_map)
+
+Save & load methods are currently implemented only for ``BaseTrie``::
+
+    >>> trie.save('my.trie')
+    >>> trie2 = datrie.load('my.trie')
+
+
 Performance
 ===========
 
-Performance is measured against Python's dict with 100k unique unicode
-words (English and Russian) as keys and '1' numbers as values.
+Performance is measured for ``datrie.Trie`` against Python's dict with
+100k unique unicode words (English and Russian) as keys and '1' numbers
+as values.
 
-``datrie.Trie`` uses about 4.6M memory for 100k words; Python's dict
+``datrie.Trie`` uses about 5M memory for 100k words; Python's dict
 uses about 22M for this according to my unscientific tests.
 
 This trie implementation is 2-6 times slower than python's dict
@@ -143,49 +160,50 @@ Looking for prefixes of a given word is almost as fast as
 __getitem__ (results are for Python 3.2, they are even faster under
 Python 2.x on my machine)::
 
-    trie.iter_prefix_items (hits):      0.697M ops/sec
-    trie.prefix_items (hits):           0.856M ops/sec
-    trie.prefix_items loop (hits):      0.708M ops/sec
-    trie.iter_prefixes (hits):          0.854M ops/sec
-    trie.iter_prefixes (misses):        1.585M ops/sec
-    trie.iter_prefixes (mixed):         1.463M ops/sec
-    trie.has_keys_with_prefix (hits):   1.896M ops/sec
-    trie.has_keys_with_prefix (misses): 2.623M ops/sec
-    trie.longest_prefix (hits):         1.788M ops/sec
-    trie.longest_prefix (misses):       1.552M ops/sec
-    trie.longest_prefix (mixed):        1.642M ops/sec
+    trie.iter_prefix_items (hits):      0.373M ops/sec
+    trie.prefix_items (hits):           0.685M ops/sec
+    trie.prefix_items loop (hits):      0.601M ops/sec
+    trie.iter_prefixes (hits):          0.814M ops/sec
+    trie.iter_prefixes (misses):        1.565M ops/sec
+    trie.iter_prefixes (mixed):         1.461M ops/sec
+    trie.has_keys_with_prefix (hits):   1.945M ops/sec
+    trie.has_keys_with_prefix (misses): 2.625M ops/sec
+    trie.longest_prefix (hits):         1.750M ops/sec
+    trie.longest_prefix (misses):       1.569M ops/sec
+    trie.longest_prefix (mixed):        1.662M ops/sec
 
 Looking for all words starting with a given prefix is mostly limited
 by overall result count (this can be improved in future because a
 lot of time is spent decoding strings from utf_32_le to Python's
 unicode)::
 
-    trie.items(prefix="xxx"), avg_len(res)==415:        0.699K ops/sec
-    trie.keys(prefix="xxx"), avg_len(res)==415:         0.708K ops/sec
-    trie.values(prefix="xxx"), avg_len(res)==415:       2.165K ops/sec
-    trie.items(prefix="xxxxx"), avg_len(res)==17:       16.227K ops/sec
-    trie.keys(prefix="xxxxx"), avg_len(res)==17:        16.434K ops/sec
-    trie.values(prefix="xxxxx"), avg_len(res)==17:      45.806K ops/sec
-    trie.items(prefix="xxxxxxxx"), avg_len(res)==3:     74.912K ops/sec
-    trie.keys(prefix="xxxxxxxx"), avg_len(res)==3:      73.857K ops/sec
-    trie.values(prefix="xxxxxxxx"), avg_len(res)==3:    170.833K ops/sec
-    trie.items(prefix="xxxxx..xx"), avg_len(res)==1.4:  124.003K ops/sec
-    trie.keys(prefix="xxxxx..xx"), avg_len(res)==1.4:   124.709K ops/sec
-    trie.values(prefix="xxxxx..xx"), avg_len(res)==1.4: 210.586K ops/sec
-    trie.items(prefix="xxx"), NON_EXISTING:             1779.258K ops/sec
-    trie.keys(prefix="xxx"), NON_EXISTING:              1827.053K ops/sec
-    trie.values(prefix="xxx"), NON_EXISTING:            1793.204K ops/sec
+    trie.items(prefix="xxx"), avg_len(res)==415:        0.690K ops/sec
+    trie.keys(prefix="xxx"), avg_len(res)==415:         0.721K ops/sec
+    trie.values(prefix="xxx"), avg_len(res)==415:       2.151K ops/sec
+    trie.items(prefix="xxxxx"), avg_len(res)==17:       15.841K ops/sec
+    trie.keys(prefix="xxxxx"), avg_len(res)==17:        16.829K ops/sec
+    trie.values(prefix="xxxxx"), avg_len(res)==17:      43.930K ops/sec
+    trie.items(prefix="xxxxxxxx"), avg_len(res)==3:     71.620K ops/sec
+    trie.keys(prefix="xxxxxxxx"), avg_len(res)==3:      77.067K ops/sec
+    trie.values(prefix="xxxxxxxx"), avg_len(res)==3:    157.464K ops/sec
+    trie.items(prefix="xxxxx..xx"), avg_len(res)==1.4:  116.869K ops/sec
+    trie.keys(prefix="xxxxx..xx"), avg_len(res)==1.4:   128.392K ops/sec
+    trie.values(prefix="xxxxx..xx"), avg_len(res)==1.4: 194.388K ops/sec
+    trie.items(prefix="xxx"), NON_EXISTING:             1753.472K ops/sec
+    trie.keys(prefix="xxx"), NON_EXISTING:              1797.559K ops/sec
+    trie.values(prefix="xxx"), NON_EXISTING:            1705.695K ops/sec
 
-Build time is worse than dict's::
+Build time is worse than dict's; updates are quite fast::
 
-    dict __setitem__ (updates):	3.520M ops/sec
-    trie __setitem__ (updates):	1.846M ops/sec
-    dict __setitem__ (inserts):	3.512M ops/sec
-    trie __setitem__ (inserts):	0.051M ops/sec
-    dict setdefault (updates):	2.587M ops/sec
-    trie setdefault (updates):	1.579M ops/sec
-    dict setdefault (inserts):	2.613M ops/sec
-    trie setdefault (inserts):	0.051M ops/sec
+    dict __setitem__ (updates): 3.489M ops/sec
+    trie __setitem__ (updates): 1.862M ops/sec
+    dict __setitem__ (inserts): 3.628M ops/sec
+    trie __setitem__ (inserts): 0.050M ops/sec
+    dict setdefault (updates):  2.575M ops/sec
+    trie setdefault (updates):  1.600M ops/sec
+    dict setdefault (inserts):  2.596M ops/sec
+    trie setdefault (inserts):  0.050M ops/sec
+
 
 Please take this benchmark results with a grain of salt; this
 is a very simple benchmark and may not cover your use case.
@@ -195,8 +213,8 @@ Current Limitations
 
 * keys must be unicode (no implicit conversion for byte strings
   under Python 2.x, sorry);
-* values must be integers 0 <= x <= 2147483647;
 * it doesn't work under pypy+MacOS X (some obscure error);
+* save/load is implemented only for ``datrie.BaseTrie``.
 
 Contributing
 ============

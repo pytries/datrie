@@ -34,11 +34,19 @@ def load(path):
     """
     Loads a Trie from file.
     """
-    return Trie(path=path, alpha_map=None)
+    return BaseTrie(path=path, alpha_map=None)
 
-RAISE_KEY_ERROR=object()
+RAISE_KEY_ERROR = object()
+DELETED_OBJECT = object()
 
-cdef class Trie:
+
+cdef class BaseTrie:
+    """
+    Wrapper for libdatrie's trie.
+
+    Keys are unicode strings, values are integers 0 <= x <= 2147483647.
+    """
+
     cdef cdatrie.Trie *_c_trie
 
     def __init__(self, path=None, AlphaMap alpha_map=None):
@@ -63,6 +71,9 @@ cdef class Trie:
         return cdatrie.trie_is_dirty(self._c_trie)
 
     def __setitem__(self, unicode key, cdatrie.TrieData value):
+        self._setitem(key, value)
+
+    cdef void _setitem(self, unicode key, cdatrie.TrieData value):
         cdef cdatrie.AlphaChar* c_key = new_alpha_char_from_unicode(key)
         try:
             cdatrie.trie_store(self._c_trie, c_key, value)
@@ -70,7 +81,10 @@ cdef class Trie:
             free(c_key)
 
     def __getitem__(self, unicode key):
-        cdef cdatrie.TrieData data = 0
+        return self._getitem(key)
+
+    cdef cdatrie.TrieData _getitem(self, unicode key) except -1:
+        cdef cdatrie.TrieData data
         cdef cdatrie.AlphaChar* c_key = new_alpha_char_from_unicode(key)
 
         try:
@@ -82,6 +96,7 @@ cdef class Trie:
             raise KeyError(key)
         return data
 
+
     def __contains__(self, unicode key):
         cdef cdatrie.AlphaChar* c_key = new_alpha_char_from_unicode(key)
         try:
@@ -90,9 +105,10 @@ cdef class Trie:
             free(c_key)
 
     def __delitem__(self, unicode key):
-        self._delete(key)
+        if not self._delitem(key):
+            raise KeyError(key)
 
-    cpdef bint _delete(self, unicode key):
+    cpdef bint _delitem(self, unicode key):
         """
         Deletes an entry for the given key from the trie. Returns
         boolean value indicating whether the key exists and is removed.
@@ -103,9 +119,12 @@ cdef class Trie:
         finally:
             free(c_key)
 
-    cpdef cdatrie.TrieData setdefault(self, unicode key, cdatrie.TrieData value):
+    def setdefault(self, unicode key, cdatrie.TrieData value):
+        return self._setdefault(key, value)
+
+    cdef cdatrie.TrieData _setdefault(self, unicode key, cdatrie.TrieData value):
         cdef cdatrie.AlphaChar* c_key = new_alpha_char_from_unicode(key)
-        cdef cdatrie.TrieData data = 0
+        cdef cdatrie.TrieData data
 
         try:
             found = cdatrie.trie_retrieve(self._c_trie, c_key, &data)
@@ -190,6 +209,9 @@ cdef class Trie:
         of this trie that are associated with keys that are
         prefixes of ``key``.
         '''
+        return self._prefix_items(key)
+
+    cdef list _prefix_items(self, unicode key):
         cdef cdatrie.TrieState* state = cdatrie.trie_root(self._c_trie)
         cdef cdatrie.TrieState* tmp_state = cdatrie.trie_state_clone(state)
 
@@ -212,6 +234,7 @@ cdef class Trie:
         finally:
             cdatrie.trie_state_free(state)
             cdatrie.trie_state_free(tmp_state)
+
 
     def longest_prefix(self, unicode key, default=RAISE_KEY_ERROR):
         """
@@ -246,13 +269,16 @@ cdef class Trie:
 
     def longest_prefix_item(self, unicode key, default=RAISE_KEY_ERROR):
         """
-        Return the item (``(key,value)`` tuple) associated with the longest
+        Returns the item (``(key,value)`` tuple) associated with the longest
         key in this trie that is a prefix of ``key``.
 
         If the trie doesn't contain any prefix of ``key``:
           - if ``default`` is given, returns it,
           - otherwise raises ``KeyError``.
         """
+        return self._longest_prefix_item(key, default)
+
+    cdef _longest_prefix_item(self, unicode key, default=RAISE_KEY_ERROR):
         cdef cdatrie.TrieState* state = cdatrie.trie_root(self._c_trie)
         cdef cdatrie.TrieState* tmp_state = cdatrie.trie_state_clone(state)
 
@@ -270,6 +296,8 @@ cdef class Trie:
                             raise KeyError(key)
                         return default
                 index += 1
+
+            # FIXME!!
             if cdatrie.trie_state_is_terminal(state):
                 return key
             if default is RAISE_KEY_ERROR:
@@ -424,6 +452,92 @@ cdef class Trie:
 
 
 
+cdef class Trie(BaseTrie):
+    cdef list _values
+
+    def __init__(self, path=None, AlphaMap alpha_map=None):
+        self._values = []
+        super(Trie, self).__init__(path, alpha_map)
+
+    def __getitem__(self, unicode key):
+        cdef cdatrie.TrieData index = self._getitem(key)
+        return self._values[index]
+
+    def __setitem__(self, unicode key, object value):
+        cdef cdatrie.TrieData next_index = len(self._values)
+        cdef cdatrie.TrieData index = self._setdefault(key, next_index)
+        if index == next_index:
+            self._values.append(value) # insert
+        else:
+            self._values[index] = value # update
+
+    def setdefault(self, unicode key, object value):
+        cdef cdatrie.TrieData next_index = len(self._values)
+        cdef cdatrie.TrieData index = self._setdefault(key, next_index)
+
+        if index == next_index:
+            self._values.append(value) # insert
+            return value
+        else:
+            return self._values[index] # lookup
+
+    def __delitem__(self, unicode key):
+        # XXX: this could be faster (key is encoded twice here)
+        cdef cdatrie.TrieData index = self._getitem(key)
+        self._values[index] = DELETED_OBJECT
+        if not self._delitem(key):
+            raise KeyError(key)
+
+
+    def save(self, path):
+        raise NotImplementedError()
+
+
+    def items(self, unicode prefix=None):
+        """
+        Returns a list of this trie's items (``(key,value)`` tuples).
+
+        If ``prefix`` is not None, returns only the items
+        associated with keys prefixed by ``prefix``.
+        """
+        return [(key, self._values[value]) for (key, value) in self._walk_prefixes(prefix, _items_enum_func)]
+
+    def values(self, unicode prefix=None):
+        """
+        Returns a list of this trie's values.
+
+        If ``prefix`` is not None, returns only the values
+        associated with keys prefixed by ``prefix``.
+        """
+        return [self._values[val] for val in self._walk_prefixes(prefix, _values_enum_func)]
+
+    def longest_prefix_item(self, unicode key, default=RAISE_KEY_ERROR):
+        """
+        Returnы the item (``(key,value)`` tuple) associated with the longest
+        key in this trie that is a prefix of ``key``.
+
+        If the trie doesn't contain any prefix of ``key``:
+          - if ``default`` is given, returns it,
+          - otherwise raises ``KeyError``.
+        """
+        _key, _value = self._longest_prefix_item(key, default)
+        return _key, self._values[_value]
+
+    def prefix_items(self, unicode key):
+        '''
+        Returns a list of the items (``(key,value)`` tuples)
+        of this trie that are associated with keys that are
+        prefixes of ``key``.
+        '''
+        return [(k, self._values[v]) for (k, v) in self._prefix_items(key)]
+
+    def iter_prefix_items(self, unicode key):
+        for k, v in super(Trie, self).iter_prefix_items(key):
+            yield k, self._values[v]
+
+
+
+
 cdef bint _items_enum_func(cdatrie.AlphaChar *key, cdatrie.TrieData key_data, void *user_data):
     """ enum_func for .items() method  """
     (<list> user_data).append(
@@ -450,7 +564,7 @@ cdef class TrieState:
     """
     cdef cdatrie.TrieState* _state
 
-    def __cinit__(self, Trie trie):
+    def __cinit__(self, BaseTrie trie):
         self._state = cdatrie.trie_root(trie._c_trie)
         if self._state is NULL:
             raise MemoryError()

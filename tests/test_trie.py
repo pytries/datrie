@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals
-import datrie
 import tempfile
 import string
 import random
+import pytest
+import datrie
 
 def test_trie():
     trie = datrie.new(alphabet=string.printable)
@@ -12,13 +13,13 @@ def test_trie():
     assert 'foo' not in trie
     assert 'Foo' not in trie
 
-    trie['foo'] = 5
+    trie['foo'] = '5'
     assert 'foo' in trie
-    assert trie['foo'] == 5
+    assert trie['foo'] == '5'
 
     trie['Foo'] = 10
     assert trie['Foo'] == 10
-    assert trie['foo'] == 5
+    assert trie['foo'] == '5'
     del trie['foo']
 
     assert 'foo' not in trie
@@ -31,6 +32,7 @@ def test_trie():
     except KeyError:
         pass
 
+@pytest.mark.xfail
 def test_trie_save_load():
     fd, fname = tempfile.mkstemp()
     trie = datrie.new(alphabet=string.printable)
@@ -38,7 +40,7 @@ def test_trie_save_load():
     trie['foovar'] = 2
     trie['baz'] = 3
     trie['fo'] = 4
-    trie['Foo'] = 5
+    trie['Foo'] = 'vasia'
     trie.save(fname)
     del trie
 
@@ -47,7 +49,24 @@ def test_trie_save_load():
     assert trie2['baz'] == 3
     assert trie2['fo'] == 4
     assert trie2['foovar'] == 2
-    assert trie2['Foo'] == 5
+    assert trie2['Foo'] == 'vasia'
+
+def test_save_load_base():
+    fd, fname = tempfile.mkstemp()
+    alpha_map = datrie.AlphaMap(alphabet=string.printable)
+    trie = datrie.BaseTrie(alpha_map=alpha_map)
+    trie['foobar'] = 1
+    trie['foovar'] = 2
+    trie['baz'] = 3
+    trie['fo'] = 4
+    trie.save(fname)
+
+    trie2 = datrie.load(fname)
+    assert trie2['foobar'] == 1
+    assert trie2['baz'] == 3
+    assert trie2['fo'] == 4
+    assert trie2['foovar'] == 2
+
 
 
 def test_trie_unicode():
@@ -55,37 +74,37 @@ def test_trie_unicode():
     trie = datrie.new(ranges=[('а', 'я')])
     trie['а'] = 1
     trie['б'] = 2
-    trie['аб'] = 3
+    trie['аб'] = 'vasia'
 
     assert trie['а'] == 1
     assert trie['б'] == 2
-    assert trie['аб'] == 3
+    assert trie['аб'] == 'vasia'
 
 def test_trie_ascii():
     trie = datrie.new(string.ascii_letters)
     trie['x'] = 1
-    trie['y'] = 3
+    trie['y'] = 'foo'
     trie['xx'] = 2
 
     assert trie['x'] == 1
-    assert trie['y'] == 3
+    assert trie['y'] == 'foo'
     assert trie['xx'] == 2
 
 def test_trie_items():
     trie = datrie.new(string.ascii_lowercase)
     trie['foo'] = 10
-    trie['bar'] = 20
+    trie['bar'] = 'foo'
     trie['foobar'] = 30
-    assert trie.items() == [('bar', 20), ('foo', 10), ('foobar', 30)]
+    assert trie.items() == [('bar', 'foo'), ('foo', 10), ('foobar', 30)]
     assert trie.keys() == ['bar', 'foo', 'foobar']
-    assert trie.values() == [20, 10, 30]
+    assert trie.values() == ['foo', 10, 30]
 
 
 def test_trie_len():
     trie = datrie.new(string.ascii_lowercase)
     words = ['foo', 'f', 'faa', 'bar', 'foobar']
     for word in words:
-        trie[word] = 1
+        trie[word] = None
     assert len(trie) == len(words)
 
 
@@ -93,9 +112,10 @@ def test_setdefault():
     trie = datrie.new(string.ascii_lowercase)
     assert trie.setdefault('foo', 5) == 5
     assert trie.setdefault('foo', 4) == 5
-    assert trie.setdefault('bar', 3) == 3
-    assert trie.setdefault('bar', 3) == 3
-    assert trie.setdefault('bar', 7) == 3
+    assert trie.setdefault('foo', 5) == 5
+    assert trie.setdefault('bar', 'vasia') == 'vasia'
+    assert trie.setdefault('bar', 3) == 'vasia'
+    assert trie.setdefault('bar', 7) == 'vasia'
 
 
 class TestPrefixLookups(object):
@@ -105,7 +125,7 @@ class TestPrefixLookups(object):
         trie['bar'] = 20
         trie['foobar'] = 30
         trie['foovar'] = 40
-        trie['foobarzartic'] = 50
+        trie['foobarzartic'] = None
         return trie
 
     def test_trie_keys_prefix(self):
@@ -119,20 +139,20 @@ class TestPrefixLookups(object):
 
     def test_trie_items_prefix(self):
         trie = self._trie()
-        assert trie.items('foobarz') == [('foobarzartic', 50)]
-        assert trie.items('foobarzart') == [('foobarzartic', 50)]
-        assert trie.items('foo') == [('foo', 10), ('foobar', 30), ('foobarzartic', 50), ('foovar', 40)]
-        assert trie.items('foobar') == [('foobar', 30), ('foobarzartic', 50)]
-        assert trie.items('') == [('bar', 20), ('foo', 10), ('foobar', 30), ('foobarzartic', 50), ('foovar', 40)]
+        assert trie.items('foobarz') == [('foobarzartic', None)]
+        assert trie.items('foobarzart') == [('foobarzartic', None)]
+        assert trie.items('foo') == [('foo', 10), ('foobar', 30), ('foobarzartic', None), ('foovar', 40)]
+        assert trie.items('foobar') == [('foobar', 30), ('foobarzartic', None)]
+        assert trie.items('') == [('bar', 20), ('foo', 10), ('foobar', 30), ('foobarzartic', None), ('foovar', 40)]
         assert trie.items('x') == []
 
     def test_trie_values_prefix(self):
         trie = self._trie()
-        assert trie.values('foobarz') == [50]
-        assert trie.values('foobarzart') == [50]
-        assert trie.values('foo') == [10, 30, 50, 40]
-        assert trie.values('foobar') == [30, 50]
-        assert trie.values('') == [20, 10, 30, 50, 40]
+        assert trie.values('foobarz') == [None]
+        assert trie.values('foobarzart') == [None]
+        assert trie.values('foo') == [10, 30, None, 40]
+        assert trie.values('foobar') == [30, None]
+        assert trie.values('') == [20, 10, 30, None, 40]
         assert trie.values('x') == []
 
 
@@ -148,6 +168,7 @@ class TestPrefixSearch(object):
 
     def test_trie_iter_prefixes(self):
         trie = self._trie()
+        trie['pr'] = 'foo'
 
         prefixes = trie.iter_prefixes('producers')
         assert list(prefixes) == ['pr', 'produce', 'producer', 'producers']
@@ -156,7 +177,7 @@ class TestPrefixSearch(object):
         assert list(no_prefixes) == []
 
         items = trie.iter_prefix_items('producers')
-        assert next(items) == ('pr', 3)
+        assert next(items) == ('pr', 'foo')
         assert next(items) == ('produce', 8)
         assert next(items) == ('producer', 9)
         assert next(items) == ('producers', 1)
