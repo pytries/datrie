@@ -3,6 +3,8 @@ from __future__ import absolute_import, unicode_literals
 import tempfile
 import string
 import random
+import pickle
+
 import pytest
 import datrie
 
@@ -66,6 +68,33 @@ def test_save_load_base():
     assert trie2['baz'] == 3
     assert trie2['fo'] == 4
     assert trie2['foovar'] == 2
+
+def test_trie_file_io():
+    fd, fname = tempfile.mkstemp()
+    alpha_map = datrie.AlphaMap(alphabet=string.printable)
+
+    trie = datrie.BaseTrie(alpha_map=alpha_map)
+    trie['foobar'] = 1
+    trie['foo'] = 2
+
+    extra_data = ['foo', 'bar']
+
+    with open(fname, "wb", 0) as f:
+        pickle.dump(extra_data, f)
+        trie.write(f)
+        pickle.dump(extra_data, f)
+
+    with open(fname, "rb", 0) as f:
+        extra_data2 = pickle.load(f)
+        trie2 = datrie.BaseTrie.read(f)
+        extra_data3 = pickle.load(f)
+
+    assert extra_data2 == extra_data
+    assert extra_data3 == extra_data
+    assert trie2['foobar'] == 1
+    assert trie2['foo'] == 2
+    assert len(trie2) == len(trie)
+
 
 
 

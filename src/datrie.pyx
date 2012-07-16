@@ -94,6 +94,7 @@ cdef class BaseTrie:
 
         stdio.fflush(f_ptr)
 
+
     @classmethod
     def load(cls, path):
         """
@@ -111,7 +112,7 @@ cdef class BaseTrie:
         # XXX: does it work properly in subclasses?
         """
         cdef BaseTrie trie = cls(_create=False)
-        trie._c_trie = _load_from_fd(f.fileno())
+        trie._c_trie = _load_from_file(f)
         return trie
 
     def __setitem__(self, unicode key, cdatrie.TrieData value):
@@ -612,13 +613,18 @@ cdef bint _trie_counter(cdatrie.AlphaChar *key, cdatrie.TrieData key_data, void 
      (<int *>counter)[0] += 1
      return 1
 
-cdef (cdatrie.Trie* ) _load_from_fd(int fd) except NULL:
+cdef (cdatrie.Trie* ) _load_from_file(f) except NULL:
+    cdef int fd = f.fileno()
     cdef stdio.FILE* f_ptr = stdio_ext.fdopen(fd, "r")
     if f_ptr == NULL:
         raise IOError()
     cdef cdatrie.Trie* trie = cdatrie.trie_fread(f_ptr)
     if trie == NULL:
         raise DatrieError("Can't load trie from stream")
+
+    cdef int f_pos = stdio.ftell(f_ptr)
+    f.seek(f_pos)
+
     return trie
 
 #cdef (cdatrie.Trie*) _load_from_file(path) except NULL:
