@@ -1,2 +1,2 @@
 #!/bin/sh
-cython src/datrie.pyx src/cdatrie.pxd
+cython src/datrie.pyx src/cdatrie.pxd -a
