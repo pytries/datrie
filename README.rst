@@ -143,7 +143,6 @@ on __getitem__. Benchmark results (macbook air i5 1.7GHz,
 "1.000M ops/sec" == "1 000 000 operations per second")::
 
     Python 2.6:
-
     dict __getitem__: 6.024M ops/sec
     trie __getitem__: 2.272M ops/sec
 
@@ -154,6 +153,10 @@ on __getitem__. Benchmark results (macbook air i5 1.7GHz,
     Python 3.2:
     dict __getitem__: 3.628M ops/sec
     trie __getitem__: 1.980M ops/sec
+
+    Python 3.3b1:
+    dict __getitem__: 6.721M ops/sec
+    trie __getitem__: 2.584M ops/sec
 
 Looking for prefixes of a given word is almost as fast as
 __getitem__ (results are for Python 3.2, they are even faster under
@@ -243,8 +246,15 @@ Make sure `tox`_ is installed and run
 
     $ tox
 
-from the source checkout. Tests should pass under python 2.6, 2.7
-and 3.2.
+from the source checkout. Tests should pass under python 2.6, 2.7, 3.2 and 3.3.
+
+.. note::
+
+    At the moment of writing the latest pip release (1.1) does not
+    support Python 3.3; in order to run tox tests under Python 3.3
+    find the "virtualenv_support" directory in site-packages
+    (of the env you run tox from) and place an sdist zip/tarball of the newer
+    pip (from github) there.
 
 ::
 
