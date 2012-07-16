@@ -2,6 +2,16 @@
 CHANGES
 =======
 
+0.2 (2012-07-16)
+----------------
+
+* ``datrie.Trie`` items can have any Python object as a value
+  (``Trie`` from 0.1.x becomes ``datrie.BaseTrie``);
+* ``longest_prefix`` and ``longest_prefix_items`` are fixed;
+* ``save`` & ``load`` are rewritten;
+* ``setdefault`` method.
+
+
 0.1.1 (2012-07-13)
 ------------------
 
