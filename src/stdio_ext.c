@@ -271,15 +271,9 @@
 #define _USE_MATH_DEFINES
 #endif
 #include <math.h>
-#define __PYX_HAVE__cdatrie
-#define __PYX_HAVE_API__cdatrie
+#define __PYX_HAVE__stdio_ext
+#define __PYX_HAVE_API__stdio_ext
 #include "stdio.h"
-#include "../libdatrie/datrie/triedefs.h"
-#include "../libdatrie/datrie/alpha-map.h"
-#include "../libdatrie/datrie/alpha-map-private.h"
-#include "../libdatrie/datrie/darray.h"
-#include "../libdatrie/datrie/tail.h"
-#include "../libdatrie/datrie/trie.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif /* _OPENMP */
@@ -366,54 +360,10 @@ static const char *__pyx_filename;
 
 
 static const char *__pyx_f[] = {
-  "cdatrie.pxd",
+  "stdio_ext.pxd",
 };
 
 /*--- Type declarations ---*/
-struct __pyx_t_7cdatrie__TrieEnumData;
-struct __pyx_t_7cdatrie__Trie;
-struct __pyx_t_7cdatrie__TrieState;
-
-/* "cdatrie.pxd":142
- * 
- * 
- * cdef struct _TrieEnumData:             # <<<<<<<<<<<<<<
- *     Trie *trie
- *     TrieEnumFunc enum_func
- */
-struct __pyx_t_7cdatrie__TrieEnumData {
-  Trie *trie;
-  TrieEnumFunc enum_func;
-  void *user_data;
-};
-
-/* "cdatrie.pxd":147
- *     void *user_data
- * 
- * cdef struct _Trie:             # <<<<<<<<<<<<<<
- *     AlphaMap   *alpha_map
- *     DArray     *da
- */
-struct __pyx_t_7cdatrie__Trie {
-  struct AlphaMap *alpha_map;
-  struct DArray *da;
-  struct Tail *tail;
-  int is_dirty;
-};
-
-/* "cdatrie.pxd":153
- *     bint       is_dirty
- * 
- * cdef struct _TrieState:             # <<<<<<<<<<<<<<
- *     _Trie       *trie         # the corresponding trie
- *     TrieIndex   index  # index in double-array/tail structures
- */
-struct __pyx_t_7cdatrie__TrieState {
-  struct __pyx_t_7cdatrie__Trie *trie;
-  TrieIndex index;
-  short suffix_idx;
-  short is_suffix;
-};
 #ifndef CYTHON_REFNANNY
   #define CYTHON_REFNANNY 0
 #endif
@@ -526,11 +476,11 @@ static int __Pyx_InitStrings(__Pyx_StringTabEntry *t); /*proto*/
 
 /* Module declarations from 'libc.stdio' */
 
-/* Module declarations from 'cdatrie' */
-#define __Pyx_MODULE_NAME "cdatrie"
-int __pyx_module_is_main_cdatrie = 0;
+/* Module declarations from 'stdio_ext' */
+#define __Pyx_MODULE_NAME "stdio_ext"
+int __pyx_module_is_main_stdio_ext = 0;
 
-/* Implementation of 'cdatrie' */
+/* Implementation of 'stdio_ext' */
 static char __pyx_k____main__[] = "__main__";
 static char __pyx_k____test__[] = "__test__";
 static PyObject *__pyx_n_s____main__;
@@ -543,7 +493,7 @@ static PyMethodDef __pyx_methods[] = {
 #if PY_MAJOR_VERSION >= 3
 static struct PyModuleDef __pyx_moduledef = {
     PyModuleDef_HEAD_INIT,
-    __Pyx_NAMESTR("cdatrie"),
+    __Pyx_NAMESTR("stdio_ext"),
     0, /* m_doc */
     -1, /* m_size */
     __pyx_methods /* m_methods */,
@@ -578,11 +528,11 @@ static int __Pyx_InitGlobals(void) {
 }
 
 #if PY_MAJOR_VERSION < 3
-PyMODINIT_FUNC initcdatrie(void); /*proto*/
-PyMODINIT_FUNC initcdatrie(void)
+PyMODINIT_FUNC initstdio_ext(void); /*proto*/
+PyMODINIT_FUNC initstdio_ext(void)
 #else
-PyMODINIT_FUNC PyInit_cdatrie(void); /*proto*/
-PyMODINIT_FUNC PyInit_cdatrie(void)
+PyMODINIT_FUNC PyInit_stdio_ext(void); /*proto*/
+PyMODINIT_FUNC PyInit_stdio_ext(void)
 #endif
 {
   PyObject *__pyx_t_1 = NULL;
@@ -596,7 +546,7 @@ PyMODINIT_FUNC PyInit_cdatrie(void)
           Py_FatalError("failed to import 'refnanny' module");
   }
   #endif
-  __Pyx_RefNannySetupContext("PyMODINIT_FUNC PyInit_cdatrie(void)", 0);
+  __Pyx_RefNannySetupContext("PyMODINIT_FUNC PyInit_stdio_ext(void)", 0);
   if ( __Pyx_check_binary_version() < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_empty_tuple = PyTuple_New(0); if (unlikely(!__pyx_empty_tuple)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_empty_bytes = PyBytes_FromStringAndSize("", 0); if (unlikely(!__pyx_empty_bytes)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -618,7 +568,7 @@ PyMODINIT_FUNC PyInit_cdatrie(void)
   #endif
   /*--- Module creation code ---*/
   #if PY_MAJOR_VERSION < 3
-  __pyx_m = Py_InitModule4(__Pyx_NAMESTR("cdatrie"), __pyx_methods, 0, 0, PYTHON_API_VERSION);
+  __pyx_m = Py_InitModule4(__Pyx_NAMESTR("stdio_ext"), __pyx_methods, 0, 0, PYTHON_API_VERSION);
   #else
   __pyx_m = PyModule_Create(&__pyx_moduledef);
   #endif
@@ -634,7 +584,7 @@ PyMODINIT_FUNC PyInit_cdatrie(void)
   if (__Pyx_SetAttrString(__pyx_m, "__builtins__", __pyx_b) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
   /*--- Initialize various global constants etc. ---*/
   if (unlikely(__Pyx_InitGlobals() < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  if (__pyx_module_is_main_cdatrie) {
+  if (__pyx_module_is_main_stdio_ext) {
     if (__Pyx_SetAttrString(__pyx_m, "__name__", __pyx_n_s____main__) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
   }
   /*--- Builtin init code ---*/
@@ -650,10 +600,10 @@ PyMODINIT_FUNC PyInit_cdatrie(void)
   /*--- Function import code ---*/
   /*--- Execution code ---*/
 
-  /* "cdatrie.pxd":1
- * # cython: profile=False             # <<<<<<<<<<<<<<
- * from libc cimport stdio
+  /* "stdio_ext.pxd":1
+ * from libc cimport stdio             # <<<<<<<<<<<<<<
  * 
+ * cdef extern from "stdio.h" nogil:
  */
   __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(((PyObject *)__pyx_t_1));
@@ -663,10 +613,10 @@ PyMODINIT_FUNC PyInit_cdatrie(void)
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
   if (__pyx_m) {
-    __Pyx_AddTraceback("init cdatrie", __pyx_clineno, __pyx_lineno, __pyx_filename);
+    __Pyx_AddTraceback("init stdio_ext", __pyx_clineno, __pyx_lineno, __pyx_filename);
     Py_DECREF(__pyx_m); __pyx_m = 0;
   } else if (!PyErr_Occurred()) {
-    PyErr_SetString(PyExc_ImportError, "init cdatrie");
+    PyErr_SetString(PyExc_ImportError, "init stdio_ext");
   }
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
