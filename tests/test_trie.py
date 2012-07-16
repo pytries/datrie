@@ -44,7 +44,7 @@ def test_trie_save_load():
     trie.save(fname)
     del trie
 
-    trie2 = datrie.load(fname)
+    trie2 = datrie.Trie.load(fname)
     assert trie2['foobar'] == 1
     assert trie2['baz'] == 3
     assert trie2['fo'] == 4
@@ -61,7 +61,7 @@ def test_save_load_base():
     trie['fo'] = 4
     trie.save(fname)
 
-    trie2 = datrie.load(fname)
+    trie2 = datrie.BaseTrie.load(fname)
     assert trie2['foobar'] == 1
     assert trie2['baz'] == 3
     assert trie2['fo'] == 4

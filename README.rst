@@ -126,7 +126,7 @@ If you don't need values or integer values are OK then use ``datrie.BaseTrie``::
 Save & load methods are currently implemented only for ``BaseTrie``::
 
     >>> trie.save('my.trie')
-    >>> trie2 = datrie.load('my.trie')
+    >>> trie2 = datrie.BaseTrie.load('my.trie')
 
 
 Performance

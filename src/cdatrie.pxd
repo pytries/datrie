@@ -1,4 +1,5 @@
 # cython: profile=False
+from libc cimport stdio
 
 cdef extern from "../libdatrie/datrie/triedefs.h":
     ctypedef int AlphaChar # it should be utf32 letter
@@ -85,13 +86,13 @@ cdef extern from "../libdatrie/datrie/trie.h":
 
     Trie * trie_new_from_file (char *path)
 
-    Trie * trie_fread (void *file) # FILE?
+    Trie * trie_fread (stdio.FILE *file)
 
     void trie_free (Trie *trie)
 
     int trie_save (Trie *trie, char *path)
 
-    int trie_fwrite (Trie *trie, void *file) # FILE?
+    int trie_fwrite (Trie *trie, stdio.FILE *file)
 
     bint trie_is_dirty (Trie *trie)
 

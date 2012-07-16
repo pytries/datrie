@@ -24,7 +24,7 @@ setup(
     ext_modules = [
         Extension(
             "datrie",
-            ['src/datrie.c', 'src/cdatrie.c'] + LIBDATRIE_FILES,
+            ['src/datrie.c', 'src/cdatrie.c', 'src/stdio_ext.c'] + LIBDATRIE_FILES,
             include_dirs=['libdatrie'],
         )
     ],

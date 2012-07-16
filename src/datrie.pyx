@@ -6,6 +6,7 @@ Cython wrapper for libdatrie.
 from libc.stdlib cimport malloc, free
 from libc cimport stdio
 from libc cimport string
+cimport stdio_ext
 cimport cdatrie
 
 import sys
@@ -27,14 +28,8 @@ def new(alphabet=None, ranges=None, AlphaMap alpha_map=None):
     """
     if alpha_map is None:
         alpha_map = AlphaMap(alphabet, ranges)
-    return Trie(path=None, alpha_map=alpha_map)
+    return Trie(alpha_map=alpha_map)
 
-
-def load(path):
-    """
-    Loads a Trie from file.
-    """
-    return BaseTrie(path=path, alpha_map=None)
 
 RAISE_KEY_ERROR = object()
 DELETED_OBJECT = object()
@@ -49,15 +44,20 @@ cdef class BaseTrie:
 
     cdef cdatrie.Trie *_c_trie
 
-    def __init__(self, path=None, AlphaMap alpha_map=None):
+    def __init__(self, AlphaMap alpha_map=None, _create=True):
         if self._c_trie is not NULL:
             return
+
+        if not _create:
+            return
+
         if alpha_map is not None:
             self._c_trie = cdatrie.trie_new(alpha_map._c_alpha_map)
             if self._c_trie is NULL:
                 raise MemoryError()
         else:
-            self._c_trie = _load_from_file(path)
+            raise ValueError("alpha_map is required")
+
 
     def __dealloc__(self):
         if self._c_trie is not NULL:
@@ -69,6 +69,50 @@ cdef class BaseTrie:
         and needs saving to synchronize with the file.
         """
         return cdatrie.trie_is_dirty(self._c_trie)
+
+    def save(self, path):
+        """
+        Saves this trie.
+        """
+        with open(path, "wb", 0) as f:
+            self.write(f)
+
+    def write(self, f):
+        """
+        Writes a trie to a file. File-like objects without real
+        file descriptors are not supported.
+        """
+        f.flush()
+
+        cdef stdio.FILE* f_ptr = stdio_ext.fdopen(f.fileno(), "w")
+        if f_ptr == NULL:
+            raise IOError("Can't open file descriptor")
+
+        cdef int res = cdatrie.trie_fwrite(self._c_trie, f_ptr)
+        if res == -1:
+            raise IOError("Can't write to file")
+
+        stdio.fflush(f_ptr)
+
+    @classmethod
+    def load(cls, path):
+        """
+        Loads a trie from file.
+        """
+        with open(path, "rb", 0) as f:
+            return cls.read(f)
+
+    @classmethod
+    def read(cls, f):
+        """
+        Creates a new Trie by reading it from file.
+        File-like objects without real file descriptors are not supported.
+
+        # XXX: does it work properly in subclasses?
+        """
+        cdef BaseTrie trie = cls(_create=False)
+        trie._c_trie = _load_from_fd(f.fileno())
+        return trie
 
     def __setitem__(self, unicode key, cdatrie.TrieData value):
         self._setitem(key, value)
@@ -118,6 +162,16 @@ cdef class BaseTrie:
             return cdatrie.trie_delete(self._c_trie, c_key)
         finally:
             free(c_key)
+
+    def __len__(self):
+        # XXX: this is very slow
+        cdef int counter=0
+        cdatrie.trie_enumerate(
+            self._c_trie,
+            _trie_counter,
+            &counter
+        )
+        return counter
 
     def setdefault(self, unicode key, cdatrie.TrieData value):
         return self._setdefault(key, value)
@@ -348,23 +402,6 @@ cdef class BaseTrie:
         """
         return self._walk_prefixes(prefix, _values_enum_func)
 
-    def __len__(self):
-        # XXX: this is very slow
-        cdef int counter=0
-        cdatrie.trie_enumerate(
-            self._c_trie,
-            _trie_counter,
-            &counter
-        )
-        return counter
-
-    def save(self, path):
-        str_path = path.encode(sys.getfilesystemencoding())
-        cdef char* c_path = str_path
-        cdef int res = cdatrie.trie_save(self._c_trie, c_path)
-        if res == -1:
-            raise IOError("Can't write to file")
-
     cpdef _enumerate(self, callback):
         """
         Enumerates all entries in trie. For each entry, the user-supplied
@@ -455,9 +492,9 @@ cdef class BaseTrie:
 cdef class Trie(BaseTrie):
     cdef list _values
 
-    def __init__(self, path=None, AlphaMap alpha_map=None):
+    def __init__(self, AlphaMap alpha_map=None, _create=True):
         self._values = []
-        super(Trie, self).__init__(path, alpha_map)
+        super(Trie, self).__init__(alpha_map, _create)
 
     def __getitem__(self, unicode key):
         cdef cdatrie.TrieData index = self._getitem(key)
@@ -616,6 +653,37 @@ cdef cdatrie.TrieData _terminal_state_data(cdatrie.TrieState* state, cdatrie.Tri
         cdatrie.trie_state_walk(tmp_state, cdatrie.TRIE_CHAR_TERM)
         return cdatrie.trie_state_get_data(tmp_state)
 
+cdef bint trie_enum_helper(cdatrie.AlphaChar *key, cdatrie.TrieData key_data, void *py_func):
+     cdef unicode py_key = unicode_from_alpha_char(key)
+     cdef int py_data = <int>key_data
+     res = (<object>py_func)(py_key, py_data)
+     return res
+
+cdef bint _trie_counter(cdatrie.AlphaChar *key, cdatrie.TrieData key_data, void *counter):
+     """ enum_func for __len__ method """
+     (<int *>counter)[0] += 1
+     return 1
+
+cdef (cdatrie.Trie* ) _load_from_fd(int fd) except NULL:
+    cdef stdio.FILE* f_ptr = stdio_ext.fdopen(fd, "r")
+    if f_ptr == NULL:
+        raise IOError()
+    cdef cdatrie.Trie* trie = cdatrie.trie_fread(f_ptr)
+    if trie == NULL:
+        raise DatrieError("Can't load trie from stream")
+    return trie
+
+#cdef (cdatrie.Trie*) _load_from_file(path) except NULL:
+#    str_path = path.encode(sys.getfilesystemencoding())
+#    cdef char* c_path = str_path
+#    cdef cdatrie.Trie* trie = cdatrie.trie_new_from_file(c_path)
+#    if trie is NULL:
+#        raise DatrieError("Can't load trie from file")
+#
+#    return trie
+
+
+# ============================ AlphaMap & utils ================================
 
 cdef class AlphaMap:
     """
@@ -678,6 +746,8 @@ cdef (cdatrie.AlphaChar*) new_alpha_char_from_unicode(unicode txt):
     """
     Converts Python unicode string to libdatrie's AlphaChar* format.
     libdatrie wants null-terminated array of 4-byte LE symbols.
+
+    The caller should free the result of this function.
     """
     cdef int txt_len = len(txt)
     cdef int size = (txt_len + 1) * sizeof(cdatrie.AlphaChar)
@@ -717,18 +787,6 @@ cdef unicode unicode_from_alpha_char(cdatrie.AlphaChar* key, int len=0):
     return c_str[:length].decode('utf_32_le')
 
 
-cdef bint trie_enum_helper(cdatrie.AlphaChar *key, cdatrie.TrieData key_data, void *py_func):
-    cdef unicode py_key = unicode_from_alpha_char(key)
-    cdef int py_data = <int>key_data
-    res = (<object>py_func)(py_key, py_data)
-    return res
-
-cdef bint _trie_counter(cdatrie.AlphaChar *key, cdatrie.TrieData key_data, void *counter):
-    """ enum_func for __len__ method """
-    (<int *>counter)[0] += 1
-    return 1
-
-
 def to_ranges(lst):
     """
     Converts a list of numbers to a list of ranges::
@@ -744,16 +802,4 @@ def to_ranges(lst):
 def alphabet_to_ranges(alphabet):
     for begin, end in to_ranges(sorted(map(ord, iter(alphabet)))):
         yield begin, end
-
-
-cdef (cdatrie.Trie*) _load_from_file(path) except NULL:
-    str_path = path.encode(sys.getfilesystemencoding())
-    cdef char* c_path = str_path
-    cdef cdatrie.Trie* c_trie
-
-    c_trie = cdatrie.trie_new_from_file(c_path)
-    if c_trie is NULL:
-        raise DatrieError()
-
-    return c_trie
 
