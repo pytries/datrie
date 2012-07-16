@@ -11,6 +11,7 @@ cimport cdatrie
 
 import sys
 import itertools
+import pickle
 
 class DatrieError(Exception):
     pass
@@ -526,9 +527,25 @@ cdef class Trie(BaseTrie):
         if not self._delitem(key):
             raise KeyError(key)
 
+    def write(self, f):
+        """
+        Writes a trie to a file. File-like objects without real
+        file descriptors are not supported.
+        """
+        super(Trie, self).write(f)
 
-    def save(self, path):
-        raise NotImplementedError()
+        # pickle protocol 2 is used because it is more portable
+        pickle.dump(self._values, f, 2)
+
+    @classmethod
+    def read(cls, f):
+        """
+        Creates a new Trie by reading it from file.
+        File-like objects without real file descriptors are not supported.
+        """
+        cdef Trie trie = super(Trie, cls).read(f)
+        trie._values = pickle.load(f)
+        return trie
 
 
     def items(self, unicode prefix=None):

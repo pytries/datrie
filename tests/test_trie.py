@@ -34,7 +34,6 @@ def test_trie():
     except KeyError:
         pass
 
-@pytest.mark.xfail
 def test_trie_save_load():
     fd, fname = tempfile.mkstemp()
     trie = datrie.new(alphabet=string.printable)

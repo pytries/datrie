@@ -106,6 +106,11 @@ Get all items with a given prefix from a trie::
     >>> trie.values(u'foob')
     [10]
 
+Save & load a trie (values must be picklable)::
+
+    >>> trie.save('my.trie')
+    >>> trie2 = datrie.Trie.load('my.trie')
+
 
 Trie and BaseTrie
 =================
@@ -122,12 +127,6 @@ If you don't need values or integer values are OK then use ``datrie.BaseTrie``::
     import string
     alpha_map = datrie.AlphaMap(alphabet=string.ascii_lowercase)
     trie = datrie.BaseTrie(alpha_map=alpha_map)
-
-Save & load methods are currently implemented only for ``BaseTrie``::
-
-    >>> trie.save('my.trie')
-    >>> trie2 = datrie.BaseTrie.load('my.trie')
-
 
 Performance
 ===========
@@ -213,8 +212,10 @@ Current Limitations
 
 * keys must be unicode (no implicit conversion for byte strings
   under Python 2.x, sorry);
-* it doesn't work under pypy+MacOS X (some obscure error);
-* save/load is implemented only for ``datrie.BaseTrie``.
+* there are no iterator versions of keys/values/items (this is a current
+  limitation of libdatrie);
+* it doesn't work under pypy+MacOS X (some obscure error which I don't
+  understand).
 
 Contributing
 ============
@@ -271,8 +272,8 @@ Authors & Contributors
 
 This module is based on `libdatrie`_ C library and is inspired by
 `fast_trie`_ Ruby bindings, `PyTrie`_ pure Python implementation
-and `Tree::Trie`_ Perl implementation; some docs are borrowed from
-these projects.
+and `Tree::Trie`_ Perl implementation; some docs and API ideas are
+borrowed from these projects.
 
 .. _fast_trie: https://github.com/tyler/trie
 .. _PyTrie: https://bitbucket.org/gsakkis/pytrie
