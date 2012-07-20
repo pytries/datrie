@@ -28,11 +28,8 @@ def test_trie():
     assert 'Foo' in trie
     assert trie['Foo'] == 10
 
-    try:
+    with pytest.raises(KeyError):
         x = trie['bar']
-        assert 0 == 1, "KeyError not raised"
-    except KeyError:
-        pass
 
 def test_trie_save_load():
     fd, fname = tempfile.mkstemp()
@@ -257,11 +254,8 @@ class TestPrefixSearch(object):
         assert trie.longest_prefix('p', default=None) == None
         assert trie.longest_prefix('z', default=None) == None
 
-        try:
+        with pytest.raises(KeyError):
             trie.longest_prefix('z')
-            assert False
-        except KeyError:
-            pass
 
     def test_longest_prefix_item(self):
         trie = self._trie()
@@ -277,11 +271,8 @@ class TestPrefixSearch(object):
         assert trie.longest_prefix_item('p', default=(None, None)) == (None, None)
         assert trie.longest_prefix_item('z', default=(None, None)) == (None, None)
 
-        try:
+        with pytest.raises(KeyError):
             trie.longest_prefix_item('z')
-            assert False
-        except KeyError:
-            pass
 
 
 
