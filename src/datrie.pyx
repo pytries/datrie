@@ -581,7 +581,7 @@ cdef class Trie(BaseTrie):
 
     def longest_prefix_item(self, unicode key, default=RAISE_KEY_ERROR):
         """
-        Returnы the item (``(key,value)`` tuple) associated with the longest
+        Returns the item (``(key,value)`` tuple) associated with the longest
         key in this trie that is a prefix of ``key``.
 
         If the trie doesn't contain any prefix of ``key``:
