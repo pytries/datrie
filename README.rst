@@ -20,7 +20,7 @@ Create a new trie capable of storing items with lower-case ascii keys::
 
     >>> import string
     >>> import datrie
-    >>> trie = datrie.new(string.ascii_lowercase)
+    >>> trie = datrie.Trie(string.ascii_lowercase)
 
 ``trie`` variable is a dict-like object that can have unicode keys of
 certain ranges and Python objects as values.
@@ -125,8 +125,7 @@ If you don't need values or integer values are OK then use ``datrie.BaseTrie``::
 
     import datrie
     import string
-    alpha_map = datrie.AlphaMap(alphabet=string.ascii_lowercase)
-    trie = datrie.BaseTrie(alpha_map=alpha_map)
+    trie = datrie.BaseTrie(string.ascii_lowercase)
 
 Performance
 ===========

@@ -67,8 +67,8 @@ def bench(name, timer, descr='M ops/sec', op_count=0.1, repeats=3, runs=5):
 
 def create_trie():
     words = words100k()
-    trie = datrie.new(_alphabet(words))
-#    trie = datrie.new(ranges = [
+    trie = datrie.Trie(_alphabet(words))
+#    trie = datrie.Trie(ranges = [
 #        ("'", "'"),
 #        ('A', 'z'),
 #        ('А', 'я'),

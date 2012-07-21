@@ -9,27 +9,13 @@ from libc cimport string
 cimport stdio_ext
 cimport cdatrie
 
+import warnings
 import sys
 import itertools
 import pickle
 
 class DatrieError(Exception):
     pass
-
-
-def new(alphabet=None, ranges=None, AlphaMap alpha_map=None):
-    """
-    Creates a new Trie.
-
-    For efficiency trie needs to know what unicode symbols
-    it should be able to store so this constructor requires
-    either ``alphabet`` (a string/iterable with all allowed characters),
-    ``ranges`` (a list of (begin, end) pairs, e.g. [('a', 'z')])
-    or ``alpha_map`` (:class:`datrie.AlphaMap` instance).
-    """
-    if alpha_map is None:
-        alpha_map = AlphaMap(alphabet, ranges)
-    return Trie(alpha_map=alpha_map)
 
 
 RAISE_KEY_ERROR = object()
@@ -47,19 +33,29 @@ cdef class BaseTrie:
 
     cdef cdatrie.Trie *_c_trie
 
-    def __init__(self, AlphaMap alpha_map=None, _create=True):
+    def __init__(self, alphabet=None, ranges=None, AlphaMap alpha_map=None, _create=True):
+        """
+        For efficiency trie needs to know what unicode symbols
+        it should be able to store so this constructor requires
+        either ``alphabet`` (a string/iterable with all allowed characters),
+        ``ranges`` (a list of (begin, end) pairs, e.g. [('a', 'z')])
+        or ``alpha_map`` (:class:`datrie.AlphaMap` instance).
+        """
         if self._c_trie is not NULL:
             return
 
         if not _create:
             return
 
-        if alpha_map is not None:
-            self._c_trie = cdatrie.trie_new(alpha_map._c_alpha_map)
-            if self._c_trie is NULL:
-                raise MemoryError()
-        else:
-            raise ValueError("alpha_map is required")
+        if alphabet is None and ranges is None and alpha_map is None:
+            raise ValueError("Please provide alphabet, ranges or alpha_map argument.")
+
+        if alpha_map is None:
+            alpha_map = AlphaMap(alphabet, ranges)
+
+        self._c_trie = cdatrie.trie_new(alpha_map._c_alpha_map)
+        if self._c_trie is NULL:
+            raise MemoryError()
 
 
     def __dealloc__(self):
@@ -496,11 +492,24 @@ cdef class BaseTrie:
 
 
 cdef class Trie(BaseTrie):
+    """
+    Wrapper for libdatrie's trie.
+    Keys are unicode strings, values are Python objects.
+    """
+
     cdef list _values
 
-    def __init__(self, AlphaMap alpha_map=None, _create=True):
+    def __init__(self, alphabet=None, ranges=None, AlphaMap alpha_map=None, _create=True):
+        """
+        For efficiency trie needs to know what unicode symbols
+        it should be able to store so this constructor requires
+        either ``alphabet`` (a string/iterable with all allowed characters),
+        ``ranges`` (a list of (begin, end) pairs, e.g. [('a', 'z')])
+        or ``alpha_map`` (:class:`datrie.AlphaMap` instance).
+        """
+
         self._values = []
-        super(Trie, self).__init__(alpha_map, _create)
+        super(Trie, self).__init__(alphabet, ranges, alpha_map, _create)
 
     def __getitem__(self, unicode key):
         cdef cdatrie.TrieData index = self._getitem(key)
@@ -782,4 +791,9 @@ def to_ranges(lst):
 def alphabet_to_ranges(alphabet):
     for begin, end in to_ranges(sorted(map(ord, iter(alphabet)))):
         yield begin, end
+
+def new(alphabet=None, ranges=None, AlphaMap alpha_map=None):
+    warnings.warn('datrie.new is deprecated; please use datrie.Trie.', DeprecationWarning)
+    return Trie(alphabet, ranges, alpha_map)
+
 

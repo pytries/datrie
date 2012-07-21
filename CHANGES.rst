@@ -2,6 +2,12 @@
 CHANGES
 =======
 
+dev (TBA)
+---------
+
+* ``datrie.new`` is deprecated; use ``datrie.Trie`` with the same arguments;
+* small test & benchmark improvements.
+
 0.2 (2012-07-16)
 ----------------
 

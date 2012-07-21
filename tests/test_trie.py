@@ -9,7 +9,7 @@ import pytest
 import datrie
 
 def test_trie():
-    trie = datrie.new(alphabet=string.printable)
+    trie = datrie.Trie(string.printable)
     assert trie.is_dirty() == True
 
     assert 'foo' not in trie
@@ -33,7 +33,7 @@ def test_trie():
 
 def test_trie_save_load():
     fd, fname = tempfile.mkstemp()
-    trie = datrie.new(alphabet=string.printable)
+    trie = datrie.Trie(string.printable)
     trie['foobar'] = 1
     trie['foovar'] = 2
     trie['baz'] = 3
@@ -51,8 +51,7 @@ def test_trie_save_load():
 
 def test_save_load_base():
     fd, fname = tempfile.mkstemp()
-    alpha_map = datrie.AlphaMap(alphabet=string.printable)
-    trie = datrie.BaseTrie(alpha_map=alpha_map)
+    trie = datrie.BaseTrie(alphabet=string.printable)
     trie['foobar'] = 1
     trie['foovar'] = 2
     trie['baz'] = 3
@@ -67,9 +66,8 @@ def test_save_load_base():
 
 def test_trie_file_io():
     fd, fname = tempfile.mkstemp()
-    alpha_map = datrie.AlphaMap(alphabet=string.printable)
 
-    trie = datrie.BaseTrie(alpha_map=alpha_map)
+    trie = datrie.BaseTrie(string.printable)
     trie['foobar'] = 1
     trie['foo'] = 2
 
@@ -96,7 +94,7 @@ def test_trie_file_io():
 
 def test_trie_unicode():
     # trie for lowercase Russian characters
-    trie = datrie.new(ranges=[('а', 'я')])
+    trie = datrie.Trie(ranges=[('а', 'я')])
     trie['а'] = 1
     trie['б'] = 2
     trie['аб'] = 'vasia'
@@ -106,7 +104,7 @@ def test_trie_unicode():
     assert trie['аб'] == 'vasia'
 
 def test_trie_ascii():
-    trie = datrie.new(string.ascii_letters)
+    trie = datrie.Trie(string.ascii_letters)
     trie['x'] = 1
     trie['y'] = 'foo'
     trie['xx'] = 2
@@ -116,7 +114,7 @@ def test_trie_ascii():
     assert trie['xx'] == 2
 
 def test_trie_items():
-    trie = datrie.new(string.ascii_lowercase)
+    trie = datrie.Trie(string.ascii_lowercase)
     trie['foo'] = 10
     trie['bar'] = 'foo'
     trie['foobar'] = 30
@@ -126,7 +124,7 @@ def test_trie_items():
 
 
 def test_trie_len():
-    trie = datrie.new(string.ascii_lowercase)
+    trie = datrie.Trie(string.ascii_lowercase)
     words = ['foo', 'f', 'faa', 'bar', 'foobar']
     for word in words:
         trie[word] = None
@@ -134,7 +132,7 @@ def test_trie_len():
 
 
 def test_setdefault():
-    trie = datrie.new(string.ascii_lowercase)
+    trie = datrie.Trie(string.ascii_lowercase)
     assert trie.setdefault('foo', 5) == 5
     assert trie.setdefault('foo', 4) == 5
     assert trie.setdefault('foo', 5) == 5
@@ -145,7 +143,7 @@ def test_setdefault():
 
 class TestPrefixLookups(object):
     def _trie(self):
-        trie = datrie.new(string.ascii_lowercase)
+        trie = datrie.Trie(string.ascii_lowercase)
         trie['foo'] = 10
         trie['bar'] = 20
         trie['foobar'] = 30
@@ -186,7 +184,7 @@ class TestPrefixSearch(object):
     WORDS = ['producers', 'producersz', 'pr', 'pool', 'prepare', 'preview', 'prize', 'produce', 'producer', 'progress']
 
     def _trie(self):
-        trie = datrie.new(string.ascii_lowercase)
+        trie = datrie.Trie(string.ascii_lowercase)
         for index, word in enumerate(self.WORDS, 1):
             trie[word] = index
         return trie
@@ -284,7 +282,7 @@ def test_trie_fuzzy():
         for y in range(1000)
     ]))
 
-    trie = datrie.new(alphabet)
+    trie = datrie.Trie(alphabet)
 
     enumerated_words = list(enumerate(words))
 
