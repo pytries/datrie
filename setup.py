@@ -12,7 +12,7 @@ LIBDATRIE_FILES = [os.path.join(LIBDATRIE_DIR, name) for name in LIBDATRIE_FILE_
 
 setup(
     name="datrie",
-    version="0.2",
+    version="0.3",
     description="Super-fast, efficiently stored Trie for Python",
     long_description = open('README.rst').read() + open('CHANGES.rst').read(),
     author='Mikhail Korobov',

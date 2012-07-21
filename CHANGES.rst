@@ -2,8 +2,10 @@
 CHANGES
 =======
 
-dev (TBA)
----------
+0.3 (2012-07-21)
+----------------
+
+There are no new features or speed improvements in this release.
 
 * ``datrie.new`` is deprecated; use ``datrie.Trie`` with the same arguments;
 * small test & benchmark improvements.
