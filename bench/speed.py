@@ -6,14 +6,8 @@ import string
 import timeit
 import os
 import zipfile
-import pstats
-import cProfile
-#import psutil
-import datrie
 
-def _get_memory(pid):
-    process = psutil.Process(pid)
-    return float(process.get_memory_info()[0]) / (1024 ** 2)
+import datrie
 
 def words100k():
     zip_name = os.path.join(
@@ -84,20 +78,13 @@ def create_trie():
         trie[word] = 1
     return trie
 
-def check_trie(trie, words):
-    value = 0
-    for word in words:
-        value += trie[word]
-    if value != len(words):
-        raise Exception()
-
 def benchmark():
     print('\n====== Benchmarks (100k unique unicode words) =======\n')
 
     tests = [
         ('__getitem__ (hits)', "for word in words: data[word]", 'M ops/sec', 0.1, 3),
         ('__contains__ (hits)', "for word in words: word in data", 'M ops/sec', 0.1, 3),
-        ('__contains__ (misses)', "for word in words2: word in data", 'M ops/sec', 0.1, 3),
+        ('__contains__ (misses)', "for word in NON_WORDS100k: word in data", 'M ops/sec', 0.1, 3),
         ('__len__', 'len(data)', ' ops/sec', 1, 1),
         ('__setitem__ (updates)', 'for word in words: data[word]=1', 'M ops/sec',0.1, 3),
         ('__setitem__ (inserts)', 'for word in NON_WORDS_10k: data[word]=1', 'M ops/sec',0.01, 3),
@@ -112,8 +99,6 @@ def benchmark():
 from __main__ import create_trie, WORDS100k, NON_WORDS100k, MIXED_WORDS100k
 from __main__ import PREFIXES_3_1k, PREFIXES_5_1k, PREFIXES_8_1k, PREFIXES_15_1k
 words = WORDS100k
-words2 = NON_WORDS100k
-words3 = MIXED_WORDS100k
 NON_WORDS_10k = NON_WORDS100k[:10000]
 NON_WORDS_1k = ['ыва', 'xyz', 'соы', 'Axx', 'avы']*200
 """
@@ -169,7 +154,7 @@ NON_WORDS_1k = ['ыва', 'xyz', 'соы', 'Axx', 'avы']*200
     bench(
         'trie.iter_prefixes (misses)',
         timeit.Timer(
-            "for word in words2:\n"
+            "for word in NON_WORDS100k:\n"
             "   for it in data.iter_prefixes(word): pass",
             trie_setup
         )
@@ -178,7 +163,7 @@ NON_WORDS_1k = ['ыва', 'xyz', 'соы', 'Axx', 'avы']*200
     bench(
         'trie.iter_prefixes (mixed)',
         timeit.Timer(
-            "for word in words3:\n"
+            "for word in MIXED_WORDS100k:\n"
             "   for it in data.iter_prefixes(word): pass",
             trie_setup
         )
@@ -195,7 +180,7 @@ NON_WORDS_1k = ['ыва', 'xyz', 'соы', 'Axx', 'avы']*200
     bench(
         'trie.has_keys_with_prefix (misses)',
         timeit.Timer(
-            "for word in words2: data.has_keys_with_prefix(word)",
+            "for word in NON_WORDS100k: data.has_keys_with_prefix(word)",
             trie_setup
         )
     )
@@ -212,7 +197,7 @@ NON_WORDS_1k = ['ыва', 'xyz', 'соы', 'Axx', 'avы']*200
         bench(
             'trie.%s (misses)' % meth,
             timeit.Timer(
-                "for word in words2: data.%s(word, default=None)" % meth,
+                "for word in NON_WORDS100k: data.%s(word, default=None)" % meth,
                 trie_setup
             )
         )
@@ -220,7 +205,7 @@ NON_WORDS_1k = ['ыва', 'xyz', 'соы', 'Axx', 'avы']*200
         bench(
             'trie.%s (mixed)' % meth,
             timeit.Timer(
-                "for word in words3: data.%s(word, default=None)" % meth,
+                "for word in MIXED_WORDS100k: data.%s(word, default=None)" % meth,
                 trie_setup
             )
         )
@@ -247,18 +232,45 @@ NON_WORDS_1k = ['ыва', 'xyz', 'соы', 'Axx', 'avы']*200
 
 def profiling():
     print('\n====== Profiling =======\n')
-    trie = create_trie()
-    WORDS = words100k()
 
-#    def check_prefixes(trie, words):
-#        for word in words:
-#            trie.keys(word)
-#    cProfile.runctx("check_prefixes(trie, NON_WORDS_1k)", globals(), locals(), "Profile.prof")
-#
-    cProfile.runctx("check_trie(trie, WORDS)", globals(), locals(), "Profile.prof")
 
-    s = pstats.Stats("Profile.prof")
-    s.strip_dirs().sort_stats("time").print_stats(20)
+    def profile_yep():
+        import yep
+
+        trie = create_trie()
+        WORDS = words100k()
+
+        yep.start(b'output.prof')
+        for x in range(1000):
+            for word in WORDS:
+                trie[word]
+        yep.stop()
+
+    def profile_cprofile():
+        import pstats
+        import cProfile
+
+        trie = create_trie()
+        WORDS = words100k()
+
+        def check_trie(trie, words):
+            value = 0
+            for word in words:
+                value += trie[word]
+            if value != len(words):
+                raise Exception()
+
+#        def check_prefixes(trie, words):
+#            for word in words:
+#                trie.keys(word)
+#        cProfile.runctx("check_prefixes(trie, NON_WORDS_1k)", globals(), locals(), "Profile.prof")
+
+        cProfile.runctx("check_trie(trie, WORDS)", globals(), locals(), "Profile.prof")
+
+        s = pstats.Stats("Profile.prof")
+        s.strip_dirs().sort_stats("time").print_stats(20)
+
+    profile_cprofile()
 
 #def memory():
 #    gc.collect()
@@ -284,15 +296,6 @@ def profiling():
 #    ))
 
 if __name__ == '__main__':
-#    trie = create_trie()
-#    def check_pref(prefixes):
-#        cntr = 0
-#        for w in prefixes:
-#            cntr += len(trie.keys(w))
-#        print(len(prefixes), cntr, cntr / len(prefixes))
-#    check_pref(prefixes1k(WORDS100k, 15))
-
-
     benchmark()
     #profiling()
     #memory()
