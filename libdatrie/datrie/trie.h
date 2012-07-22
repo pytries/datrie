@@ -121,6 +121,9 @@ void      trie_state_rewind (TrieState *s);
 
 Bool      trie_state_walk (TrieState *s, AlphaChar c);
 
+// XXX: is it useful to walk all states, even non-terminal?
+Bool      trie_state_walk_next (TrieState* s);
+
 Bool      trie_state_is_walkable (const TrieState *s, AlphaChar c);
 
 /**
@@ -144,7 +147,7 @@ Bool      trie_state_is_single (const TrieState *s);
  *
  * @return boolean value indicating whether it is a leaf state
  *
- * Check if the given state is a leaf state. A leaf state is a terminal state 
+ * Check if the given state is a leaf state. A leaf state is a terminal state
  * that has no other branch.
  */
 #define   trie_state_is_leaf(s) \

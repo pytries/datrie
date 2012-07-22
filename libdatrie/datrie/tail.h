@@ -71,6 +71,11 @@ Bool     tail_walk_char (const Tail      *t,
                          short           *suffix_idx,
                          TrieChar         c);
 
+TrieChar tail_walk_next (const Tail      *t,
+                         TrieIndex        s,
+                         short           *suffix_idx);
+
+
 /**
  * @brief Test walkability in tail with a character
  *
@@ -81,7 +86,7 @@ Bool     tail_walk_char (const Tail      *t,
  *
  * @return boolean indicating walkability
  *
- * Test if the character @a c can be used to walk from given character 
+ * Test if the character @a c can be used to walk from given character
  * position @a suffix_idx of entry @a s of the tail data @a t.
  */
 /*

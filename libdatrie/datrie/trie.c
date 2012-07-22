@@ -26,6 +26,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "trie.h"
 #include "fileutils.h"
@@ -50,10 +51,11 @@ struct _Trie {
  */
 struct _TrieState {
     const Trie *trie;       /**< the corresponding trie */
-    TrieIndex   index;      /**< index in double-array/tail structures */
+    TrieIndex   index;      /**< index in double-array structure */
     short       suffix_idx; /**< suffix character offset, if in suffix */
     short       is_suffix;  /**< whether it is currently in suffix part */
 };
+
 
 /*------------------------*
  *   INTERNAL FUNCTIONS   *
@@ -121,7 +123,7 @@ trie_new (const AlphaMap *alpha_map)
     trie->tail = tail_new ();
     if (!trie->tail)
         goto exit_da_created;
- 
+
     trie->is_dirty = TRUE;
     return trie;
 
@@ -360,7 +362,7 @@ trie_retrieve (const Trie *trie, const AlphaChar *key, TrieData *o_data)
  *
  * @return boolean value indicating the success of the process
  *
- * Store a @a data for the given @a key in @a trie. If @a key does not 
+ * Store a @a data for the given @a key in @a trie. If @a key does not
  * exist in @a trie, it will be appended. If it does, its current data will
  * be overwritten.
  */
@@ -379,7 +381,7 @@ trie_store (Trie *trie, const AlphaChar *key, TrieData data)
  *
  * @return boolean value indicating the success of the process
  *
- * Store a @a data for the given @a key in @a trie. If @a key does not 
+ * Store a @a data for the given @a key in @a trie. If @a key does not
  * exist in @a trie, it will be appended. If it does, the function will
  * return failure and the existing value will not be touched.
  *
@@ -615,7 +617,7 @@ trie_da_enum_func (const TrieChar *key, TrieIndex sep_node, void *user_data)
  *
  * @return boolean value indicating whether all the keys are visited
  *
- * Enumerate all entries in trie. For each entry, the user-supplied 
+ * Enumerate all entries in trie. For each entry, the user-supplied
  * @a enum_func callback function is called, with the entry key and data.
  * Returning FALSE from such callback will stop enumeration and return FALSE.
  */
@@ -759,14 +761,58 @@ trie_state_walk (TrieState *s, AlphaChar c)
         ret = da_walk (s->trie->da, &s->index, tc);
 
         if (ret && trie_da_is_separate (s->trie->da, s->index)) {
-            s->index = trie_da_get_tail_index (s->trie->da, s->index);
             s->suffix_idx = 0;
             s->is_suffix = TRUE;
         }
 
         return ret;
     } else {
-        return tail_walk_char (s->trie->tail, s->index, &s->suffix_idx, tc);
+        TrieIndex tail_index = trie_da_get_tail_index (s->trie->da, s->index);
+        return tail_walk_char (s->trie->tail, tail_index, &s->suffix_idx, tc);
+    }
+}
+
+/**
+ * @brief Walk the trie from the state to next state
+ *
+ * @param s    : current state
+ *
+ * @return boolean value indicating the success of the walk
+ *
+ * Walk the trie stepwise.
+ * On return, the state @a s is updated to the new state if successfully walked.
+ */
+Bool
+trie_state_walk_next (TrieState* s)
+{
+    TrieChar next_char;
+    TrieIndex tail_index;
+
+    if (!s->is_suffix) {
+        Bool ret;
+        ret = da_walk_next (s->trie->da, &s->index);
+
+        if (ret && trie_da_is_separate (s->trie->da, s->index)) {
+            s->suffix_idx = 0;
+            s->is_suffix = TRUE;
+            //printf("GO TO TAIL\n");
+        }
+
+        return ret;
+
+    } else {
+        tail_index = trie_da_get_tail_index (s->trie->da, s->index);
+        //printf("TAIL (%d)\n", tail_index);
+
+        next_char = tail_walk_next (s->trie->tail, tail_index, &s->suffix_idx);
+        if (next_char) {
+            //printf("TAIL -> (%c)\n", next_char-1);
+            return TRUE;
+        }
+
+        s->is_suffix = FALSE;
+        //printf("JUMP FROM TAIL -> %d\n", s->index);
+        return trie_state_walk_next(s); // recursion depth max is 1
     }
 }
 
@@ -785,11 +831,14 @@ trie_state_is_walkable (const TrieState *s, AlphaChar c)
 {
     TrieChar tc = alpha_map_char_to_trie (s->trie->alpha_map, c);
 
-    if (!s->is_suffix)
+    if (!s->is_suffix) {
         return da_is_walkable (s->trie->da, s->index, tc);
-    else 
-        return tail_is_walkable_char (s->trie->tail, s->index, s->suffix_idx,
+    }
+    else {
+        TrieIndex tail_index = trie_da_get_tail_index (s->trie->da, s->index);
+        return tail_is_walkable_char (s->trie->tail, tail_index, s->suffix_idx,
                                       tc);
+    }
 }
 
 /**
@@ -822,9 +871,15 @@ trie_state_is_single (const TrieState *s)
 TrieData
 trie_state_get_data (const TrieState *s)
 {
-    return s->is_suffix ? tail_get_data (s->trie->tail, s->index)
-                        : TRIE_DATA_ERROR;
+    if (!s->is_suffix)
+        return TRIE_DATA_ERROR;
+
+    TrieIndex tail_index = trie_da_get_tail_index (s->trie->da, s->index);
+    return tail_get_data (s->trie->tail, tail_index);
 }
+
+
+
 
 /*
 vi:ts=4:ai:expandtab

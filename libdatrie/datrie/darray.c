@@ -97,6 +97,11 @@ static void         da_free_cell       (DArray         *d,
 //                                            DAEnumFunc      enum_func,
 //                                            void           *user_data);
 
+static Bool         da_walk_next_recursive (const DArray *d,
+                                            TrieIndex *s,
+                                            TrieChar start_c);
+
+
 /* ==================== BEGIN IMPLEMENTATION PART ====================  */
 
 /*------------------------------------*
@@ -418,6 +423,96 @@ da_walk (const DArray *d, TrieIndex *s, TrieChar c)
     }
     return FALSE;
 }
+
+
+static TrieIndex
+da_down_state_after (const DArray* d, TrieIndex s, TrieChar start_c)
+{
+
+    TrieIndex base = da_get_base (d, s);
+    TrieIndex next, c;
+
+    if (TRIE_INDEX_ERROR == base || base < 0) {
+        return TRIE_INDEX_ERROR;
+    }
+
+    TrieIndex max_c = MIN_VAL (TRIE_CHAR_MAX, TRIE_INDEX_MAX - base);
+
+    for (c = start_c + 1; c < max_c; c++) {
+        next = base + c;
+        if (da_get_check (d, next) == s) {
+            return next;
+        }
+    }
+
+    return TRIE_INDEX_ERROR;
+}
+
+static TrieChar
+da_transition_char (const DArray* d, TrieIndex parent, TrieIndex child)
+{
+    int res = child - da_get_base (d, parent);
+    return res;
+//    if (res > 0)
+//        return res;
+//    printf("ERROR");
+//    return 0;
+}
+
+/**
+ * @brief Walk in double-array structure (using preorder traversal).
+ *
+ * @param d : the double-array structure
+ * @param s : current state
+ *
+ * @return boolean indicating success
+ *
+ */
+Bool
+da_walk_next (const DArray* d, TrieIndex *s)
+{
+    //printf("da_walk_next (state=%d)\n", *s);
+
+    TrieIndex   next, parent, current;
+    TrieChar    c, current_c;
+
+    // try to go down
+    next = da_down_state_after(d, *s, 0);
+    if (next != TRIE_INDEX_ERROR) {  // there is a child; go to it
+
+        c = da_transition_char(d, *s, next);
+       // printf("DOWN %d -> (%c) -> %d\n", *s, c-1, next);
+
+        *s = next;
+        return TRUE;
+    }
+
+    // can't go down; go up & right
+    current = *s;
+    while (current != da_get_root(d)) {
+
+        parent = da_get_check(d, current);
+        current_c = da_transition_char(d, parent, current);
+
+        next = da_down_state_after(d, parent, current_c);
+        if (next != TRIE_INDEX_ERROR) { // up & right & down
+
+            c = da_transition_char(d, parent, next);
+       //     printf("UP-RIGHT-DOWN %d -> (%c) -> %d -> (%c) -> %d\n", *s, current_c-1, parent, c-1, next);
+
+            *s = next;
+            return TRUE;
+        }
+
+        // there is no right items in parent node; move up
+        //printf("TMP UP %d -> (%c) -> %d\n", current, current_c-1, parent);
+        current = parent;
+    }
+
+    //printf("ROOT");
+    return FALSE;
+}
+
 
 /**
  * @brief Insert a branch from trie node
