@@ -217,9 +217,8 @@ cdef class BaseTrie:
         of this trie that are associated with keys that are prefixes of ``key``.
         '''
         cdef cdatrie.TrieState* state = cdatrie.trie_root(self._c_trie)
-        cdef cdatrie.TrieState* tmp_state = cdatrie.trie_state_clone(state)
 
-        if state == NULL or tmp_state == NULL:
+        if state == NULL:
             raise MemoryError()
 
         cdef int index = 1
@@ -228,11 +227,10 @@ cdef class BaseTrie:
                 if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
                     return
                 if cdatrie.trie_state_is_terminal(state): # word is found
-                    yield key[:index], _terminal_state_data(state, tmp_state)
+                    yield key[:index], _terminal_state_data(state)
                 index += 1
         finally:
             cdatrie.trie_state_free(state)
-            cdatrie.trie_state_free(tmp_state)
 
 
     def prefixes(self, unicode key):
@@ -267,9 +265,8 @@ cdef class BaseTrie:
 
     cdef list _prefix_items(self, unicode key):
         cdef cdatrie.TrieState* state = cdatrie.trie_root(self._c_trie)
-        cdef cdatrie.TrieState* tmp_state = cdatrie.trie_state_clone(state)
 
-        if state == NULL or tmp_state == NULL:
+        if state == NULL:
             raise MemoryError()
 
         cdef list result = []
@@ -281,13 +278,12 @@ cdef class BaseTrie:
                 if cdatrie.trie_state_is_terminal(state): # word is found
                     result.append(
                         (key[:index],
-                         _terminal_state_data(state, tmp_state))
+                         _terminal_state_data(state))
                     )
                 index += 1
             return result
         finally:
             cdatrie.trie_state_free(state)
-            cdatrie.trie_state_free(tmp_state)
 
 
     def longest_prefix(self, unicode key, default=RAISE_KEY_ERROR):
@@ -335,9 +331,8 @@ cdef class BaseTrie:
 
     cdef _longest_prefix_item(self, unicode key, default=RAISE_KEY_ERROR):
         cdef cdatrie.TrieState* state = cdatrie.trie_root(self._c_trie)
-        cdef cdatrie.TrieState* tmp_state = cdatrie.trie_state_clone(state)
 
-        if state == NULL or tmp_state == NULL:
+        if state == NULL:
             raise MemoryError()
 
         cdef int index = 0
@@ -345,7 +340,7 @@ cdef class BaseTrie:
             for char in key:
                 if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
                     if cdatrie.trie_state_is_terminal(state):
-                        return key[:index], _terminal_state_data(state, tmp_state)
+                        return key[:index], _terminal_state_data(state)
                     else:
                         if default is RAISE_KEY_ERROR:
                             raise KeyError(key)
@@ -353,14 +348,13 @@ cdef class BaseTrie:
                 index += 1
 
             if cdatrie.trie_state_is_terminal(state):
-                return key, _terminal_state_data(state, tmp_state)
+                return key, _terminal_state_data(state)
 
             if default is RAISE_KEY_ERROR:
                 raise KeyError(key)
             return default
         finally:
             cdatrie.trie_state_free(state)
-            cdatrie.trie_state_free(tmp_state)
 
 
     def has_keys_with_prefix(self, unicode prefix):
@@ -425,8 +419,6 @@ cdef class BaseTrie:
         """
         cdef:
             cdatrie.TrieState* state = cdatrie.trie_root(self._c_trie)
-            cdatrie.TrieState* tmp_state = cdatrie.trie_state_clone(state)
-
             cdatrie._TrieState* _state = <cdatrie._TrieState *> state
             cdatrie._Trie* trie = <cdatrie._Trie*> self._c_trie
 
@@ -436,7 +428,7 @@ cdef class BaseTrie:
             cdatrie._TrieEnumData enum_data
             cdatrie.AlphaChar* tail_suffix
 
-        if state == NULL or tmp_state == NULL:
+        if state == NULL:
             raise MemoryError()
 
         try:
@@ -487,7 +479,6 @@ cdef class BaseTrie:
             return result
         finally:
             cdatrie.trie_state_free(state)
-            cdatrie.trie_state_free(tmp_state)
 
 
 
@@ -628,8 +619,13 @@ cdef bint _values_enum_func(cdatrie.AlphaChar *key, cdatrie.TrieData key_data, v
     (<list> user_data).append(<int> key_data)
     return True
 
-cdef cdatrie.TrieData _terminal_state_data(cdatrie.TrieState* state, cdatrie.TrieState* tmp_state):
+cdef cdatrie.TrieData _terminal_state_data(cdatrie.TrieState* state):
     """ Wrapper for cdatrie.trie_state_get_data that handle non-leaf nodes. """
+
+    # XXX: move it to trie.c?
+    cdef cdatrie._TrieState _tmp_state
+    cdef cdatrie.TrieState* tmp_state = <cdatrie.TrieState *> &_tmp_state
+
     if cdatrie.trie_state_is_single(state): # leaf
         return cdatrie.trie_state_get_data(state)
     else: # non-leaf terminal, data is not available here
