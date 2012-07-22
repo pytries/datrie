@@ -417,6 +417,7 @@ cdef class BaseTrie:
         Passes result list to ``enum_func`` as ``user_data`` argument.
         ``enum_func`` is expected to add values to this list.
         """
+        raise NotImplementedError()
         cdef:
             cdatrie.TrieState* state = cdatrie.trie_root(self._c_trie)
             cdatrie._TrieState* _state = <cdatrie._TrieState *> state
@@ -568,7 +569,27 @@ cdef class Trie(BaseTrie):
         If ``prefix`` is not None, returns only the values
         associated with keys prefixed by ``prefix``.
         """
-        return [self._values[val] for val in self._walk_prefixes(prefix, _values_enum_func)]
+        if prefix is not None:
+            raise NotImplementedError()
+
+        cdef list res = []
+        cdef TrieState state = TrieState(self)
+        while state.next():
+            if state.is_terminal():
+                res.append(self._values[state.get_data()])
+
+        return res
+        #return [self._values[val] for val in self._walk_prefixes(prefix, _values_enum_func)]
+
+#    def itervalues(self, unicode prefix=None):
+#        cdef TrieState state = TrieState(self)
+#        cdef bint res = state.walk(prefix)
+#        if not res:
+#            return
+#
+#        while state.next():
+#            if state.is_terminal():
+
 
     def longest_prefix_item(self, unicode key, default=RAISE_KEY_ERROR):
         """
@@ -600,6 +621,76 @@ cdef class Trie(BaseTrie):
             yield k, self._values[v]
 
 
+cdef class TrieState:
+    """
+    Experimental TrieState wrapper. It can be used for custom trie traversal.
+    It is not used by ``datrie.Trie`` for performance reasons.
+    """
+    cdef cdatrie.TrieState* _state
+
+    def __cinit__(self, BaseTrie trie):
+        self._state = cdatrie.trie_root(trie._c_trie)
+        if self._state is NULL:
+            raise MemoryError()
+
+    def __dealloc__(self):
+        if self._state is not NULL:
+            cdatrie.trie_state_free(self._state)
+
+    cpdef walk(self, unicode to):
+        cdef bint res
+        for ch in to:
+            if not self._walk(<cdatrie.AlphaChar> ch):
+                return False
+        return True
+
+    cpdef bint next(self):
+        return cdatrie.trie_state_walk_next(self._state)
+
+    cdef bint _walk(self, cdatrie.AlphaChar char):
+        """
+        Walks the trie stepwise, using a given character ``char``.
+        On return, the state is updated to the new state if successfully walked.
+        Returns boolean value indicating the success of the walk.
+        """
+        return cdatrie.trie_state_walk(self._state, char)
+
+    cpdef copy_to(self, TrieState state):
+        """ Copies trie state to another """
+        cdatrie.trie_state_copy(state._state, self._state)
+
+    cpdef rewind(self):
+        """ Puts the state at root """
+        cdatrie.trie_state_rewind(self._state)
+
+    cpdef bint is_terminal(self):
+        return cdatrie.trie_state_is_terminal(self._state)
+
+    cpdef bint is_single(self):
+        return cdatrie.trie_state_is_single(self._state)
+
+    cpdef bint is_leaf(self):
+        return cdatrie.trie_state_is_leaf(self._state)
+
+    cpdef int get_data(self):
+        return _terminal_state_data(self._state)
+
+    def _internals(self):
+        cdef cdatrie._TrieState* s = <cdatrie._TrieState*> self._state
+        return u"idx: %d, suf_idx:%d, is_suf:%d" % (<int>s.index, <int>s.suffix_idx, <int>s.is_suffix)
+
+    def __unicode__(self):
+
+        return u"%s, data:%d, term:%s, leaf:%s, single: %s" % (
+            self._internals(),
+            self.get_data(),
+            self.is_terminal(),
+            self.is_leaf(),
+            self.is_single(),
+        )
+
+    def __repr__(self):
+        return self.__unicode__()
 
 
 cdef bint _items_enum_func(cdatrie.AlphaChar *key, cdatrie.TrieData key_data, void *user_data):

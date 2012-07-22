@@ -1,4 +1,7 @@
 # cython: profile=False
+"""
+Public libdatrie header wrapper
+"""
 from libc cimport stdio
 
 cdef extern from "../libdatrie/datrie/triedefs.h":
@@ -126,6 +129,8 @@ cdef extern from "../libdatrie/datrie/trie.h":
 
     bint trie_state_walk (TrieState *s, AlphaChar c)
 
+    bint trie_state_walk_next (TrieState *s)
+
     bint trie_state_is_walkable (TrieState *s, AlphaChar c)
 
     bint trie_state_is_terminal(TrieState * s)
@@ -152,7 +157,7 @@ cdef struct _Trie:
 
 cdef struct _TrieState:
     _Trie       *trie         # the corresponding trie
-    TrieIndex   index  # index in double-array/tail structures
-    short       suffix_idx   # suffix character offset, if in suffix
-    short       is_suffix    # whether it is currently in suffix part
+    TrieIndex   index         # index in double-array/tail structures
+    short       suffix_idx    # suffix character offset, if in suffix
+    short       is_suffix     # whether it is currently in suffix part
 

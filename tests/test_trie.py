@@ -118,9 +118,9 @@ def test_trie_items():
     trie['foo'] = 10
     trie['bar'] = 'foo'
     trie['foobar'] = 30
+    assert trie.values() == ['foo', 10, 30]
     assert trie.items() == [('bar', 'foo'), ('foo', 10), ('foobar', 30)]
     assert trie.keys() == ['bar', 'foo', 'foobar']
-    assert trie.values() == ['foo', 10, 30]
 
 
 def test_trie_len():
