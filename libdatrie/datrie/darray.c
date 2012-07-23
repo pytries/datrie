@@ -480,8 +480,8 @@ da_walk_next (const DArray* d, TrieIndex *s)
     next = da_down_state_after(d, *s, 0);
     if (next != TRIE_INDEX_ERROR) {  // there is a child; go to it
 
-        c = da_transition_char(d, *s, next);
-       // printf("DOWN %d -> (%c) -> %d\n", *s, c-1, next);
+        //c = da_transition_char(d, *s, next);
+        //printf("DOWN %d -> (%c) -> %d\n", *s, c-1, next);
 
         *s = next;
         return TRUE;
@@ -497,8 +497,8 @@ da_walk_next (const DArray* d, TrieIndex *s)
         next = da_down_state_after(d, parent, current_c);
         if (next != TRIE_INDEX_ERROR) { // up & right & down
 
-            c = da_transition_char(d, parent, next);
-       //     printf("UP-RIGHT-DOWN %d -> (%c) -> %d -> (%c) -> %d\n", *s, current_c-1, parent, c-1, next);
+            //c = da_transition_char(d, parent, next);
+            //printf("UP-RIGHT-DOWN %d -> (%c) -> %d -> (%c) -> %d\n", *s, current_c-1, parent, c-1, next);
 
             *s = next;
             return TRUE;

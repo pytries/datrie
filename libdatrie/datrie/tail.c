@@ -528,8 +528,7 @@ tail_walk_next (const Tail      *t,
 
     suffix_char = suffix[*suffix_idx];
     if (0 != suffix_char){
-        ++*suffix_idx;
-        return suffix[*suffix_idx];
+        return suffix[(*suffix_idx)++];
     }
     return 0;
 }
