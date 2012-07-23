@@ -11,10 +11,9 @@ def _trie():
     trie['fo'] = 2
     trie['fa'] = 3
     trie['faur'] = 4
-    trie['fauxiiiip'] = 5
+    trie['fauxi'] = 5
     trie['fauzox'] = 10
     trie['fauzoy'] = 20
-    #trie['faurox'] = 6
     return trie
 
 def test_trie_state():

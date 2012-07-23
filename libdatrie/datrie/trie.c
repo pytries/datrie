@@ -52,6 +52,7 @@ struct _Trie {
 struct _TrieState {
     const Trie *trie;       /**< the corresponding trie */
     TrieIndex   index;      /**< index in double-array structure */
+    TrieIndex   tail_index; /**< index in tail structure */
     short       suffix_idx; /**< suffix character offset, if in suffix */
     short       is_suffix;  /**< whether it is currently in suffix part */
 };
@@ -67,6 +68,7 @@ struct _TrieState {
 
 static TrieState * trie_state_new (const Trie *trie,
                                    TrieIndex   index,
+                                   TrieIndex   tail_index,
                                    short       suffix_idx,
                                    short       is_suffix);
 
@@ -652,7 +654,7 @@ trie_enumerate (const Trie *trie, TrieEnumFunc enum_func, void *user_data)
 TrieState *
 trie_root (const Trie *trie)
 {
-    return trie_state_new (trie, da_get_root (trie->da), 0, FALSE);
+    return trie_state_new (trie, da_get_root (trie->da), 0, 0, FALSE);
 }
 
 /*----------------*
@@ -662,6 +664,7 @@ trie_root (const Trie *trie)
 static TrieState *
 trie_state_new (const Trie *trie,
                 TrieIndex   index,
+                TrieIndex   tail_index,
                 short       suffix_idx,
                 short       is_suffix)
 {
@@ -673,6 +676,7 @@ trie_state_new (const Trie *trie,
 
     s->trie       = trie;
     s->index      = index;
+    s->tail_index = tail_index;
     s->suffix_idx = suffix_idx;
     s->is_suffix  = is_suffix;
 
@@ -709,7 +713,8 @@ trie_state_copy (TrieState *dst, const TrieState *src)
 TrieState *
 trie_state_clone (const TrieState *s)
 {
-    return trie_state_new (s->trie, s->index, s->suffix_idx, s->is_suffix);
+    return trie_state_new (s->trie, s->index, s->tail_index,
+                           s->suffix_idx, s->is_suffix);
 }
 
 /**
@@ -762,13 +767,13 @@ trie_state_walk (TrieState *s, AlphaChar c)
 
         if (ret && trie_da_is_separate (s->trie->da, s->index)) {
             s->suffix_idx = 0;
+            s->tail_index = trie_da_get_tail_index (s->trie->da, s->index);
             s->is_suffix = TRUE;
         }
 
         return ret;
     } else {
-        TrieIndex tail_index = trie_da_get_tail_index (s->trie->da, s->index);
-        return tail_walk_char (s->trie->tail, tail_index, &s->suffix_idx, tc);
+        return tail_walk_char (s->trie->tail, s->tail_index, &s->suffix_idx, tc);
     }
 }
 
@@ -793,6 +798,7 @@ trie_state_walk_next (TrieState* s)
         ret = da_walk_next (s->trie->da, &s->index);
 
         if (ret && trie_da_is_separate (s->trie->da, s->index)) {
+            s->tail_index = trie_da_get_tail_index (s->trie->da, s->index);
             s->suffix_idx = 0;
             s->is_suffix = TRUE;
             //printf("GO TO TAIL\n");
@@ -801,10 +807,9 @@ trie_state_walk_next (TrieState* s)
         return ret;
 
     } else {
-        tail_index = trie_da_get_tail_index (s->trie->da, s->index);
         //printf("TAIL (%d)\n", tail_index);
 
-        next_char = tail_walk_next (s->trie->tail, tail_index, &s->suffix_idx);
+        next_char = tail_walk_next (s->trie->tail, s->tail_index, &s->suffix_idx);
         if (next_char) {
             //printf("TAIL -> (%c)\n", next_char-1);
             return TRUE;
@@ -812,7 +817,9 @@ trie_state_walk_next (TrieState* s)
 
         s->is_suffix = FALSE;
         //printf("JUMP FROM TAIL -> %d\n", s->index);
-        return trie_state_walk_next(s); // recursion depth max is 1
+
+        /* max recursion depth will be 1 so it is OK to use recursion here */
+        return trie_state_walk_next(s);
     }
 }
 
@@ -835,9 +842,8 @@ trie_state_is_walkable (const TrieState *s, AlphaChar c)
         return da_is_walkable (s->trie->da, s->index, tc);
     }
     else {
-        TrieIndex tail_index = trie_da_get_tail_index (s->trie->da, s->index);
-        return tail_is_walkable_char (s->trie->tail, tail_index, s->suffix_idx,
-                                      tc);
+        return tail_is_walkable_char (s->trie->tail, s->tail_index,
+                                      s->suffix_idx, tc);
     }
 }
 
@@ -874,11 +880,8 @@ trie_state_get_data (const TrieState *s)
     if (!s->is_suffix)
         return TRIE_DATA_ERROR;
 
-    TrieIndex tail_index = trie_da_get_tail_index (s->trie->da, s->index);
-    return tail_get_data (s->trie->tail, tail_index);
+    return tail_get_data (s->trie->tail, s->tail_index);
 }
-
-
 
 
 /*

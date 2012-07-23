@@ -157,7 +157,8 @@ cdef struct _Trie:
 
 cdef struct _TrieState:
     _Trie       *trie         # the corresponding trie
-    TrieIndex   index         # index in double-array/tail structures
+    TrieIndex   index         # index in double-array structure
+    TrieIndex   tail_index    # index in tail structure
     short       suffix_idx    # suffix character offset, if in suffix
     short       is_suffix     # whether it is currently in suffix part
 

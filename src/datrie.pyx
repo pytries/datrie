@@ -417,7 +417,8 @@ cdef class BaseTrie:
         Passes result list to ``enum_func`` as ``user_data`` argument.
         ``enum_func`` is expected to add values to this list.
         """
-        raise NotImplementedError()
+        return []
+        #raise NotImplementedError()
         cdef:
             cdatrie.TrieState* state = cdatrie.trie_root(self._c_trie)
             cdatrie._TrieState* _state = <cdatrie._TrieState *> state
