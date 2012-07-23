@@ -34,6 +34,7 @@
 #include "trie-private.h"
 #include "darray.h"
 #include "fileutils.h"
+#include "key-storage.h"
 
 /*----------------------------------*
  *    INTERNAL TYPES DECLARATIONS   *
@@ -91,6 +92,11 @@ static void         da_alloc_cell      (DArray         *d,
 
 static void         da_free_cell       (DArray         *d,
                                         TrieIndex       cell);
+
+static TrieChar     da_transition_char (const DArray* d,
+                                        TrieIndex parent,
+                                        TrieIndex child);
+
 
 //static Bool         da_enumerate_recursive (const DArray   *d,
 //                                            TrieIndex       state,
@@ -465,7 +471,7 @@ da_transition_char (const DArray* d, TrieIndex parent, TrieIndex child)
  *
  */
 Bool
-da_walk_next (const DArray* d, TrieIndex *s)
+da_walk_next (const DArray* d, TrieIndex *s, KeyStorage* ks)
 {
     //printf("da_walk_next (state=%d)\n", *s);
 
@@ -476,7 +482,8 @@ da_walk_next (const DArray* d, TrieIndex *s)
     next = da_down_state_after(d, *s, 0);
     if (next != TRIE_INDEX_ERROR) {  /* there is a child; go to it */
 
-        //c = da_transition_char(d, *s, next);
+        c = da_transition_char(d, *s, next);
+        ks_push_tc (ks, c);
         //printf("DOWN %d -> (%c) -> %d\n", *s, c-1, next);
 
         *s = next;
@@ -493,9 +500,9 @@ da_walk_next (const DArray* d, TrieIndex *s)
         next = da_down_state_after(d, parent, current_c);
         if (next != TRIE_INDEX_ERROR) { /* up & right & down */
 
-            //c = da_transition_char(d, parent, next);
+            c = da_transition_char(d, parent, next);
             //printf("UP-RIGHT-DOWN %d -> (%c) -> %d -> (%c) -> %d\n", *s, current_c-1, parent, c-1, next);
-
+            ks_push_tc (ks, c);
             *s = next;
             return TRUE;
         }
@@ -503,6 +510,7 @@ da_walk_next (const DArray* d, TrieIndex *s)
 
         /* there is no right items in parent node; move up */
         //printf("TMP UP %d -> (%c) -> %d\n", current, current_c-1, parent);
+        ks_pop (ks, 1);
         current = parent;
     }
 
@@ -646,7 +654,7 @@ da_get_state_key   (const DArray   *d,
             key = (TrieChar *) realloc (key, key_size);
         }
         parent = da_get_check (d, state);
-        key[key_length++] = (TrieChar) (state - da_get_base (d, parent));
+        key[key_length++] = da_transition_char (d, parent, state);
         state = parent;
     }
     key[key_length] = '\0';

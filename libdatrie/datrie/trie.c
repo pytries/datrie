@@ -34,6 +34,7 @@
 #include "alpha-map-private.h"
 #include "darray.h"
 #include "tail.h"
+#include "key-storage.h"
 
 /**
  * @brief Trie structure
@@ -55,6 +56,8 @@ struct _TrieState {
     TrieIndex   tail_index; /**< index in tail structure */
     short       suffix_idx; /**< suffix character offset, if in suffix */
     short       is_suffix;  /**< whether it is currently in suffix part */
+
+    KeyStorage  ks;         /**< key associated with this state */
 };
 
 
@@ -680,6 +683,8 @@ trie_state_new (const Trie *trie,
     s->suffix_idx = suffix_idx;
     s->is_suffix  = is_suffix;
 
+    ks_init(&s->ks, 20, trie->alpha_map);
+
     return s;
 }
 
@@ -697,6 +702,7 @@ trie_state_copy (TrieState *dst, const TrieState *src)
 {
     /* May be deep copy if necessary, not the case for now */
     *dst = *src;
+    // FIXME: copy the current key
 }
 
 /**
@@ -713,6 +719,7 @@ trie_state_copy (TrieState *dst, const TrieState *src)
 TrieState *
 trie_state_clone (const TrieState *s)
 {
+    // FIXME: copy current key
     return trie_state_new (s->trie, s->index, s->tail_index,
                            s->suffix_idx, s->is_suffix);
 }
@@ -727,6 +734,7 @@ trie_state_clone (const TrieState *s)
 void
 trie_state_free (TrieState *s)
 {
+    ks_free(&s->ks);
     free (s);
 }
 
@@ -742,6 +750,7 @@ trie_state_rewind (TrieState *s)
 {
     s->index      = da_get_root (s->trie->da);
     s->is_suffix  = FALSE;
+    ks_clear (&s->ks);
 }
 
 /**
@@ -759,9 +768,9 @@ Bool
 trie_state_walk (TrieState *s, AlphaChar c)
 {
     TrieChar tc = alpha_map_char_to_trie (s->trie->alpha_map, c);
+    Bool ret;
 
     if (!s->is_suffix) {
-        Bool ret;
 
         ret = da_walk (s->trie->da, &s->index, tc);
 
@@ -770,11 +779,15 @@ trie_state_walk (TrieState *s, AlphaChar c)
             s->tail_index = trie_da_get_tail_index (s->trie->da, s->index);
             s->is_suffix = TRUE;
         }
-
-        return ret;
     } else {
-        return tail_walk_char (s->trie->tail, s->tail_index, &s->suffix_idx, tc);
+        ret = tail_walk_char (s->trie->tail, s->tail_index, &s->suffix_idx, tc);
     }
+
+    if (ret) {
+        ks_push (&s->ks, tc, c);
+    }
+
+    return ret;
 }
 
 /**
@@ -795,7 +808,7 @@ trie_state_walk_next (TrieState* s)
 
     if (!s->is_suffix) {
         Bool ret;
-        ret = da_walk_next (s->trie->da, &s->index);
+        ret = da_walk_next (s->trie->da, &s->index, &s->ks);
 
         if (ret && trie_da_is_separate (s->trie->da, s->index)) {
             s->tail_index = trie_da_get_tail_index (s->trie->da, s->index);
@@ -812,9 +825,11 @@ trie_state_walk_next (TrieState* s)
         next_char = tail_walk_next (s->trie->tail, s->tail_index, &s->suffix_idx);
         if (next_char) {
             //printf("TAIL -> (%c)\n", next_char-1);
+            ks_push_tc (&s->ks, next_char);
             return TRUE;
         }
 
+        ks_pop (&s->ks, s->suffix_idx + 1);
         s->is_suffix = FALSE;
         //printf("JUMP FROM TAIL -> %d\n", s->index);
 
@@ -881,6 +896,26 @@ trie_state_get_data (const TrieState *s)
         return TRIE_DATA_ERROR;
 
     return tail_get_data (s->trie->tail, s->tail_index);
+}
+
+/**
+ * @brief Get key from a state
+ *
+ * @param s         : a state
+ * @param length    : a pointer to int variable where to store key length
+ *
+ * @return null-terminated AlphaChar* key associated with the state @a s.
+ *
+ * The result should be considered read-only; it is only valid in current
+ * iteration. Caller shouldn't modify or free() the result.
+ */
+const AlphaChar*
+trie_state_get_key (const TrieState* s, int* length) {
+    ks_terminate (&s->ks);
+    if (NULL != length){
+        *length = s->ks.length;
+    }
+    return s->ks.alpha_key;
 }
 
 

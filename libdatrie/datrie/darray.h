@@ -28,6 +28,7 @@
 #define __DARRAY_H
 
 #include "triedefs.h"
+#include "key-storage.h"
 
 /**
  * @file darray.h
@@ -76,7 +77,7 @@ void       da_set_check (DArray *d, TrieIndex s, TrieIndex val);
 
 Bool       da_walk (const DArray *d, TrieIndex *s, TrieChar c);
 
-Bool       da_walk_next (const DArray* d, TrieIndex* s);
+Bool       da_walk_next (const DArray* d, TrieIndex* s, KeyStorage* ks);
 
 /**
  * @brief Test walkability in double-array structure
