@@ -10,7 +10,7 @@
 
 typedef struct {
     TrieChar * trie_key;    /* < key in TrieChar* format */
-    AlphaChar* alpha_key;   /* < key in AlphaChar* format */
+//    AlphaChar* alpha_key;   /* < key in AlphaChar* format */
     int length;             /* < current string length */
     int allocated;          /* < allocated length */
 
@@ -24,7 +24,7 @@ Bool ks_ensure_size (KeyStorage* ks, int size);
 
 void ks_free (KeyStorage* ks);
 
-void ks_push (KeyStorage* ks, TrieChar tc, AlphaChar ac);
+// void ks_push (KeyStorage* ks, TrieChar tc, AlphaChar ac);
 
 void ks_push_tc (KeyStorage* ks, TrieChar tc);
 

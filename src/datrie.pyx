@@ -166,11 +166,10 @@ cdef class BaseTrie:
     def __len__(self):
         # XXX: this is very slow
         cdef int counter=0
-        cdatrie.trie_enumerate(
-            self._c_trie,
-            _trie_counter,
-            &counter
-        )
+        cdef TrieState state = TrieState(self)
+        while state.next():
+            if state.is_terminal():
+                counter += 1
         return counter
 
     def setdefault(self, unicode key, cdatrie.TrieData value):
@@ -227,11 +226,22 @@ cdef class BaseTrie:
                 if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
                     return
                 if cdatrie.trie_state_is_terminal(state): # word is found
-                    yield key[:index], _terminal_state_data(state)
+                    yield key[:index], cdatrie.trie_state_get_terminal_data(state) # _terminal_state_data(state)
                 index += 1
         finally:
             cdatrie.trie_state_free(state)
 
+#    def iter_prefix_items(self, unicode key):
+#        cdef TrieState state = TrieState(self)
+#        cdef bint res
+#        cdef int index = 1
+#        for char in key:
+#            if not state._walk(char):
+#                return
+#            if state.is_terminal():
+#                yield key[:index], state.data()
+#            index += 1
+#
 
     def prefixes(self, unicode key):
         '''
@@ -278,7 +288,7 @@ cdef class BaseTrie:
                 if cdatrie.trie_state_is_terminal(state): # word is found
                     result.append(
                         (key[:index],
-                         _terminal_state_data(state))
+                         cdatrie.trie_state_get_terminal_data(state))
                     )
                 index += 1
             return result
@@ -340,7 +350,7 @@ cdef class BaseTrie:
             for char in key:
                 if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
                     if cdatrie.trie_state_is_terminal(state):
-                        return key[:index], _terminal_state_data(state)
+                        return key[:index], cdatrie.trie_state_get_terminal_data(state)
                     else:
                         if default is RAISE_KEY_ERROR:
                             raise KeyError(key)
@@ -348,7 +358,7 @@ cdef class BaseTrie:
                 index += 1
 
             if cdatrie.trie_state_is_terminal(state):
-                return key, _terminal_state_data(state)
+                return key, cdatrie.trie_state_get_terminal_data(state)
 
             if default is RAISE_KEY_ERROR:
                 raise KeyError(key)
@@ -379,7 +389,19 @@ cdef class BaseTrie:
         If ``prefix`` is not None, returns only the items
         associated with keys prefixed by ``prefix``.
         """
-        return self._walk_prefixes(prefix, _items_enum_func)
+        if prefix is not None:
+            raise NotImplementedError()
+
+        cdef list res = []
+        cdef TrieState state = TrieState(self)
+        while state.next():
+            if state.is_terminal():
+                res.append(
+                    (state.key(), state.data())
+                )
+        return res
+
+#        return self._walk_prefixes(prefix, _items_enum_func)
 
     def keys(self, unicode prefix=None):
         """
@@ -387,7 +409,18 @@ cdef class BaseTrie:
 
         If ``prefix`` is not None, returns only the keys prefixed by ``prefix``.
         """
-        return self._walk_prefixes(prefix, _keys_enum_func)
+        if prefix is not None:
+            raise NotImplementedError()
+
+        cdef list res = []
+        cdef TrieState state = TrieState(self)
+        while state.next():
+            if state.is_terminal():
+                res.append(state.key())
+
+        return res
+
+        #return self._walk_prefixes(prefix, _keys_enum_func)
 
     def values(self, unicode prefix=None):
         """
@@ -396,20 +429,18 @@ cdef class BaseTrie:
         If ``prefix`` is not None, returns only the values
         associated with keys prefixed by ``prefix``.
         """
-        return self._walk_prefixes(prefix, _values_enum_func)
+        if prefix is not None:
+            raise NotImplementedError()
 
-    cpdef _enumerate(self, callback):
-        """
-        Enumerates all entries in trie. For each entry, the user-supplied
-        callback function is called, with the entry key and data.
-        Return True from the callback to continue the enumeration,
-        returning False from such callback will stop enumeration.
-        """
-        return cdatrie.trie_enumerate(
-            self._c_trie,
-            trie_enum_helper,
-            <void*> callback
-        )
+        cdef list res = []
+        cdef TrieState state = TrieState(self)
+        while state.next():
+            if state.is_terminal():
+                res.append(state.data())
+        return res
+
+        #return self._walk_prefixes(prefix, _values_enum_func)
+
 
     cdef list _walk_prefixes(self, unicode prefix, cdatrie.TrieEnumFunc enum_func):
         """
@@ -419,68 +450,68 @@ cdef class BaseTrie:
         """
         return []
         #raise NotImplementedError()
-        cdef:
-            cdatrie.TrieState* state = cdatrie.trie_root(self._c_trie)
-            cdatrie._TrieState* _state = <cdatrie._TrieState *> state
-            cdatrie._Trie* trie = <cdatrie._Trie*> self._c_trie
-
-            list result = []
-            unicode key
-            cdatrie.TrieData value
-            cdatrie._TrieEnumData enum_data
-            cdatrie.AlphaChar* tail_suffix
-
-        if state == NULL:
-            raise MemoryError()
-
-        try:
-            # move the state to the end of the prefix
-            if prefix:
-                for char in prefix:
-                    if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
-                        return result
-
-            if cdatrie.trie_state_is_single(state):
-                # state is in the tail pool
-                tail_suffix = cdatrie.alpha_map_trie_to_char_str(
-                    _state.trie.alpha_map,
-                    cdatrie.tail_get_suffix(_state.trie.tail, _state.index)
-                )
-                if tail_suffix == NULL:
-                    raise MemoryError()
-
-                try:
-                    # TODO: more efficient key reconstruction
-                    key = prefix + unicode_from_alpha_char(tail_suffix)[_state.suffix_idx:]
-                    try:
-                        alpha_key = new_alpha_char_from_unicode(key)
-                        value = cdatrie.trie_state_get_data(state)
-                        enum_func(alpha_key, value, <void *>result)
-                    finally:
-                        free(alpha_key)
-                finally:
-                    free(tail_suffix)
-
-                return result
-
-            # state is in double-array structure, enumerate works
-            enum_data.trie      = self._c_trie
-            enum_data.enum_func = enum_func
-            enum_data.user_data = <void*> result
-
-            # This can be optimized: most time is spent in utf_32_le
-            # decoding from AlphaChar* inside enum functions; at least
-            # prefix may be decoded only once.
-            cdatrie.da_enumerate_recursive(
-                _state.trie.da,
-                _state.index,
-                cdatrie.trie_da_enum_func,
-                &enum_data
-            )
-
-            return result
-        finally:
-            cdatrie.trie_state_free(state)
+#        cdef:
+#            cdatrie.TrieState* state = cdatrie.trie_root(self._c_trie)
+#            cdatrie._TrieState* _state = <cdatrie._TrieState *> state
+#            cdatrie._Trie* trie = <cdatrie._Trie*> self._c_trie
+#
+#            list result = []
+#            unicode key
+#            cdatrie.TrieData value
+#            cdatrie._TrieEnumData enum_data
+#            cdatrie.AlphaChar* tail_suffix
+#
+#        if state == NULL:
+#            raise MemoryError()
+#
+#        try:
+#            # move the state to the end of the prefix
+#            if prefix:
+#                for char in prefix:
+#                    if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
+#                        return result
+#
+#            if cdatrie.trie_state_is_single(state):
+#                # state is in the tail pool
+#                tail_suffix = cdatrie.alpha_map_trie_to_char_str(
+#                    _state.trie.alpha_map,
+#                    cdatrie.tail_get_suffix(_state.trie.tail, _state.index)
+#                )
+#                if tail_suffix == NULL:
+#                    raise MemoryError()
+#
+#                try:
+#                    # TODO: more efficient key reconstruction
+#                    key = prefix + unicode_from_alpha_char(tail_suffix)[_state.suffix_idx:]
+#                    try:
+#                        alpha_key = new_alpha_char_from_unicode(key)
+#                        value = cdatrie.trie_state_get_data(state)
+#                        enum_func(alpha_key, value, <void *>result)
+#                    finally:
+#                        free(alpha_key)
+#                finally:
+#                    free(tail_suffix)
+#
+#                return result
+#
+#            # state is in double-array structure, enumerate works
+#            enum_data.trie      = self._c_trie
+#            enum_data.enum_func = enum_func
+#            enum_data.user_data = <void*> result
+#
+#            # This can be optimized: most time is spent in utf_32_le
+#            # decoding from AlphaChar* inside enum functions; at least
+#            # prefix may be decoded only once.
+#            cdatrie.da_enumerate_recursive(
+#                _state.trie.da,
+#                _state.index,
+#                cdatrie.trie_da_enum_func,
+#                &enum_data
+#            )
+#
+#            return result
+#        finally:
+#            cdatrie.trie_state_free(state)
 
 
 
@@ -561,7 +592,19 @@ cdef class Trie(BaseTrie):
         If ``prefix`` is not None, returns only the items
         associated with keys prefixed by ``prefix``.
         """
-        return [(key, self._values[value]) for (key, value) in self._walk_prefixes(prefix, _items_enum_func)]
+        if prefix is not None:
+            raise NotImplementedError()
+
+        cdef list res = []
+        cdef TrieState state = TrieState(self)
+        while state.next():
+            if state.is_terminal():
+                res.append(
+                    (state.key(), self._values[state.data()])
+                )
+        return res
+
+        #return [(key, self._values[value]) for (key, value) in self._walk_prefixes(prefix, _items_enum_func)]
 
     def values(self, unicode prefix=None):
         """
@@ -577,7 +620,7 @@ cdef class Trie(BaseTrie):
         cdef TrieState state = TrieState(self)
         while state.next():
             if state.is_terminal():
-                res.append(self._values[state.get_data()])
+                res.append(self._values[state.data()])
 
         return res
         #return [self._values[val] for val in self._walk_prefixes(prefix, _values_enum_func)]
@@ -656,6 +699,11 @@ cdef class TrieState:
         """
         return cdatrie.trie_state_walk(self._state, char)
 
+    cpdef unicode key(self):
+        cdef int length
+        cdef cdatrie.AlphaChar* key = cdatrie.trie_state_get_key(self._state, &length)
+        return unicode_from_alpha_char(key, length)
+
     cpdef copy_to(self, TrieState state):
         """ Copies trie state to another """
         cdatrie.trie_state_copy(state._state, self._state)
@@ -673,8 +721,8 @@ cdef class TrieState:
     cpdef bint is_leaf(self):
         return cdatrie.trie_state_is_leaf(self._state)
 
-    cpdef int get_data(self):
-        return _terminal_state_data(self._state)
+    cpdef cdatrie.TrieData data(self):
+        return cdatrie.trie_state_get_terminal_data(self._state)
 
     def _internals(self):
         cdef cdatrie._TrieState* s = <cdatrie._TrieState*> self._state
@@ -682,9 +730,10 @@ cdef class TrieState:
 
     def __unicode__(self):
 
-        return u"%s, data:%d, term:%s, leaf:%s, single: %s" % (
+        return u"<%s:%d>, %s, term:%s, leaf:%s, single: %s" % (
+            self.key(),
+            self.data(),
             self._internals(),
-            self.get_data(),
             self.is_terminal(),
             self.is_leaf(),
             self.is_single(),
@@ -725,16 +774,6 @@ cdef cdatrie.TrieData _terminal_state_data(cdatrie.TrieState* state):
         cdatrie.trie_state_walk(tmp_state, cdatrie.TRIE_CHAR_TERM)
         return cdatrie.trie_state_get_data(tmp_state)
 
-cdef bint trie_enum_helper(cdatrie.AlphaChar *key, cdatrie.TrieData key_data, void *py_func):
-     cdef unicode py_key = unicode_from_alpha_char(key)
-     cdef int py_data = <int>key_data
-     res = (<object>py_func)(py_key, py_data)
-     return res
-
-cdef bint _trie_counter(cdatrie.AlphaChar *key, cdatrie.TrieData key_data, void *counter):
-     """ enum_func for __len__ method """
-     (<int *>counter)[0] += 1
-     return 1
 
 cdef (cdatrie.Trie* ) _load_from_file(f) except NULL:
     cdef int fd = f.fileno()
@@ -859,9 +898,9 @@ cdef unicode unicode_from_alpha_char(cdatrie.AlphaChar* key, int len=0):
     """
     cdef int length = len
     if length == 0:
-        length = cdatrie.alpha_char_strlen(key)*sizeof(cdatrie.AlphaChar)
+        length = cdatrie.alpha_char_strlen(key)
     cdef char* c_str = <char*> key
-    return c_str[:length].decode('utf_32_le')
+    return c_str[:length*sizeof(cdatrie.AlphaChar)].decode('utf_32_le')
 
 
 def to_ranges(lst):

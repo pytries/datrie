@@ -784,7 +784,7 @@ trie_state_walk (TrieState *s, AlphaChar c)
     }
 
     if (ret) {
-        ks_push (&s->ks, tc, c);
+        ks_push_tc (&s->ks, tc);
     }
 
     return ret;
@@ -899,6 +899,36 @@ trie_state_get_data (const TrieState *s)
 }
 
 /**
+ * @brief Get data from terminal state
+ *
+ * @param s    : a terminal state
+ *
+ * @return the data associated with the terminal state @a s.
+ *
+ * Get value from a terminal state of trie. Getting value from a non-terminal
+ * state will result in TRIE_DATA_ERROR.
+ */
+TrieData
+trie_state_get_terminal_data (const TrieState *s)
+{
+    /* leaf terminal node */
+    if (s->is_suffix) {
+        return tail_get_data (s->trie->tail, s->tail_index);
+    }
+
+    /* non-leaf terminal node; we have to walk to terminal char to get data */
+    TrieIndex index = s->index;
+
+    Bool ret = da_walk (s->trie->da, &index, TRIE_CHAR_TERM);
+    if (!ret) {
+        return TRIE_DATA_ERROR;
+    }
+
+    TrieIndex tail_index = trie_da_get_tail_index (s->trie->da, index);
+    return tail_get_data (s->trie->tail, tail_index);
+}
+
+/**
  * @brief Get key from a state
  *
  * @param s         : a state
@@ -915,6 +945,7 @@ trie_state_get_key (const TrieState* s, int* length) {
     if (NULL != length){
         *length = s->ks.length;
     }
+
     return s->ks.alpha_key;
 }
 
