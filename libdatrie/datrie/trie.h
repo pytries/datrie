@@ -62,6 +62,12 @@ typedef Bool (*TrieEnumFunc) (const AlphaChar  *key,
  */
 typedef struct _TrieState TrieState;
 
+
+/**
+ * @brief Trie iteration state
+ */
+typedef struct _TrieIterator TrieIterator;
+
 /*-----------------------*
  *   GENERAL FUNCTIONS   *
  *-----------------------*/
@@ -156,6 +162,22 @@ Bool      trie_state_is_single (const TrieState *s);
 TrieData trie_state_get_data (const TrieState *s);
 
 Bool trie_da_enum_func (const TrieChar *key, TrieIndex sep_node, void *user_data);
+
+
+/*---------------------*
+ *    TRIE ITERATION   *
+ *---------------------*/
+
+TrieIterator*   trie_iterator_new (TrieState *s);
+
+void            trie_iterator_free (TrieIterator *iter);
+
+Bool            trie_iterator_next (TrieIterator *iter);
+
+Bool            trie_iterator_get_key (const TrieIterator *iter, AlphaChar *key,
+                                       int key_len);
+
+TrieData        trie_iterator_get_data (const TrieIterator *iter);
 
 
 #ifdef __cplusplus

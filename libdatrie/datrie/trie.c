@@ -56,6 +56,13 @@ struct _TrieState {
     short       is_suffix;  /**< whether it is currently in suffix part */
 };
 
+/**
+ * @brief TrieIterator structure
+ */
+struct _TrieIterator {
+    TrieState root;      /**< the state to start iteration from */
+    TrieState state;     /**< the current state */
+};
 
 /*------------------------*
  *   INTERNAL FUNCTIONS   *
@@ -879,6 +886,64 @@ trie_state_get_data (const TrieState *s)
 }
 
 
+/* =============== Iterator API ================= */
+
+TrieIterator*
+trie_iterator_new (TrieState *s)
+{
+    TrieIterator *iter;
+
+    iter = (TrieIterator *) malloc (sizeof (TrieIterator));
+    if (!iter)
+        return NULL;
+
+    trie_state_copy(&iter->root, s);
+    trie_state_copy(&iter->state, s);
+
+    return iter;
+}
+
+void
+trie_iterator_free (TrieIterator *iter)
+{
+    // XXX: if trie_state_free will become more complicated
+    // this may cause issues.
+    free(iter);
+}
+
+Bool
+trie_iterator_next (TrieIterator *iter)
+{
+
+}
+
+Bool
+trie_iterator_get_key (const TrieIterator *iter, AlphaChar *key, int key_len)
+{
+
+}
+
+TrieData
+trie_iterator_get_data (const TrieIterator *iter)
+{
+    TrieState* s = &iter->state;
+
+    /* terminal node is in suffix */
+    if (s->is_suffix) {
+        TrieIndex tail_index = trie_da_get_tail_index (s->trie->da, s->index);
+        return tail_get_data (s->trie->tail, tail_index);
+    }
+
+    /* non-suffix terminal node; we have to walk to terminal char to get data */
+    TrieIndex index = s->index;
+    Bool ret = da_walk (s->trie->da, &index, TRIE_CHAR_TERM);
+    if (!ret) {
+        return TRIE_DATA_ERROR;
+    }
+
+    TrieIndex tail_index = trie_da_get_tail_index (s->trie->da, index);
+    return tail_get_data (s->trie->tail, tail_index);
+}
 
 
 /*
