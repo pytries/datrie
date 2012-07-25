@@ -693,6 +693,23 @@ cdef class TrieState:
         return self.__unicode__()
 
 
+cdef class TrieIterator:
+    cdef cdatrie.TrieIterator* _iter
+
+    def __cinit__(self, TrieState state):
+        self._iter = cdatrie.trie_iterator_new(state._state)
+        if self._iter is NULL:
+            raise MemoryError()
+
+    def __dealloc__(self):
+        if self._iter is not NULL:
+            cdatrie.trie_iterator_free(self._iter)
+
+    cpdef cdatrie.TrieData data(self):
+        return cdatrie.trie_iterator_get_data(self._iter)
+
+
+
 cdef bint _items_enum_func(cdatrie.AlphaChar *key, cdatrie.TrieData key_data, void *user_data):
     """ enum_func for .items() method  """
     (<list> user_data).append(

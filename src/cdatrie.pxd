@@ -66,10 +66,10 @@ cdef extern from "../libdatrie/datrie/trie.h":
 
     ctypedef struct TrieState:
         pass
-#        Trie *trie         # the corresponding trie
-#        TrieIndex index  # index in double-array/tail structures
-#        short suffix_idx   # suffix character offset, if in suffix
-#        short is_suffix    # whether it is currently in suffix part
+
+    ctypedef struct TrieIterator:
+        pass
+
 
     ctypedef int TrieData
 
@@ -140,6 +140,23 @@ cdef extern from "../libdatrie/datrie/trie.h":
     bint trie_da_enum_func (TrieChar *key, TrieIndex sep_node, void *user_data)
 
 
+    # ============== ITERATION ===================
+
+    TrieIterator*   trie_iterator_new (TrieState *s)
+
+    void            trie_iterator_free (TrieIterator *iter)
+
+    bint            trie_iterator_next (TrieIterator *iter)
+
+    bint            trie_iterator_get_key (TrieIterator *iter, AlphaChar *key,
+                                           int key_len)
+
+    TrieData        trie_iterator_get_data (TrieIterator *iter)
+
+
+
+# FIXME: remove all the following declarations
+
 cdef struct _TrieEnumData:
     Trie *trie
     TrieEnumFunc enum_func
@@ -157,3 +174,6 @@ cdef struct _TrieState:
     short       suffix_idx    # suffix character offset, if in suffix
     short       is_suffix     # whether it is currently in suffix part
 
+cdef struct _TrieIterator:
+    _TrieState  root
+    _TrieState  state
