@@ -21,9 +21,9 @@ def test_trie_state():
     trie = _trie()
     state = datrie.TrieState(trie)
     state.walk('f')
-    assert state.get_data() == 1
+    assert state.data() == 1
     state.walk('o')
-    assert state.get_data() == 2
+    assert state.data() == 2
 
 def test_state_next():
     trie = _trie()
@@ -39,6 +39,6 @@ def test_state_next_values():
     res = []
     while state.next():
         if state.is_terminal():
-            res.append(state.get_data())
+            res.append(state.data())
 
     assert res == [1, 3, 4, 5, 10, 20, 2]

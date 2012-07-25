@@ -576,7 +576,7 @@ cdef class Trie(BaseTrie):
         cdef TrieState state = TrieState(self)
         while state.next():
             if state.is_terminal():
-                res.append(self._values[state.get_data()])
+                res.append(self._values[state.data()])
 
         return res
         #return [self._values[val] for val in self._walk_prefixes(prefix, _values_enum_func)]
@@ -672,7 +672,7 @@ cdef class TrieState:
     cpdef bint is_leaf(self):
         return cdatrie.trie_state_is_leaf(self._state)
 
-    cpdef int get_data(self):
+    cpdef int data(self):
         return _terminal_state_data(self._state)
 
     def _internals(self):
@@ -683,7 +683,7 @@ cdef class TrieState:
 
         return u"%s, data:%d, term:%s, leaf:%s, single: %s" % (
             self._internals(),
-            self.get_data(),
+            self.data(),
             self.is_terminal(),
             self.is_leaf(),
             self.is_single(),

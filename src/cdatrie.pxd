@@ -63,10 +63,6 @@ cdef extern from "../libdatrie/datrie/trie.h":
 
     ctypedef struct Trie:
         pass
-#        AlphaMap   *alpha_map
-#        DArray     *da
-#        Tail       *tail
-#        bint        is_dirty
 
     ctypedef struct TrieState:
         pass
