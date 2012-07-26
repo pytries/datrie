@@ -2,6 +2,16 @@
 CHANGES
 =======
 
+dev (TBA)
+---------
+
+* ``libdatrie`` improvements and bugfixes, including C iterator API support;
+* custom iteration support using ``datrie.TrieState`` and
+  ``datrie.TrieIterator``.
+* speed improvements: ``__length__``, ``keys``, ``values`` and
+  ``items`` methods should be up to 2x faster.
+
+
 0.3 (2012-07-21)
 ----------------
 

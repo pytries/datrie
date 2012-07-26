@@ -238,12 +238,14 @@ def profiling():
         import yep
 
         trie = create_trie()
-        WORDS = words100k()
+        #WORDS = words100k()
 
         yep.start(b'output.prof')
-        for x in range(1000):
-            for word in WORDS:
-                trie[word]
+        for x in range(100):
+            trie.keys()
+#        for x in range(1000):
+#            for word in WORDS:
+#                trie[word]
         yep.stop()
 
     def profile_cprofile():
@@ -270,7 +272,8 @@ def profiling():
         s = pstats.Stats("Profile.prof")
         s.strip_dirs().sort_stats("time").print_stats(20)
 
-    profile_cprofile()
+    #profile_cprofile()
+    profile_yep()
 
 #def memory():
 #    gc.collect()

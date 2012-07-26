@@ -127,6 +127,32 @@ If you don't need values or integer values are OK then use ``datrie.BaseTrie``::
     import string
     trie = datrie.BaseTrie(string.ascii_lowercase)
 
+Custom iteration
+================
+
+If the built-in trie methods don't fit you can use ``datrie.TrieState`` and
+``datrie.TrieIterator`` to implement custom traversal.
+
+.. note::
+
+    If you use ``datrie.BaseTrie`` you need ``datrie.BaseTrieState`` and
+    ``datrie.BaseTrieIterator`` for custom traversal.
+
+
+For example, let's find all suffixes of ``'fo'`` for our trie and get
+the values::
+
+    >>> state = datrie.TrieState(trie)
+    >>> state.walk(u'foo')
+    >>> it = datrie.TrieIterator(state)
+    >>> while it.next():
+    ...     print(it.key())
+    ...     print(it.data))
+    o
+    5
+    obar
+    10
+
 Performance
 ===========
 
@@ -158,46 +184,47 @@ on __getitem__. Benchmark results (macbook air i5 1.7GHz,
     trie __getitem__: 2.584M ops/sec
 
 Looking for prefixes of a given word is almost as fast as
-__getitem__ (results are for Python 3.2, they are even faster under
-Python 2.x on my machine)::
+``__getitem__`` (results are for Python 3.2, this is the slowest
+supported Python, results are better for 2.6, 2.7 and 3.3)::
 
-    trie.iter_prefix_items (hits):      0.431M ops/sec
-    trie.prefix_items (hits):           0.685M ops/sec
-    trie.prefix_items loop (hits):      0.601M ops/sec
-    trie.iter_prefixes (hits):          0.814M ops/sec
-    trie.iter_prefixes (misses):        1.565M ops/sec
-    trie.iter_prefixes (mixed):         1.461M ops/sec
-    trie.has_keys_with_prefix (hits):   1.945M ops/sec
-    trie.has_keys_with_prefix (misses): 2.625M ops/sec
-    trie.longest_prefix (hits):         1.750M ops/sec
-    trie.longest_prefix (misses):       1.569M ops/sec
-    trie.longest_prefix (mixed):        1.662M ops/sec
-    trie.longest_prefix_item (hits):    1.075M ops/sec
-    trie.longest_prefix_item (misses):  1.058M ops/sec
-    trie.longest_prefix_item (mixed):   1.083M ops/sec
+    trie.iter_prefix_items (hits):      0.461M ops/sec
+    trie.prefix_items (hits):           0.743M ops/sec
+    trie.prefix_items loop (hits):      0.629M ops/sec
+    trie.iter_prefixes (hits):          0.759M ops/sec
+    trie.iter_prefixes (misses):        1.538M ops/sec
+    trie.iter_prefixes (mixed):         1.359M ops/sec
+    trie.has_keys_with_prefix (hits):   1.896M ops/sec
+    trie.has_keys_with_prefix (misses): 2.590M ops/sec
+    trie.longest_prefix (hits):         1.710M ops/sec
+    trie.longest_prefix (misses):       1.506M ops/sec
+    trie.longest_prefix (mixed):        1.520M ops/sec
+    trie.longest_prefix_item (hits):    1.276M ops/sec
+    trie.longest_prefix_item (misses):  1.292M ops/sec
+    trie.longest_prefix_item (mixed):   1.379M ops/sec
 
 Looking for all words starting with a given prefix is mostly limited
 by overall result count (this can be improved in future because a
 lot of time is spent decoding strings from utf_32_le to Python's
 unicode)::
 
-    trie.items(prefix="xxx"), avg_len(res)==415:        0.690K ops/sec
-    trie.keys(prefix="xxx"), avg_len(res)==415:         0.721K ops/sec
-    trie.values(prefix="xxx"), avg_len(res)==415:       2.151K ops/sec
-    trie.items(prefix="xxxxx"), avg_len(res)==17:       15.841K ops/sec
-    trie.keys(prefix="xxxxx"), avg_len(res)==17:        16.829K ops/sec
-    trie.values(prefix="xxxxx"), avg_len(res)==17:      43.930K ops/sec
-    trie.items(prefix="xxxxxxxx"), avg_len(res)==3:     71.620K ops/sec
-    trie.keys(prefix="xxxxxxxx"), avg_len(res)==3:      77.067K ops/sec
-    trie.values(prefix="xxxxxxxx"), avg_len(res)==3:    157.464K ops/sec
-    trie.items(prefix="xxxxx..xx"), avg_len(res)==1.4:  116.869K ops/sec
-    trie.keys(prefix="xxxxx..xx"), avg_len(res)==1.4:   128.392K ops/sec
-    trie.values(prefix="xxxxx..xx"), avg_len(res)==1.4: 194.388K ops/sec
-    trie.items(prefix="xxx"), NON_EXISTING:             1753.472K ops/sec
-    trie.keys(prefix="xxx"), NON_EXISTING:              1797.559K ops/sec
-    trie.values(prefix="xxx"), NON_EXISTING:            1705.695K ops/sec
+    trie.items(prefix="xxx"), avg_len(res)==415:        0.721K ops/sec
+    trie.keys(prefix="xxx"), avg_len(res)==415:         0.723K ops/sec
+    trie.values(prefix="xxx"), avg_len(res)==415:       4.870K ops/sec
+    trie.items(prefix="xxxxx"), avg_len(res)==17:       18.084K ops/sec
+    trie.keys(prefix="xxxxx"), avg_len(res)==17:        18.279K ops/sec
+    trie.values(prefix="xxxxx"), avg_len(res)==17:      98.668K ops/sec
+    trie.items(prefix="xxxxxxxx"), avg_len(res)==3:     87.141K ops/sec
+    trie.keys(prefix="xxxxxxxx"), avg_len(res)==3:      90.251K ops/sec
+    trie.values(prefix="xxxxxxxx"), avg_len(res)==3:    346.981K ops/sec
+    trie.items(prefix="xxxxx..xx"), avg_len(res)==1.4:  202.346K ops/sec
+    trie.keys(prefix="xxxxx..xx"), avg_len(res)==1.4:   216.588K ops/sec
+    trie.values(prefix="xxxxx..xx"), avg_len(res)==1.4: 532.858K ops/sec
+    trie.items(prefix="xxx"), NON_EXISTING:             1864.411K ops/sec
+    trie.keys(prefix="xxx"), NON_EXISTING:              1857.531K ops/sec
+    trie.values(prefix="xxx"), NON_EXISTING:            1822.818K ops/sec
 
-Build time is worse than dict's; updates are quite fast::
+Insert time is very slow compared to dict, this is the limitation
+of double-array tries; updates are quite fast::
 
     dict __setitem__ (updates): 3.489M ops/sec
     trie __setitem__ (updates): 1.862M ops/sec
@@ -208,6 +235,21 @@ Build time is worse than dict's; updates are quite fast::
     dict setdefault (inserts):  2.596M ops/sec
     trie setdefault (inserts):  0.050M ops/sec
 
+Other results (note that ``len(trie)`` is currently implemented
+using trie traversal)::
+
+    dict __contains__ (hits):   3.905M ops/sec
+    trie __contains__ (hits):   2.017M ops/sec
+    dict __contains__ (misses): 3.296M ops/sec
+    trie __contains__ (misses): 2.633M ops/sec
+    dict __len__:               199728.762 ops/sec
+    trie __len__:               22.007 ops/sec
+    dict values():              360.243 ops/sec
+    trie values():              19.703 ops/sec
+    dict keys():                180.307 ops/sec
+    trie keys():                3.361 ops/sec
+    dict items():               49.029 ops/sec
+    trie items():               3.172 ops/sec
 
 Please take this benchmark results with a grain of salt; this
 is a very simple benchmark and may not cover your use case.
@@ -217,8 +259,8 @@ Current Limitations
 
 * keys must be unicode (no implicit conversion for byte strings
   under Python 2.x, sorry);
-* there are no iterator versions of keys/values/items (this is a current
-  limitation of libdatrie);
+* there are no iterator versions of keys/values/items (this is not
+  implemented yet);
 * it doesn't work under pypy+MacOS X (some obscure error which I don't
   understand);
 * library is not tested with narrow Python builds.
