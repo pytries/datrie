@@ -670,8 +670,10 @@ cdef class TrieState:
 
 cdef class TrieIterator:
     cdef cdatrie.TrieIterator* _iter
+    cdef TrieState _root
 
     def __cinit__(self, TrieState state):
+        self._root = state # prevent garbage collection of state
         self._iter = cdatrie.trie_iterator_new(state._state)
         if self._iter is NULL:
             raise MemoryError()
