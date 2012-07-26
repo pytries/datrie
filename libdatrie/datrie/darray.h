@@ -76,7 +76,9 @@ void       da_set_check (DArray *d, TrieIndex s, TrieIndex val);
 
 Bool       da_walk (const DArray *d, TrieIndex *s, TrieChar c);
 
-Bool       da_walk_next (const DArray* d, TrieIndex* s);
+Bool       da_walk_next (const DArray* d, TrieIndex root, TrieIndex* s);
+
+Bool       da_walk_next_terminal (const DArray* d, TrieIndex root, TrieIndex* s);
 
 /**
  * @brief Test walkability in double-array structure

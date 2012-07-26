@@ -62,6 +62,9 @@ struct _TrieState {
 struct _TrieIterator {
     TrieState root;      /**< the state to start iteration from */
     TrieState state;     /**< the current state */
+
+    Bool started;
+    Bool finished;
 };
 
 /*------------------------*
@@ -797,7 +800,7 @@ trie_state_walk_next (TrieState* s)
 
     if (!s->is_suffix) {
         Bool ret;
-        ret = da_walk_next (s->trie->da, &s->index);
+        ret = da_walk_next (s->trie->da, da_get_root(&s->trie->da), &s->index);
 
         if (ret && trie_da_is_separate (s->trie->da, s->index)) {
             s->suffix_idx = 0;
@@ -888,6 +891,18 @@ trie_state_get_data (const TrieState *s)
 
 /* =============== Iterator API ================= */
 
+/**
+ * @brief Create a new trie iterator
+ *
+ * @param   s   : the TrieState to start iteration from
+ *
+ * @return a pointer to the newly created TrieIterator, NULL on failure
+ *
+ * Create a new trie iterator for iterating sub-trie starting with state @a s.
+ * Use it with the result of trie_get_root(trie) to iterate the whole trie.
+ *
+ * The created object must be freed with trie_iterator_free().
+ */
 TrieIterator*
 trie_iterator_new (TrieState *s)
 {
@@ -900,9 +915,19 @@ trie_iterator_new (TrieState *s)
     trie_state_copy(&iter->root, s);
     trie_state_copy(&iter->state, s);
 
+    iter->finished = FALSE;
+    iter->started = FALSE;
+
     return iter;
 }
 
+/**
+ * @brief Free a trie iterator
+ *
+ * @param s    : the trie iterator
+ *
+ * Free the trie iterator.
+ */
 void
 trie_iterator_free (TrieIterator *iter)
 {
@@ -911,34 +936,155 @@ trie_iterator_free (TrieIterator *iter)
     free(iter);
 }
 
+/**
+ * @brief Move iterator to the next terminal node
+ *
+ * @param iter    : an iterator
+ *
+ * @return boolean value indicating the success of the walk
+ *
+ * Move iterator to the next terminal node. On return, the iterator @a iter
+ * is updated to the new state if successfully walked.
+ *
+ */
 Bool
 trie_iterator_next (TrieIterator *iter)
 {
+    if (iter->finished)
+        return FALSE;
 
+    /* handle tail starting states */
+    if (iter->state.is_suffix) {
+        iter->finished = TRUE;
+        iter->started = TRUE;
+        return TRUE;
+    }
+
+    /* Do not move to the next terminal node if the starting node is terminal
+       and it is the first iteration */
+    if (!iter->started) {
+        iter->started = TRUE;
+
+        if (da_is_walkable (iter->state.trie->da, iter->state.index, 0)) {
+            return TRUE;
+        }
+    }
+
+    /* go to next terminal node */
+    Bool res = da_walk_next_terminal (iter->state.trie->da, iter->root.index, &iter->state.index);
+    if (!res)
+        iter->finished = TRUE;
+
+    return res;
 }
+
+
+/**
+ * @brief Get a key for the current iterator state
+ *
+ * @param iter    : an iterator
+ * @param key     : pointer to storage where to store the key
+ * @param key_len : storage size
+ *
+ * @return boolean value indicating the success
+ *
+ * Get a key for the current iterator state and copy it into storage @a key.
+ */
 
 Bool
 trie_iterator_get_key (const TrieIterator *iter, AlphaChar *key, int key_len)
 {
+    int key_length = 0, i;
 
+    DArray* d = iter->state.trie->da;
+    AlphaMap* alpha_map = iter->state.trie->alpha_map;
+
+    TrieIndex state = iter->state.index;
+    TrieIndex root = iter->root.index;
+
+    /* trace back to root */
+    while (state != root) {
+        TrieIndex   parent;
+        parent = da_get_check (d, state);
+        key[key_length++] = alpha_map_trie_to_char(alpha_map, state - da_get_base (d, parent));
+        state = parent;
+
+        if (key_length > key_len) {
+            return FALSE;
+        }
+    }
+
+    /* reverse the string */
+    int reverse_i = key_length;
+    for (i = 0; i < --reverse_i; i++) {
+        AlphaChar temp;
+
+        temp = key[i];
+        key[i] = key[reverse_i];
+        key[reverse_i] = temp;
+    }
+
+    /* go to the tail */
+    state = iter->state.index;
+    if (!trie_da_is_separate(d, state)) {
+        Bool ret = da_walk (d, &state, TRIE_CHAR_TERM);
+        if (!ret) {
+            return FALSE;
+        }
+    }
+
+    TrieIndex tail_index = trie_da_get_tail_index (d, state);
+    TrieChar* suffix = tail_get_suffix (iter->state.trie->tail, tail_index);
+    if (suffix == NULL) {
+        return TRUE;
+    }
+
+    /* skip already handled letters (for the tail states) */
+    if (iter->state.is_suffix) {
+        int suffix_idx = iter->state.suffix_idx;
+        while (*suffix && suffix_idx) {
+            ++suffix;
+            --suffix_idx;
+        }
+    }
+
+    /* append characters from the tail */
+    while (*suffix) {
+//        printf("SUFF: %c\n", *suffix-1);
+        key[key_length++] = alpha_map_trie_to_char(alpha_map, *suffix);
+        if (key_length > key_len) {
+            return FALSE;
+        }
+        ++suffix;
+    }
+    key[key_length] = 0;
+
+    return TRUE;
 }
 
+/**
+ * @brief Get data for the current iterator state
+ *
+ * @param iter    : an iterator
+ *
+ * @return the data associated with the current iterator @a iter state,
+ *         or TRIE_DATA_ERROR if @a s is not a leaf state
+ *
+ * Get value for the current iterator state.
+ */
 TrieData
 trie_iterator_get_data (const TrieIterator *iter)
 {
     TrieState* s = &iter->state;
-
-    /* terminal node is in suffix */
-    if (s->is_suffix) {
-        TrieIndex tail_index = trie_da_get_tail_index (s->trie->da, s->index);
-        return tail_get_data (s->trie->tail, tail_index);
-    }
-
-    /* non-suffix terminal node; we have to walk to terminal char to get data */
     TrieIndex index = s->index;
-    Bool ret = da_walk (s->trie->da, &index, TRIE_CHAR_TERM);
-    if (!ret) {
-        return TRIE_DATA_ERROR;
+
+    if (!trie_da_is_separate(s->trie->da, index)) {  // && !s->is_suffix ?
+
+        /* non-suffix terminal node; walk to a terminal char to get the data */
+        Bool ret = da_walk (s->trie->da, &index, TRIE_CHAR_TERM);
+        if (!ret) {
+            return TRIE_DATA_ERROR;
+        }
     }
 
     TrieIndex tail_index = trie_da_get_tail_index (s->trie->da, index);
