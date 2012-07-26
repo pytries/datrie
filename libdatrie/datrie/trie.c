@@ -889,6 +889,33 @@ trie_state_get_data (const TrieState *s)
 }
 
 
+/**
+ * @brief Get data from terminal state
+ *
+ * @param s    : a terminal state
+ *
+ * @return the data associated with the terminal state @a s,
+ *         or TRIE_DATA_ERROR if @a s is not a terminal state
+ *
+ */
+TrieData
+trie_state_get_terminal_data (const TrieState *s)
+{
+    TrieIndex index = s->index;
+
+    if (!trie_da_is_separate(s->trie->da, index)) {  // && !s->is_suffix ?
+
+        /* non-suffix terminal node; walk to a terminal char to get the data */
+        Bool ret = da_walk (s->trie->da, &index, TRIE_CHAR_TERM);
+        if (!ret) {
+            return TRIE_DATA_ERROR;
+        }
+    }
+
+    TrieIndex tail_index = trie_da_get_tail_index (s->trie->da, index);
+    return tail_get_data (s->trie->tail, tail_index);
+}
+
 /* =============== Iterator API ================= */
 
 /**
@@ -1074,20 +1101,7 @@ trie_iterator_get_key (const TrieIterator *iter, AlphaChar *key, int key_len)
 TrieData
 trie_iterator_get_data (const TrieIterator *iter)
 {
-    TrieState* s = &iter->state;
-    TrieIndex index = s->index;
-
-    if (!trie_da_is_separate(s->trie->da, index)) {  // && !s->is_suffix ?
-
-        /* non-suffix terminal node; walk to a terminal char to get the data */
-        Bool ret = da_walk (s->trie->da, &index, TRIE_CHAR_TERM);
-        if (!ret) {
-            return TRIE_DATA_ERROR;
-        }
-    }
-
-    TrieIndex tail_index = trie_da_get_tail_index (s->trie->da, index);
-    return tail_get_data (s->trie->tail, tail_index);
+    return trie_state_get_terminal_data(&iter->state);
 }
 
 

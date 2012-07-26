@@ -228,7 +228,7 @@ cdef class BaseTrie:
                 if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
                     return
                 if cdatrie.trie_state_is_terminal(state): # word is found
-                    yield key[:index], _terminal_state_data(state)
+                    yield key[:index], cdatrie.trie_state_get_terminal_data(state)
                 index += 1
         finally:
             cdatrie.trie_state_free(state)
@@ -279,7 +279,7 @@ cdef class BaseTrie:
                 if cdatrie.trie_state_is_terminal(state): # word is found
                     result.append(
                         (key[:index],
-                         _terminal_state_data(state))
+                         cdatrie.trie_state_get_terminal_data(state))
                     )
                 index += 1
             return result
@@ -341,7 +341,7 @@ cdef class BaseTrie:
             for char in key:
                 if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
                     if cdatrie.trie_state_is_terminal(state):
-                        return key[:index], _terminal_state_data(state)
+                        return key[:index], cdatrie.trie_state_get_terminal_data(state)
                     else:
                         if default is RAISE_KEY_ERROR:
                             raise KeyError(key)
@@ -349,7 +349,7 @@ cdef class BaseTrie:
                 index += 1
 
             if cdatrie.trie_state_is_terminal(state):
-                return key, _terminal_state_data(state)
+                return key, cdatrie.trie_state_get_terminal_data(state)
 
             if default is RAISE_KEY_ERROR:
                 raise KeyError(key)
@@ -653,7 +653,7 @@ cdef class TrieState:
         return cdatrie.trie_state_is_leaf(self._state)
 
     cpdef int data(self):
-        return _terminal_state_data(self._state)
+        return cdatrie.trie_state_get_terminal_data(self._state)
 
     def __unicode__(self):
 
@@ -694,22 +694,6 @@ cdef class TrieIterator:
         if not res:
             raise KeyError()
         return unicode_from_alpha_char(buf)
-
-
-
-cdef cdatrie.TrieData _terminal_state_data(cdatrie.TrieState* state):
-    """ Wrapper for cdatrie.trie_state_get_data that handle non-leaf nodes. """
-
-    # XXX: move it to trie.c?
-    cdef cdatrie._TrieState _tmp_state
-    cdef cdatrie.TrieState* tmp_state = <cdatrie.TrieState *> &_tmp_state
-
-    if cdatrie.trie_state_is_single(state): # leaf
-        return cdatrie.trie_state_get_data(state)
-    else: # non-leaf terminal, data is not available here
-        cdatrie.trie_state_copy(tmp_state, state)
-        cdatrie.trie_state_walk(tmp_state, cdatrie.TRIE_CHAR_TERM)
-        return cdatrie.trie_state_get_data(tmp_state)
 
 
 cdef (cdatrie.Trie* ) _load_from_file(f) except NULL:

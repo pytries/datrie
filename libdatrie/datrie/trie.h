@@ -161,6 +161,9 @@ Bool      trie_state_is_single (const TrieState *s);
 
 TrieData trie_state_get_data (const TrieState *s);
 
+TrieData trie_state_get_terminal_data (const TrieState *s);
+
+
 Bool trie_da_enum_func (const TrieChar *key, TrieIndex sep_node, void *user_data);
 
 

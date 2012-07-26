@@ -115,6 +115,8 @@ cdef extern from "../libdatrie/datrie/trie.h":
 
     TrieData trie_state_get_data (TrieState *s)
 
+    TrieData trie_state_get_terminal_data (TrieState *s)
+
     bint trie_da_enum_func (TrieChar *key, TrieIndex sep_node, void *user_data)
 
 
@@ -131,18 +133,3 @@ cdef extern from "../libdatrie/datrie/trie.h":
 
     TrieData        trie_iterator_get_data (TrieIterator *iter)
 
-
-
-# FIXME: remove all the following declarations
-
-cdef struct _Trie:
-    AlphaMap   *alpha_map
-    DArray     *da
-    Tail       *tail
-    bint       is_dirty
-
-cdef struct _TrieState:
-    _Trie       *trie         # the corresponding trie
-    TrieIndex   index         # index in double-array/tail structures
-    short       suffix_idx    # suffix character offset, if in suffix
-    short       is_suffix     # whether it is currently in suffix part
