@@ -639,9 +639,6 @@ cdef class _TrieState:
                 return False
         return True
 
-    cpdef bint next(self):
-        return cdatrie.trie_state_walk_next(self._state)
-
     cdef bint _walk(self, cdatrie.AlphaChar char):
         """
         Walks the trie stepwise, using a given character ``char``.
@@ -649,6 +646,9 @@ cdef class _TrieState:
         Returns boolean value indicating the success of the walk.
         """
         return cdatrie.trie_state_walk(self._state, char)
+
+    cpdef bint _next(self):
+        return cdatrie.trie_state_walk_next(self._state)
 
     cpdef copy_to(self, TrieState state):
         """ Copies trie state to another """

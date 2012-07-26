@@ -26,7 +26,7 @@ def test_state_next():
     state = datrie.TrieState(trie)
 
     counter = 0
-    while state.next():
+    while state._next():
         counter += 1
 
     assert counter == 15
@@ -36,7 +36,7 @@ def test_state_next_values():
     state = datrie.TrieState(trie)
 
     res = []
-    while state.next():
+    while state._next():
         if state.is_terminal():
             res.append(state.data())
 
