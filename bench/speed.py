@@ -90,9 +90,9 @@ def benchmark():
         ('__setitem__ (inserts)', 'for word in NON_WORDS_10k: data[word]=1', 'M ops/sec',0.01, 3),
         ('setdefault (updates)', 'for word in words: data.setdefault(word, 1)', 'M ops/sec', 0.1, 3),
         ('setdefault (inserts)', 'for word in  NON_WORDS_10k: data.setdefault(word, 1)', 'M ops/sec', 0.01, 3),
-        ('items()', 'list(data.items())', ' ops/sec', 1, 1),
-        ('keys()', 'list(data.keys())', ' ops/sec', 1, 1),
         ('values()', 'list(data.values())', ' ops/sec', 1, 1),
+        ('keys()', 'list(data.keys())', ' ops/sec', 1, 1),
+        ('items()', 'list(data.items())', ' ops/sec', 1, 1),
     ]
 
     common_setup = """

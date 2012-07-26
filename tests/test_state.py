@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals
-import string
-
-import pytest
 import datrie
 
 def _trie():
@@ -14,7 +11,6 @@ def _trie():
     trie['fauxiiiip'] = 5
     trie['fauzox'] = 10
     trie['fauzoy'] = 20
-    #trie['faurox'] = 6
     return trie
 
 def test_trie_state():
@@ -28,9 +24,12 @@ def test_trie_state():
 def test_state_next():
     trie = _trie()
     state = datrie.TrieState(trie)
-    print('========= state: ', state)
+
+    counter = 0
     while state.next():
-        print('========== state: ', state)
+        counter += 1
+
+    assert counter == 15
 
 def test_state_next_values():
     trie = _trie()

@@ -22,33 +22,11 @@ cdef extern from "../libdatrie/datrie/alpha-map.h":
     int alpha_map_add_range (AlphaMap *alpha_map, AlphaChar begin, AlphaChar end)
     int alpha_char_strlen (AlphaChar *str)
 
-cdef extern from "../libdatrie/datrie/alpha-map-private.h":
-    TrieChar alpha_map_char_to_trie (AlphaMap *alpha_map, AlphaChar ac)
-
-    AlphaChar alpha_map_trie_to_char (AlphaMap *alpha_map, TrieChar tc)
-
-    TrieChar * alpha_map_char_to_trie_str (AlphaMap  *alpha_map, AlphaChar *str)
-
-    AlphaChar * alpha_map_trie_to_char_str (AlphaMap  *alpha_map, TrieChar  *str)
-
 
 cdef extern from "../libdatrie/datrie/darray.h":
-    # Double-array trie structure
-
-    struct DArray:
+    struct DArray: # Double-array trie structure
         pass
 
-    ctypedef bint (*DAEnumFunc) (TrieChar *key, TrieIndex sep_node, void *user_data)
-
-    TrieIndex da_get_root (DArray *d)
-
-    TrieIndex da_get_base (DArray *d, TrieIndex s)
-
-    TrieIndex da_get_check (DArray *d, TrieIndex s)
-
-    bint da_enumerate (DArray *d, DAEnumFunc enum_func, void *user_data)
-
-    bint da_enumerate_recursive (DArray *d, TrieIndex state, DAEnumFunc enum_func, void *user_data)
 
 cdef extern from "../libdatrie/datrie/tail.h":
     struct Tail:
@@ -157,11 +135,6 @@ cdef extern from "../libdatrie/datrie/trie.h":
 
 # FIXME: remove all the following declarations
 
-cdef struct _TrieEnumData:
-    Trie *trie
-    TrieEnumFunc enum_func
-    void *user_data
-
 cdef struct _Trie:
     AlphaMap   *alpha_map
     DArray     *da
@@ -173,7 +146,3 @@ cdef struct _TrieState:
     TrieIndex   index         # index in double-array/tail structures
     short       suffix_idx    # suffix character offset, if in suffix
     short       is_suffix     # whether it is currently in suffix part
-
-cdef struct _TrieIterator:
-    _TrieState  root
-    _TrieState  state
