@@ -105,8 +105,6 @@ void       da_prune_upto (DArray *d, TrieIndex p, TrieIndex s);
 
 Bool    da_enumerate (const DArray *d, DAEnumFunc enum_func, void *user_data);
 
-Bool    da_enumerate_recursive (const DArray *d, TrieIndex state, DAEnumFunc enum_func, void *user_data);
-
 #endif  /* __DARRAY_H */
 
 /*

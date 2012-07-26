@@ -1050,7 +1050,6 @@ trie_iterator_get_key (const TrieIterator *iter, AlphaChar *key, int key_len)
 
     /* append characters from the tail */
     while (*suffix) {
-//        printf("SUFF: %c\n", *suffix-1);
         key[key_length++] = alpha_map_trie_to_char(alpha_map, *suffix);
         if (key_length > key_len) {
             return FALSE;

@@ -92,10 +92,10 @@ static void         da_alloc_cell      (DArray         *d,
 static void         da_free_cell       (DArray         *d,
                                         TrieIndex       cell);
 
-//static Bool         da_enumerate_recursive (const DArray   *d,
-//                                            TrieIndex       state,
-//                                            DAEnumFunc      enum_func,
-//                                            void           *user_data);
+static Bool         da_enumerate_recursive (const DArray   *d,
+                                            TrieIndex       state,
+                                            DAEnumFunc      enum_func,
+                                            void           *user_data);
 
 static Bool         da_walk_next_recursive (const DArray *d,
                                             TrieIndex *s,
@@ -929,7 +929,7 @@ da_enumerate (const DArray *d, DAEnumFunc enum_func, void *user_data)
     return da_enumerate_recursive (d, da_get_root (d), enum_func, user_data);
 }
 
-Bool
+static Bool
 da_enumerate_recursive (const DArray   *d,
                         TrieIndex       state,
                         DAEnumFunc      enum_func,
