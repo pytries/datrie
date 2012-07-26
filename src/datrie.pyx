@@ -23,7 +23,6 @@ RERAISE_KEY_ERROR = object()
 DELETED_OBJECT = object()
 
 
-
 cdef class BaseTrie:
     """
     Wrapper for libdatrie's trie.
@@ -56,7 +55,6 @@ cdef class BaseTrie:
         self._c_trie = cdatrie.trie_new(alpha_map._c_alpha_map)
         if self._c_trie is NULL:
             raise MemoryError()
-
 
     def __dealloc__(self):
         if self._c_trie is not NULL:
@@ -165,8 +163,8 @@ cdef class BaseTrie:
 
     def __len__(self):
         # XXX: this is very slow
-        cdef TrieState s = TrieState(self)
-        cdef TrieIterator iter = TrieIterator(s)
+        cdef BaseTrieState s = BaseTrieState(self)
+        cdef BaseTrieIterator iter = BaseTrieIterator(s)
         cdef int counter=0
 
         while iter.next():
@@ -382,14 +380,14 @@ cdef class BaseTrie:
         """
         cdef bint success
         cdef list res = []
-        cdef TrieState state = TrieState(self)
+        cdef BaseTrieState state = BaseTrieState(self)
 
         if prefix is not None:
             success = state.walk(prefix)
             if not success:
                 return res
 
-        cdef TrieIterator iter = TrieIterator(state)
+        cdef BaseTrieIterator iter = BaseTrieIterator(state)
 
         if prefix is None:
             while iter.next():
@@ -409,14 +407,14 @@ cdef class BaseTrie:
         """
         cdef bint success
         cdef list res = []
-        cdef TrieState state = TrieState(self)
+        cdef BaseTrieState state = BaseTrieState(self)
 
         if prefix is not None:
             success = state.walk(prefix)
             if not success:
                 return res
 
-        cdef TrieIterator iter = TrieIterator(state)
+        cdef BaseTrieIterator iter = BaseTrieIterator(state)
 
         if prefix is None:
             while iter.next():
@@ -436,17 +434,20 @@ cdef class BaseTrie:
         """
         cdef bint success
         cdef list res = []
-        cdef TrieState state = TrieState(self)
+        cdef BaseTrieState state = BaseTrieState(self)
 
         if prefix is not None:
             success = state.walk(prefix)
             if not success:
                 return res
 
-        cdef TrieIterator iter = TrieIterator(state)
+        cdef BaseTrieIterator iter = BaseTrieIterator(state)
         while iter.next():
             res.append(iter.data())
         return res
+
+    cdef _index_to_value(self, cdatrie.TrieData index):
+        return index
 
 
 cdef class Trie(BaseTrie):
@@ -527,16 +528,22 @@ cdef class Trie(BaseTrie):
         associated with keys prefixed by ``prefix``.
         """
 
+        # the following code is
+        #
+        #    [(k, self._values[v]) for (k,v) in BaseTrie.items(self, prefix)]
+        #
+        # but inlined for speed.
+
         cdef bint success
         cdef list res = []
-        cdef TrieState state = TrieState(self)
+        cdef BaseTrieState state = BaseTrieState(self)
 
         if prefix is not None:
             success = state.walk(prefix)
             if not success:
                 return res
 
-        cdef TrieIterator iter = TrieIterator(state)
+        cdef BaseTrieIterator iter = BaseTrieIterator(state)
 
         if prefix is None:
             while iter.next():
@@ -554,8 +561,15 @@ cdef class Trie(BaseTrie):
         If ``prefix`` is not None, returns only the values
         associated with keys prefixed by ``prefix``.
         """
+
+        # the following code is
+        #
+        #     [self._values[v] for v in BaseTrie.values(self, prefix)]
+        #
+        # but inlined for speed.
+
         cdef list res = []
-        cdef TrieState state = TrieState(self)
+        cdef BaseTrieState state = BaseTrieState(self)
         cdef bint success
 
         if prefix is not None:
@@ -563,7 +577,7 @@ cdef class Trie(BaseTrie):
             if not success:
                 return res
 
-        cdef TrieIterator iter = TrieIterator(state)
+        cdef BaseTrieIterator iter = BaseTrieIterator(state)
 
         while iter.next():
             res.append(self._values[iter.data()])
@@ -600,18 +614,19 @@ cdef class Trie(BaseTrie):
         for k, v in super(Trie, self).iter_prefix_items(key):
             yield k, self._values[v]
 
+    cdef _index_to_value(self, cdatrie.TrieData index):
+        return self._values[index]
 
-cdef class TrieState:
-    """
-    Experimental TrieState wrapper. It can be used for custom trie traversal.
-    It is not used by ``datrie.Trie`` for performance reasons.
-    """
+
+cdef class _TrieState:
     cdef cdatrie.TrieState* _state
+    cdef BaseTrie _trie
 
     def __cinit__(self, BaseTrie trie):
         self._state = cdatrie.trie_root(trie._c_trie)
         if self._state is NULL:
             raise MemoryError()
+        self._trie = trie
 
     def __dealloc__(self):
         if self._state is not NULL:
@@ -652,9 +667,6 @@ cdef class TrieState:
     cpdef bint is_leaf(self):
         return cdatrie.trie_state_is_leaf(self._state)
 
-    cpdef int data(self):
-        return cdatrie.trie_state_get_terminal_data(self._state)
-
     def __unicode__(self):
 
         return u"data:%d, term:%s, leaf:%s, single: %s" % (
@@ -668,11 +680,32 @@ cdef class TrieState:
         return self.__unicode__()
 
 
-cdef class TrieIterator:
-    cdef cdatrie.TrieIterator* _iter
-    cdef TrieState _root
+cdef class BaseTrieState(_TrieState):
+    """
+    cdatrie.TrieState wrapper. It can be used for custom trie traversal.
+    """
+    cpdef int data(self):
+        return cdatrie.trie_state_get_terminal_data(self._state)
 
-    def __cinit__(self, TrieState state):
+
+cdef class TrieState(_TrieState):
+
+    def __cinit__(self, Trie trie): # this is overriden for extra type check
+        self._state = cdatrie.trie_root(trie._c_trie)
+        if self._state is NULL:
+            raise MemoryError()
+        self._trie = trie
+
+    cpdef data(self):
+        cdef cdatrie.TrieData data = cdatrie.trie_state_get_terminal_data(self._state)
+        return self._trie._index_to_value(data)
+
+
+cdef class _TrieIterator:
+    cdef cdatrie.TrieIterator* _iter
+    cdef _TrieState _root
+
+    def __cinit__(self, _TrieState state):
         self._root = state # prevent garbage collection of state
         self._iter = cdatrie.trie_iterator_new(state._state)
         if self._iter is NULL:
@@ -685,17 +718,39 @@ cdef class TrieIterator:
     cpdef bint next(self):
         return cdatrie.trie_iterator_next(self._iter)
 
-    cpdef cdatrie.TrieData data(self):
-        return cdatrie.trie_iterator_get_data(self._iter)
-
     cpdef unicode key(self):
         # max key length is limited!
-        DEF MAX_KEY_LENGTH = 16384
+        DEF MAX_KEY_LENGTH = 1024 #32768
         cdef cdatrie.AlphaChar buf[MAX_KEY_LENGTH]
         cdef bint res = cdatrie.trie_iterator_get_key(self._iter, buf, MAX_KEY_LENGTH)
         if not res:
-            raise KeyError()
+            raise MemoryError("key is too long (max allowed length = %d)" % MAX_KEY_LENGTH)
         return unicode_from_alpha_char(buf)
+
+
+cdef class BaseTrieIterator(_TrieIterator):
+    """
+    cdatrie.TrieIterator wrapper. It can be used for custom datrie.BaseTrie
+    traversal.
+    """
+    cpdef cdatrie.TrieData data(self):
+        return cdatrie.trie_iterator_get_data(self._iter)
+
+
+cdef class TrieIterator(_TrieIterator):
+    """
+    cdatrie.TrieIterator wrapper. It can be used for custom datrie.Trie
+    traversal.
+    """
+    def __cinit__(self, TrieState state): # this is overriden for extra type check
+        self._root = state # prevent garbage collection of state
+        self._iter = cdatrie.trie_iterator_new(state._state)
+        if self._iter is NULL:
+            raise MemoryError()
+
+    cpdef data(self):
+        cdef cdatrie.TrieData data = cdatrie.trie_iterator_get_data(self._iter)
+        return self._root._trie._index_to_value(data)
 
 
 cdef (cdatrie.Trie* ) _load_from_file(f) except NULL:
@@ -781,7 +836,7 @@ cdef class AlphaMap:
         if code != 0:
             raise MemoryError()
 
-cdef (cdatrie.AlphaChar*) new_alpha_char_from_unicode(unicode txt):
+cdef cdatrie.AlphaChar* new_alpha_char_from_unicode(unicode txt):
     """
     Converts Python unicode string to libdatrie's AlphaChar* format.
     libdatrie wants null-terminated array of 4-byte LE symbols.

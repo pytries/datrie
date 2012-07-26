@@ -1,7 +1,4 @@
 # cython: profile=False
-"""
-Public libdatrie header wrapper
-"""
 from libc cimport stdio
 
 cdef extern from "../libdatrie/datrie/triedefs.h":

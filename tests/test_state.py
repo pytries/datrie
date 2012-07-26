@@ -3,7 +3,7 @@ from __future__ import absolute_import, unicode_literals
 import datrie
 
 def _trie():
-    trie = datrie.BaseTrie(ranges=[(chr(0), chr(127))])
+    trie = datrie.Trie(ranges=[(chr(0), chr(127))])
     trie['f'] = 1
     trie['fo'] = 2
     trie['fa'] = 3

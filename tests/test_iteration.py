@@ -6,26 +6,26 @@ import datrie
 WORDS = ['producers', 'pool', 'prepare', 'preview', 'prize', 'produce', 'producer', 'progress']
 
 def _trie():
-    trie = datrie.BaseTrie(ranges=[(chr(0), chr(127))])
+    trie = datrie.Trie(ranges=[(chr(0), chr(127))])
     for index, word in enumerate(WORDS, 1):
         trie[word] = index
 
     return trie
 
 
-def test_data():
+def test_base_trie_data():
     trie = datrie.BaseTrie(string.printable)
     trie['x'] = 1
     trie['xo'] = 2
-    state = datrie.TrieState(trie)
+    state = datrie.BaseTrieState(trie)
     state.walk('x')
 
-    it = datrie.TrieIterator(state)
+    it = datrie.BaseTrieIterator(state)
     assert it.data() == 1
 
     state.walk('o')
 
-    it = datrie.TrieIterator(state)
+    it = datrie.BaseTrieIterator(state)
     assert it.data() == 2
 
 def test_next():
