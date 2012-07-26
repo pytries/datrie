@@ -881,7 +881,7 @@ trie_state_is_single (const TrieState *s)
 TrieData
 trie_state_get_data (const TrieState *s)
 {
-    if (!s->is_suffix)
+    if (!trie_state_is_leaf (s))
         return TRIE_DATA_ERROR;
 
     TrieIndex tail_index = trie_da_get_tail_index (s->trie->da, s->index);
