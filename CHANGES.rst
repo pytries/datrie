@@ -2,7 +2,7 @@
 CHANGES
 =======
 
-dev (TBA)
+0.4 (TBA)
 ---------
 
 * ``libdatrie`` improvements and bugfixes, including C iterator API support;
