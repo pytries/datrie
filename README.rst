@@ -130,21 +130,21 @@ If you don't need values or integer values are OK then use ``datrie.BaseTrie``::
 Custom iteration
 ================
 
-If the built-in trie methods don't fit you can use ``datrie.TrieState`` and
-``datrie.TrieIterator`` to implement custom traversal.
+If the built-in trie methods don't fit you can use ``datrie.State`` and
+``datrie.Iterator`` to implement custom traversal.
 
 .. note::
 
-    If you use ``datrie.BaseTrie`` you need ``datrie.BaseTrieState`` and
-    ``datrie.BaseTrieIterator`` for custom traversal.
+    If you use ``datrie.BaseTrie`` you need ``datrie.BaseState`` and
+    ``datrie.BaseIterator`` for custom traversal.
 
 
 For example, let's find all suffixes of ``'fo'`` for our trie and get
 the values::
 
-    >>> state = datrie.TrieState(trie)
+    >>> state = datrie.State(trie)
     >>> state.walk(u'foo')
-    >>> it = datrie.TrieIterator(state)
+    >>> it = datrie.Iterator(state)
     >>> while it.next():
     ...     print(it.key())
     ...     print(it.data))

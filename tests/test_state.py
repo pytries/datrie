@@ -15,7 +15,7 @@ def _trie():
 
 def test_trie_state():
     trie = _trie()
-    state = datrie.TrieState(trie)
+    state = datrie.State(trie)
     state.walk('f')
     assert state.data() == 1
     state.walk('o')
@@ -23,7 +23,7 @@ def test_trie_state():
 
 def test_state_next():
     trie = _trie()
-    state = datrie.TrieState(trie)
+    state = datrie.State(trie)
 
     counter = 0
     while state._next():
@@ -33,7 +33,7 @@ def test_state_next():
 
 def test_state_next_values():
     trie = _trie()
-    state = datrie.TrieState(trie)
+    state = datrie.State(trie)
 
     res = []
     while state._next():

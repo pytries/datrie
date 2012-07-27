@@ -163,8 +163,8 @@ cdef class BaseTrie:
 
     def __len__(self):
         # XXX: this is very slow
-        cdef BaseTrieState s = BaseTrieState(self)
-        cdef BaseTrieIterator iter = BaseTrieIterator(s)
+        cdef BaseState s = BaseState(self)
+        cdef BaseIterator iter = BaseIterator(s)
         cdef int counter=0
 
         while iter.next():
@@ -380,14 +380,14 @@ cdef class BaseTrie:
         """
         cdef bint success
         cdef list res = []
-        cdef BaseTrieState state = BaseTrieState(self)
+        cdef BaseState state = BaseState(self)
 
         if prefix is not None:
             success = state.walk(prefix)
             if not success:
                 return res
 
-        cdef BaseTrieIterator iter = BaseTrieIterator(state)
+        cdef BaseIterator iter = BaseIterator(state)
 
         if prefix is None:
             while iter.next():
@@ -407,14 +407,14 @@ cdef class BaseTrie:
         """
         cdef bint success
         cdef list res = []
-        cdef BaseTrieState state = BaseTrieState(self)
+        cdef BaseState state = BaseState(self)
 
         if prefix is not None:
             success = state.walk(prefix)
             if not success:
                 return res
 
-        cdef BaseTrieIterator iter = BaseTrieIterator(state)
+        cdef BaseIterator iter = BaseIterator(state)
 
         if prefix is None:
             while iter.next():
@@ -434,14 +434,14 @@ cdef class BaseTrie:
         """
         cdef bint success
         cdef list res = []
-        cdef BaseTrieState state = BaseTrieState(self)
+        cdef BaseState state = BaseState(self)
 
         if prefix is not None:
             success = state.walk(prefix)
             if not success:
                 return res
 
-        cdef BaseTrieIterator iter = BaseTrieIterator(state)
+        cdef BaseIterator iter = BaseIterator(state)
         while iter.next():
             res.append(iter.data())
         return res
@@ -536,14 +536,14 @@ cdef class Trie(BaseTrie):
 
         cdef bint success
         cdef list res = []
-        cdef BaseTrieState state = BaseTrieState(self)
+        cdef BaseState state = BaseState(self)
 
         if prefix is not None:
             success = state.walk(prefix)
             if not success:
                 return res
 
-        cdef BaseTrieIterator iter = BaseTrieIterator(state)
+        cdef BaseIterator iter = BaseIterator(state)
 
         if prefix is None:
             while iter.next():
@@ -569,7 +569,7 @@ cdef class Trie(BaseTrie):
         # but inlined for speed.
 
         cdef list res = []
-        cdef BaseTrieState state = BaseTrieState(self)
+        cdef BaseState state = BaseState(self)
         cdef bint success
 
         if prefix is not None:
@@ -577,7 +577,7 @@ cdef class Trie(BaseTrie):
             if not success:
                 return res
 
-        cdef BaseTrieIterator iter = BaseTrieIterator(state)
+        cdef BaseIterator iter = BaseIterator(state)
 
         while iter.next():
             res.append(self._values[iter.data()])
@@ -650,7 +650,7 @@ cdef class _TrieState:
     cpdef bint _next(self):
         return cdatrie.trie_state_walk_next(self._state)
 
-    cpdef copy_to(self, TrieState state):
+    cpdef copy_to(self, _TrieState state):
         """ Copies trie state to another """
         cdatrie.trie_state_copy(state._state, self._state)
 
@@ -680,7 +680,7 @@ cdef class _TrieState:
         return self.__unicode__()
 
 
-cdef class BaseTrieState(_TrieState):
+cdef class BaseState(_TrieState):
     """
     cdatrie.TrieState wrapper. It can be used for custom trie traversal.
     """
@@ -688,7 +688,7 @@ cdef class BaseTrieState(_TrieState):
         return cdatrie.trie_state_get_terminal_data(self._state)
 
 
-cdef class TrieState(_TrieState):
+cdef class State(_TrieState):
 
     def __cinit__(self, Trie trie): # this is overriden for extra type check
         self._state = cdatrie.trie_root(trie._c_trie)
@@ -728,7 +728,7 @@ cdef class _TrieIterator:
         return unicode_from_alpha_char(buf)
 
 
-cdef class BaseTrieIterator(_TrieIterator):
+cdef class BaseIterator(_TrieIterator):
     """
     cdatrie.TrieIterator wrapper. It can be used for custom datrie.BaseTrie
     traversal.
@@ -737,12 +737,12 @@ cdef class BaseTrieIterator(_TrieIterator):
         return cdatrie.trie_iterator_get_data(self._iter)
 
 
-cdef class TrieIterator(_TrieIterator):
+cdef class Iterator(_TrieIterator):
     """
     cdatrie.TrieIterator wrapper. It can be used for custom datrie.Trie
     traversal.
     """
-    def __cinit__(self, TrieState state): # this is overriden for extra type check
+    def __cinit__(self, State state): # this is overriden for extra type check
         self._root = state # prevent garbage collection of state
         self._iter = cdatrie.trie_iterator_new(state._state)
         if self._iter is NULL:

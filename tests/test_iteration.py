@@ -17,21 +17,21 @@ def test_base_trie_data():
     trie = datrie.BaseTrie(string.printable)
     trie['x'] = 1
     trie['xo'] = 2
-    state = datrie.BaseTrieState(trie)
+    state = datrie.BaseState(trie)
     state.walk('x')
 
-    it = datrie.BaseTrieIterator(state)
+    it = datrie.BaseIterator(state)
     assert it.data() == 1
 
     state.walk('o')
 
-    it = datrie.BaseTrieIterator(state)
+    it = datrie.BaseIterator(state)
     assert it.data() == 2
 
 def test_next():
     trie = _trie()
-    state = datrie.TrieState(trie)
-    it = datrie.TrieIterator(state)
+    state = datrie.State(trie)
+    it = datrie.Iterator(state)
 
     values = []
     while it.next():
@@ -43,9 +43,9 @@ def test_next():
 
 def test_next_non_root():
     trie = _trie()
-    state = datrie.TrieState(trie)
+    state = datrie.State(trie)
     state.walk('pr')
-    it = datrie.TrieIterator(state)
+    it = datrie.Iterator(state)
 
     values = []
     while it.next():
@@ -56,9 +56,9 @@ def test_next_non_root():
 
 def test_next_tail():
     trie = _trie()
-    state = datrie.TrieState(trie)
+    state = datrie.State(trie)
     state.walk('poo')
-    it = datrie.TrieIterator(state)
+    it = datrie.Iterator(state)
 
     values = []
     while it.next():
@@ -70,8 +70,8 @@ def test_next_tail():
 
 def test_keys():
     trie = _trie()
-    state = datrie.TrieState(trie)
-    it = datrie.TrieIterator(state)
+    state = datrie.State(trie)
+    it = datrie.Iterator(state)
 
     keys = []
     while it.next():
@@ -82,9 +82,9 @@ def test_keys():
 
 def test_keys_non_root():
     trie = _trie()
-    state = datrie.TrieState(trie)
+    state = datrie.State(trie)
     state.walk('pro')
-    it = datrie.TrieIterator(state)
+    it = datrie.Iterator(state)
 
     keys = []
     while it.next():
@@ -94,9 +94,9 @@ def test_keys_non_root():
 
 def test_keys_tail():
     trie = _trie()
-    state = datrie.TrieState(trie)
+    state = datrie.State(trie)
     state.walk('pro')
-    it = datrie.TrieIterator(state)
+    it = datrie.Iterator(state)
 
     keys = []
     while it.next():

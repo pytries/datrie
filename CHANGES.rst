@@ -2,12 +2,11 @@
 CHANGES
 =======
 
-0.4 (TBA)
----------
+0.4 (2012-07-27)
+----------------
 
 * ``libdatrie`` improvements and bugfixes, including C iterator API support;
-* custom iteration support using ``datrie.TrieState`` and
-  ``datrie.TrieIterator``.
+* custom iteration support using ``datrie.State`` and ``datrie.Iterator``.
 * speed improvements: ``__length__``, ``keys``, ``values`` and
   ``items`` methods should be up to 2x faster.
 * keys longer than 32768 are not supported in this release.
