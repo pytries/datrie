@@ -259,6 +259,7 @@ Current Limitations
 
 * keys must be unicode (no implicit conversion for byte strings
   under Python 2.x, sorry);
+* keys longer than 32768 are unsupported;
 * there are no iterator versions of keys/values/items (this is not
   implemented yet);
 * it doesn't work under pypy+MacOS X (some obscure error which I don't

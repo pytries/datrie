@@ -720,7 +720,7 @@ cdef class _TrieIterator:
 
     cpdef unicode key(self):
         # max key length is limited!
-        DEF MAX_KEY_LENGTH = 1024 #32768
+        DEF MAX_KEY_LENGTH = 32768
         cdef cdatrie.AlphaChar buf[MAX_KEY_LENGTH]
         cdef bint res = cdatrie.trie_iterator_get_key(self._iter, buf, MAX_KEY_LENGTH)
         if not res:

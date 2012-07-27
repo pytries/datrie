@@ -10,6 +10,7 @@ dev (TBA)
   ``datrie.TrieIterator``.
 * speed improvements: ``__length__``, ``keys``, ``values`` and
   ``items`` methods should be up to 2x faster.
+* keys longer than 32768 are not supported in this release.
 
 
 0.3 (2012-07-21)
