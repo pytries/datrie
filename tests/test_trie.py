@@ -64,6 +64,7 @@ def test_save_load_base():
     assert trie2['fo'] == 4
     assert trie2['foovar'] == 2
 
+
 def test_trie_file_io():
     fd, fname = tempfile.mkstemp()
 

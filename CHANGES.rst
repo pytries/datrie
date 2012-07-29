@@ -2,6 +2,11 @@
 CHANGES
 =======
 
+0.4.1 (2012-07-29)
+------------------
+
+* cPickle is used for saving/loading ``datrie.Trie`` if it is available.
+
 0.4 (2012-07-27)
 ----------------
 

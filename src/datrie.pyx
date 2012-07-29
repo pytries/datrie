@@ -12,11 +12,14 @@ cimport cdatrie
 import warnings
 import sys
 import itertools
-import pickle
+
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 class DatrieError(Exception):
     pass
-
 
 RAISE_KEY_ERROR = object()
 RERAISE_KEY_ERROR = object()
@@ -505,9 +508,7 @@ cdef class Trie(BaseTrie):
         file descriptors are not supported.
         """
         super(Trie, self).write(f)
-
-        # pickle protocol 2 is used because it is more portable
-        pickle.dump(self._values, f, 2)
+        pickle.dump(self._values, f, protocol=2)
 
     @classmethod
     def read(cls, f):
