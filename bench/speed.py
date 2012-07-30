@@ -86,8 +86,9 @@ def benchmark():
         ('__contains__ (hits)', "for word in words: word in data", 'M ops/sec', 0.1, 3),
         ('__contains__ (misses)', "for word in NON_WORDS100k: word in data", 'M ops/sec', 0.1, 3),
         ('__len__', 'len(data)', ' ops/sec', 1, 1),
-        ('__setitem__ (updates)', 'for word in words: data[word]=1', 'M ops/sec',0.1, 3),
-        ('__setitem__ (inserts)', 'for word in NON_WORDS_10k: data[word]=1', 'M ops/sec',0.01, 3),
+        ('__setitem__ (updates)', 'for word in words: data[word]=1', 'M ops/sec', 0.1, 3),
+        ('__setitem__ (inserts, random)', 'for word in NON_WORDS_10k: data[word]=1', 'M ops/sec',0.01, 3),
+        ('__setitem__ (inserts, sorted)', 'for word in words: empty_data[word]=1', 'M ops/sec', 0.1, 3),
         ('setdefault (updates)', 'for word in words: data.setdefault(word, 1)', 'M ops/sec', 0.1, 3),
         ('setdefault (inserts)', 'for word in  NON_WORDS_10k: data.setdefault(word, 1)', 'M ops/sec', 0.01, 3),
         ('values()', 'list(data.values())', ' ops/sec', 1, 1),
@@ -96,14 +97,14 @@ def benchmark():
     ]
 
     common_setup = """
-from __main__ import create_trie, WORDS100k, NON_WORDS100k, MIXED_WORDS100k
+from __main__ import create_trie, WORDS100k, NON_WORDS100k, MIXED_WORDS100k, datrie
 from __main__ import PREFIXES_3_1k, PREFIXES_5_1k, PREFIXES_8_1k, PREFIXES_15_1k
 words = WORDS100k
 NON_WORDS_10k = NON_WORDS100k[:10000]
 NON_WORDS_1k = ['ыва', 'xyz', 'соы', 'Axx', 'avы']*200
 """
-    dict_setup = common_setup + 'data = dict((word, 1) for word in words);'
-    trie_setup = common_setup + 'data = create_trie();'
+    dict_setup = common_setup + 'data = dict((word, 1) for word in words); empty_data=dict()'
+    trie_setup = common_setup + 'data = create_trie(); empty_data = datrie.Trie(ranges=[("\'", "\'"), ("A", "z"), ("А", "я")])'
 
     for test_name, test, descr, op_count, repeats in tests:
         t_dict = timeit.Timer(test, dict_setup)

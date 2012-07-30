@@ -223,17 +223,20 @@ unicode)::
     trie.keys(prefix="xxx"), NON_EXISTING:              1857.531K ops/sec
     trie.values(prefix="xxx"), NON_EXISTING:            1822.818K ops/sec
 
-Insert time is very slow compared to dict, this is the limitation
-of double-array tries; updates are quite fast::
+Random insert time is very slow compared to dict, this is the limitation
+of double-array tries; updates are quite fast. If you want to build a trie,
+consider sorting keys before the insertion::
 
-    dict __setitem__ (updates): 3.489M ops/sec
-    trie __setitem__ (updates): 1.862M ops/sec
-    dict __setitem__ (inserts): 3.628M ops/sec
-    trie __setitem__ (inserts): 0.050M ops/sec
-    dict setdefault (updates):  2.575M ops/sec
-    trie setdefault (updates):  1.600M ops/sec
-    dict setdefault (inserts):  2.596M ops/sec
-    trie setdefault (inserts):  0.050M ops/sec
+    dict __setitem__ (updates):         3.489M ops/sec
+    trie __setitem__ (updates):         1.862M ops/sec
+    dict __setitem__ (inserts, random): 3.628M ops/sec
+    trie __setitem__ (inserts, random): 0.050M ops/sec
+    dict __setitem__ (inserts, sorted): 3.272M ops/sec
+    trie __setitem__ (inserts, sorted): 0.585M ops/sec
+    dict setdefault (updates):          2.575M ops/sec
+    trie setdefault (updates):          1.600M ops/sec
+    dict setdefault (inserts):          2.596M ops/sec
+    trie setdefault (inserts):          0.050M ops/sec
 
 Other results (note that ``len(trie)`` is currently implemented
 using trie traversal)::
