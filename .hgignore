@@ -11,8 +11,10 @@ $libdatrie/
 ^libdatrie/config.log$
 ^libdatrie/config.status$
 ^libdatrie/datrie-0.2.pc$
-.deps
-.libs
+\.deps
+\.libs
+\.svn
+\.cvsignore
 ^libdatrie/datrie/Makefile$
 ^libdatrie/doc/Doxyfile$
 ^libdatrie/doc/Makefile$

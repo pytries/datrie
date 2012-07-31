@@ -127,10 +127,11 @@ void      trie_state_rewind (TrieState *s);
 
 Bool      trie_state_walk (TrieState *s, AlphaChar c);
 
-// XXX: is it useful to walk all states, even non-terminal?
-Bool      trie_state_walk_next (TrieState* s);
-
 Bool      trie_state_is_walkable (const TrieState *s, AlphaChar c);
+
+int       trie_state_walkable_chars (const TrieState  *s,
+                                     AlphaChar         chars[],
+                                     int               chars_nelm);
 
 /**
  * @brief Check for terminal state
@@ -161,24 +162,18 @@ Bool      trie_state_is_single (const TrieState *s);
 
 TrieData trie_state_get_data (const TrieState *s);
 
-TrieData trie_state_get_terminal_data (const TrieState *s);
 
+/*----------------------*
+ *    ENTRY ITERATION   *
+ *----------------------*/
 
-Bool trie_da_enum_func (const TrieChar *key, TrieIndex sep_node, void *user_data);
-
-
-/*---------------------*
- *    TRIE ITERATION   *
- *---------------------*/
-
-TrieIterator*   trie_iterator_new (TrieState *s);
+TrieIterator *  trie_iterator_new (TrieState *s);
 
 void            trie_iterator_free (TrieIterator *iter);
 
 Bool            trie_iterator_next (TrieIterator *iter);
 
-Bool            trie_iterator_get_key (const TrieIterator *iter, AlphaChar *key,
-                                       int key_len);
+AlphaChar *     trie_iterator_get_key (const TrieIterator *iter);
 
 TrieData        trie_iterator_get_data (const TrieIterator *iter);
 

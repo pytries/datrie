@@ -1,3 +1,97 @@
+2012-07-31  Theppitak Karoonboonyanan  <thep@linux.thai.net>
+
+	Add TrieIterator and its operations.
+
+	* datrie/trie.h, datrie/trie.c
+	  (+trie_iterator_new, +trie_iterator_free, +trie_iterator_next,
+	   +trie_iterator_get_key, +trie_iterator_get_data):
+	  - Add TrieIterator class and its methods.
+	* datrie/libdatrie.def, datrie/libdatrie.map:
+	  - Add the new export symbols.
+	* datrie/darray.h, datrie/darray.c
+	  (da_get_state_key -> da_get_transition_key):
+	  - Adjust da_get_state_key() from getting transition key from root
+	    to getting from arbitrary ancestor.
+	* datrie/darray.h, datrie/darray.c
+	  (+da_first_separate, +da_next_separate):
+	  - Add internal functions for iterating from one separate node to
+	    another in double-array structure.
+
+	Thanks Mikhail Korobov <kmike84@gmail.com> for the use case suggestion.
+
+2012-07-30  Theppitak Karoonboonyanan  <thep@linux.thai.net>
+
+	* doc/Doxyfile.in: Upgrade to doxygen 1.8.1.2 format.
+
+2012-07-29  Theppitak Karoonboonyanan  <thep@linux.thai.net>
+
+	* datrie/trie.c: Reformat source.
+
+2012-07-29  Theppitak Karoonboonyanan  <thep@linux.thai.net>
+
+	* datrie/trie.h, datrie/trie.c (trie_state_walkable_chars):
+	Reformat source.
+
+2012-07-27  Theppitak Karoonboonyanan  <thep@linux.thai.net>
+
+	Add new API trie_state_walkable_chars() to allow breadth-first
+	traversal.
+
+	* datrie/darray.h, datrie/darray.c:
+	  - Move da_output_symbols() to darray.h, to be called by the new
+	    function.
+	  - Move the Symbols class to darray.h, as required by
+	    da_output_symbols().
+	* datrie/trie.h, datrie/trie.c (+trie_state_walkable_chars):
+	  - Add the new public function.
+	* datrie/libdatrie.map, datrie/libdatrie.def:
+	  - Add the new symbol to export maps.
+	* configure.ac:
+	  - Update library versioning to reflect API addition.
+
+2012-07-26  Theppitak Karoonboonyanan  <thep@linux.thai.net>
+
+	* darray/darray.c (da_has_children): Accept (const DArray *) arg.
+
+2012-07-26  Theppitak Karoonboonyanan  <thep@linux.thai.net>
+
+	* datrie/darray.c (da_has_children, da_output_symbols,
+	  da_relocate_base):
+	Calculate max_c candidate using num_cells - base instead of
+	TRIE_INDEX_MAX - base, to prevent more unnecessary loops.
+
+2012-07-26  Theppitak Karoonboonyanan  <thep@linux.thai.net>
+
+	* datrie/trie.c (trie_state_get_data):
+	Check if the state is leaf, not just suffix, before getting data.
+
+	Thanks Mikhail Korobov <kmike84@gmail.com> for the report.
+
+2012-07-25  Theppitak Karoonboonyanan  <thep@linux.thai.net>
+
+	* datrie/tail.h, datrie/tail.c:
+	* datrie/alpha-map.c:
+	* datrie/trie.h, datrie/trie.c:
+	* datrie/darray.c: Remove trailing spaces.
+
+2012-07-13  Theppitak Karoonboonyanan  <thep@linux.thai.net>
+
+	* datrie/tail.c (tail_get_suffix): Fix function documentation.
+
+	Thanks Mikhail Korobov <kmike84@gmail.com> for the report.
+
+2012-07-13  Theppitak Karoonboonyanan  <thep@linux.thai.net>
+
+	* datrie/darray.c, datrie/tail.c:
+	  - Don't include <stdint.h> when compiled with MSVC, as the header is
+	    missing there, and SIZE_MAX is provided in some other header.
+
+	Thanks Mikhail Korobov <kmike84@gmail.com> for the report.
+
+2012-07-13  Theppitak Karoonboonyanan  <thep@linux.thai.net>
+
+	* configure.ac: Post-release version suffix added.
+
 2011-11-04  Theppitak Karoonboonyanan  <thep@linux.thai.net>
 
 	* NEWS, configure.ac:

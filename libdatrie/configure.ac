@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(libdatrie, 0.2.5, thep@linux.thai.net)
+AC_INIT(libdatrie, 0.2.5svn, thep@linux.thai.net)
 AC_CONFIG_SRCDIR([datrie/trie.h])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -13,9 +13,9 @@ AM_INIT_AUTOMAKE
 # Library code modified:                    REVISION++
 # Interfaces added:              CURRENT++  REVISION=0  AGE++
 # Interfaces changed/removed:    CURRENT++  REVISION=0  AGE=0
-LT_CURRENT=2
+LT_CURRENT=3
 LT_REVISION=0
-LT_AGE=1
+LT_AGE=2
 AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)

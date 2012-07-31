@@ -500,39 +500,6 @@ tail_walk_char (const Tail      *t,
     return FALSE;
 }
 
-/**
- * @brief Walk in tail to a next character
- *
- * @param t          : the tail data
- * @param s          : the tail data index
- * @param suffix_idx : pointer to current character index in suffix
- *
- * @return current character or 0 if the tail is over.
- *
- * Walk in the tail data @a t at entry @a s, from given character position
- * @a *suffix_idx. If the walk is successful, it returns the next character,
- * and @a *suffix_idx is updated to the next character.
- * Otherwise, it returns 0, and @a *suffix_idx is left unchanged.
- */
-TrieChar
-tail_walk_next (const Tail      *t,
-                TrieIndex        s,
-                short           *suffix_idx)
-{
-    const TrieChar *suffix;
-    TrieChar        suffix_char;
-
-    suffix = tail_get_suffix (t, s);
-    if (!suffix)
-        return 0;
-
-    suffix_char = suffix[*suffix_idx];
-    if (0 != suffix_char){
-        return suffix[(*suffix_idx)++];
-    }
-    return 0;
-}
-
 /*
 vi:ts=4:ai:expandtab
 */

@@ -35,6 +35,17 @@
  */
 
 /**
+ * @brief Symbol set structure type
+ */
+typedef struct _Symbols Symbols;
+
+Symbols *    symbols_new ();
+void         symbols_free (Symbols *syms);
+void         symbols_add (Symbols *syms, TrieChar c);
+int          symbols_num (const Symbols *syms);
+TrieChar     symbols_get (const Symbols *syms, int index);
+
+/**
  * @brief Double-array structure type
  */
 typedef struct _DArray  DArray;
@@ -76,9 +87,11 @@ void       da_set_check (DArray *d, TrieIndex s, TrieIndex val);
 
 Bool       da_walk (const DArray *d, TrieIndex *s, TrieChar c);
 
-Bool       da_walk_next (const DArray* d, TrieIndex root, TrieIndex* s);
+Symbols *  da_output_symbols  (const DArray *d, TrieIndex s);
 
-Bool       da_walk_next_terminal (const DArray* d, TrieIndex root, TrieIndex* s);
+TrieChar * da_get_transition_key (const DArray *d,
+                                  TrieIndex     from,
+                                  TrieIndex     to);
 
 /**
  * @brief Test walkability in double-array structure
@@ -104,6 +117,10 @@ void       da_prune (DArray *d, TrieIndex s);
 void       da_prune_upto (DArray *d, TrieIndex p, TrieIndex s);
 
 Bool    da_enumerate (const DArray *d, DAEnumFunc enum_func, void *user_data);
+
+TrieIndex  da_first_separate (DArray *d, TrieIndex root);
+
+TrieIndex  da_next_separate (DArray *d, TrieIndex root, TrieIndex sep);
 
 #endif  /* __DARRAY_H */
 

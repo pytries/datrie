@@ -151,7 +151,7 @@ alpha_map_free (AlphaMap *alpha_map)
 {
     AlphaRange *p, *q;
 
-    p = alpha_map->first_range; 
+    p = alpha_map->first_range;
     while (p) {
         q = p->next;
         free (p);
