@@ -648,9 +648,6 @@ cdef class _TrieState:
         """
         return cdatrie.trie_state_walk(self._state, char)
 
-    cpdef bint _next(self):
-        return cdatrie.trie_state_walk_next(self._state)
-
     cpdef copy_to(self, _TrieState state):
         """ Copies trie state to another """
         cdatrie.trie_state_copy(state._state, self._state)
@@ -720,13 +717,11 @@ cdef class _TrieIterator:
         return cdatrie.trie_iterator_next(self._iter)
 
     cpdef unicode key(self):
-        # max key length is limited!
-        DEF MAX_KEY_LENGTH = 32768
-        cdef cdatrie.AlphaChar buf[MAX_KEY_LENGTH]
-        cdef bint res = cdatrie.trie_iterator_get_key(self._iter, buf, MAX_KEY_LENGTH)
-        if not res:
-            raise MemoryError("key is too long (max allowed length = %d)" % MAX_KEY_LENGTH)
-        return unicode_from_alpha_char(buf)
+        cdef cdatrie.AlphaChar* key = cdatrie.trie_iterator_get_key(self._iter)
+        try:
+            return unicode_from_alpha_char(key)
+        finally:
+            free(key)
 
 
 cdef class BaseIterator(_TrieIterator):

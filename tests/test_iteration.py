@@ -21,11 +21,13 @@ def test_base_trie_data():
     state.walk('x')
 
     it = datrie.BaseIterator(state)
+    it.next()
     assert it.data() == 1
 
     state.walk('o')
 
     it = datrie.BaseIterator(state)
+    it.next()
     assert it.data() == 2
 
 def test_next():

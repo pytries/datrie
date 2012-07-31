@@ -20,20 +20,6 @@ cdef extern from "../libdatrie/datrie/alpha-map.h":
     int alpha_char_strlen (AlphaChar *str)
 
 
-cdef extern from "../libdatrie/datrie/darray.h":
-    struct DArray: # Double-array trie structure
-        pass
-
-
-cdef extern from "../libdatrie/datrie/tail.h":
-    struct Tail:
-        pass
-
-    TrieData tail_get_data (Tail *t, TrieIndex index)
-    TrieChar * tail_get_suffix(Tail *t, TrieIndex index)
-
-
-
 cdef extern from "../libdatrie/datrie/trie.h":
 
     ctypedef struct Trie:
@@ -50,9 +36,6 @@ cdef extern from "../libdatrie/datrie/trie.h":
 
     int TRIE_CHAR_TERM
     int TRIE_DATA_ERROR
-
-    ctypedef bint (*TrieEnumFunc) (AlphaChar *key, TrieData key_data, void *user_data)
-
 
     # ========== GENERAL FUNCTIONS ==========
 
@@ -81,8 +64,6 @@ cdef extern from "../libdatrie/datrie/trie.h":
 
     bint trie_delete (Trie *trie, AlphaChar *key)
 
-    bint trie_enumerate (Trie *trie, TrieEnumFunc enum_func, void *user_data)
-
     # ======== STEPWISE QUERY OPERATIONS ========
 
     TrieState * trie_root (Trie *trie)
@@ -100,8 +81,6 @@ cdef extern from "../libdatrie/datrie/trie.h":
 
     bint trie_state_walk (TrieState *s, AlphaChar c)
 
-    bint trie_state_walk_next (TrieState *s)
-
     bint trie_state_is_walkable (TrieState *s, AlphaChar c)
 
     bint trie_state_is_terminal(TrieState * s)
@@ -114,8 +93,6 @@ cdef extern from "../libdatrie/datrie/trie.h":
 
     TrieData trie_state_get_terminal_data (TrieState *s)
 
-    bint trie_da_enum_func (TrieChar *key, TrieIndex sep_node, void *user_data)
-
 
     # ============== ITERATION ===================
 
@@ -125,8 +102,7 @@ cdef extern from "../libdatrie/datrie/trie.h":
 
     bint            trie_iterator_next (TrieIterator *iter)
 
-    bint            trie_iterator_get_key (TrieIterator *iter, AlphaChar *key,
-                                           int key_len)
+    AlphaChar *     trie_iterator_get_key (TrieIterator *iter)
 
     TrieData        trie_iterator_get_data (TrieIterator *iter)
 
