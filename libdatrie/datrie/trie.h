@@ -133,6 +133,9 @@ int       trie_state_walkable_chars (const TrieState  *s,
                                      AlphaChar         chars[],
                                      int               chars_nelm);
 
+TrieData  trie_state_get_terminal_data (const TrieState *s);
+
+
 /**
  * @brief Check for terminal state
  *
