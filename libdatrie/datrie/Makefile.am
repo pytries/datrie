@@ -16,6 +16,8 @@ libdatrie_la_SOURCES =	\
 	typedefs.h	\
 	triedefs.h	\
 	trie-private.h	\
+	dstring.h	\
+	dstring.c	\
 	fileutils.h	\
 	fileutils.c	\
 	darray.h	\

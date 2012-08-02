@@ -176,7 +176,7 @@ void            trie_iterator_free (TrieIterator *iter);
 
 Bool            trie_iterator_next (TrieIterator *iter);
 
-AlphaChar *     trie_iterator_get_key (const TrieIterator *iter);
+AlphaChar *     trie_iterator_get_key (TrieIterator *iter);
 
 TrieData        trie_iterator_get_data (const TrieIterator *iter);
 

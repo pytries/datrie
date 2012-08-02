@@ -28,6 +28,7 @@
 #define __DARRAY_H
 
 #include "triedefs.h"
+#include "dstring.h"
 
 /**
  * @file darray.h
@@ -89,9 +90,10 @@ Bool       da_walk (const DArray *d, TrieIndex *s, TrieChar c);
 
 Symbols *  da_output_symbols  (const DArray *d, TrieIndex s);
 
-TrieChar * da_get_transition_key (const DArray *d,
+Bool       da_get_transition_key (const DArray *d,
                                   TrieIndex     from,
-                                  TrieIndex     to);
+                                  TrieIndex     to,
+                                  DString      *res_key);
 
 /**
  * @brief Test walkability in double-array structure

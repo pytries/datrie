@@ -538,53 +538,51 @@ da_output_symbols  (const DArray   *d,
  * @param  d         : the double-array structure
  * @param  from      : the node to walk from
  * @param  to        : the node to walk to
+ * @param  res_key   : the storage for storing the result
  *
- * @return the allocated key string
+ * @return boolean indicating success
  *
  * Get key for walking from state @a from to state @a to, assuming @a from
- * is an ancester node of @a to.
+ * is an ancester node of @a to, and copy it to @a res_key dynamic string.
  *
- * The return string must be freed with free().
+ * The @a res_key is assumed to be constructed with
+ * char_size == sizeof (TrieChar).
  *
  * Available since: 0.2.6
  */
-TrieChar *
+Bool
 da_get_transition_key (const DArray *d,
                        TrieIndex     from,
-                       TrieIndex     to)
+                       TrieIndex     to,
+                       DString      *res_key)
 {
     TrieChar   *key;
-    int         key_size, key_length;
+    int         key_length;
     int         i;
 
-    key_size = 20;
-    key_length = 0;
-    key = (TrieChar *) malloc (key_size);
+    dstring_clear (res_key);
 
     /* trace back to root */
     while (to != from) {
-        TrieIndex   parent;
-
-        if (key_length + 1 >= key_size) {
-            key_size += 20;
-            key = (TrieChar *) realloc (key, key_size);
-        }
-        parent = da_get_check (d, to);
-        key[key_length++] = (TrieChar) (to - da_get_base (d, parent));
+        TrieIndex  parent = da_get_check (d, to);
+        TrieChar   tc = (TrieChar )(to - da_get_base (d, parent));
+        if (!dstring_append_char (res_key, &tc))
+            return FALSE;
         to = parent;
     }
-    key[key_length] = '\0';
+    if (!dstring_terminate (res_key))
+        return FALSE;
 
     /* reverse the string */
+    key = dstring_get_val_rw (res_key);
+    key_length = dstring_length (res_key);
     for (i = 0; i < --key_length; i++) {
-        TrieChar temp;
-
-        temp = key[i];
+        TrieChar temp = key[i];
         key[i] = key[key_length];
         key[key_length] = temp;
     }
 
-    return key;
+    return TRUE;
 }
 
 static TrieIndex
@@ -835,11 +833,10 @@ da_enumerate_recursive (const DArray   *d,
     base = da_get_base (d, state);
 
     if (base < 0) {
-        TrieChar   *key;
-
-        key = da_get_transition_key (d, da_get_root (d), state);
-        ret = (*enum_func) (key, state, user_data);
-        free (key);
+        DString *key = dstring_new (sizeof (TrieChar), 20);
+        da_get_transition_key (d, da_get_root (d), state, key);
+        ret = (*enum_func) (dstring_get_val (key), state, user_data);
+        dstring_free (key);
     } else {
         Symbols *symbols;
         int      i;
