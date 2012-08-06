@@ -863,6 +863,41 @@ trie_state_get_data (const TrieState *s)
                                   : TRIE_DATA_ERROR;
 }
 
+/**
+ * @brief Get data from terminal state
+ *
+ * @param s    : a terminal state
+ *
+ * @return the data associated with the terminal state @a s,
+ *         or TRIE_DATA_ERROR if @a s is not a terminal state
+ *
+ */
+TrieData
+trie_state_get_terminal_data (const TrieState *s)
+{
+    TrieIndex        tail_index;
+    TrieIndex index = s->index;
+
+    if (!s)
+        return TRIE_DATA_ERROR;
+
+    if (!s->is_suffix){
+        if (!trie_da_is_separate(s->trie->da, index)) {
+            /* walk to a terminal char to get the data */
+            Bool ret = da_walk (s->trie->da, &index, TRIE_CHAR_TERM);
+            if (!ret) {
+                return TRIE_DATA_ERROR;
+            }
+        }
+        tail_index = trie_da_get_tail_index (s->trie->da, index);
+    }
+    else {
+        tail_index = s->index;
+    }
+
+    return tail_get_data (s->trie->tail, tail_index);
+}
+
 
 /*---------------------*
  *   ENTRY ITERATION   *
