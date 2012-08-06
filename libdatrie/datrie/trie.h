@@ -133,9 +133,6 @@ int       trie_state_walkable_chars (const TrieState  *s,
                                      AlphaChar         chars[],
                                      int               chars_nelm);
 
-TrieData  trie_state_get_terminal_data (const TrieState *s);
-
-
 /**
  * @brief Check for terminal state
  *
@@ -176,7 +173,7 @@ void            trie_iterator_free (TrieIterator *iter);
 
 Bool            trie_iterator_next (TrieIterator *iter);
 
-AlphaChar *     trie_iterator_get_key (TrieIterator *iter);
+AlphaChar *     trie_iterator_get_key (const TrieIterator *iter);
 
 TrieData        trie_iterator_get_data (const TrieIterator *iter);
 

@@ -25,17 +25,11 @@
  */
 
 #include "dstring.h"
+#include "dstring-private.h"
 
 #include "trie-private.h"
 #include <string.h>
 #include <stdlib.h>
-
-struct _DString {
-    int    char_size;
-    int    str_len;
-    int    alloc_size;
-    void * val;
-};
 
 
 DString *
@@ -141,6 +135,19 @@ dstring_append (DString *dst, const DString *src)
 }
 
 Bool
+dstring_append_string (DString *ds, const void *data, int len)
+{
+    if (!dstring_ensure_space (ds, (ds->str_len + len + 1) * ds->char_size))
+        return FALSE;
+
+    memcpy (ds->val + (ds->char_size * ds->str_len), data, ds->char_size * len);
+
+    ds->str_len += len;
+
+    return TRUE;
+}
+
+Bool
 dstring_append_char (DString *ds, const void *data)
 {
     if (!dstring_ensure_space (ds, (ds->str_len + 2) * ds->char_size))
@@ -160,6 +167,17 @@ dstring_terminate (DString *ds)
         return FALSE;
 
     memset (ds->val + (ds->char_size * ds->str_len), 0, ds->char_size);
+
+    return TRUE;
+}
+
+Bool
+dstring_cut_last (DString *ds)
+{
+    if (0 == ds->str_len)
+        return FALSE;
+
+    ds->str_len--;
 
     return TRUE;
 }

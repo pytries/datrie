@@ -19,44 +19,47 @@
  */
 
 /*
- * dstring.h - Dynamic string type
- * Created: 2012-08-01
+ * trie-string.h - Dynamic string type for Trie alphabets
+ * Created: 2012-08-02
  * Author:  Theppitak Karoonboonyanan <thep@linux.thai.net>
  */
 
-#ifndef __DSTRING_H
-#define __DSTRING_H
+#ifndef __TRIE_STRING_H
+#define __TRIE_STRING_H
 
-#include "typedefs.h"
+#include "dstring.h"
+#include "triedefs.h"
 
-typedef struct _DString DString;
+typedef struct _TrieString TrieString;
 
-DString * dstring_new (int char_size, int n_elm);
+TrieString * trie_string_new (int n_elm);
 
-void      dstring_free (DString *ds);
+void      trie_string_free (TrieString *ts);
 
-int       dstring_length (const DString *ds);
+int       trie_string_length (const TrieString *ts);
 
-const void * dstring_get_val (const DString *ds);
+const void * trie_string_get_val (const TrieString *ts);
 
-void *    dstring_get_val_rw (DString *ds);
+void *    trie_string_get_val_rw (TrieString *ts);
 
-void      dstring_clear (DString *ds);
+void      trie_string_clear (TrieString *ts);
 
-Bool      dstring_copy (DString *dst, const DString *src);
+Bool      trie_string_copy (TrieString *dst, const TrieString *src);
 
-Bool      dstring_append (DString *dst, const DString *src);
+Bool      trie_string_append (TrieString *dst, const TrieString *src);
 
-Bool      dstring_append_string (DString *ds, const void *data, int len);
+Bool      trie_string_append_string (TrieString *ts, const TrieChar *str);
 
-Bool      dstring_append_char (DString *ds, const void *data);
+Bool      trie_string_append_char (TrieString *ts, TrieChar tc);
 
-Bool      dstring_terminate (DString *ds);
+Bool      trie_string_terminate (TrieString *ts);
 
-Bool      dstring_cut_last (DString *ds);
+Bool      trie_string_cut_last (TrieString *ts);
 
-#endif  /* __DSTRING_H */
+
+#endif  /* __TRIE_STRING_H */
 
 /*
 vi:ts=4:ai:expandtab
 */
+

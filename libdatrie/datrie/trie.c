@@ -33,7 +33,7 @@
 #include "alpha-map-private.h"
 #include "darray.h"
 #include "tail.h"
-#include "dstring.h"
+#include "trie-string.h"
 
 /**
  * @brief Trie structure
@@ -62,7 +62,7 @@ struct _TrieState {
 struct _TrieIterator {
     const TrieState *root;  /**< the state to start iteration from */
     TrieState       *state; /**< the current state */
-    DString         *key;   /**< buffer for calculating the entry key */
+    TrieString      *key;   /**< buffer for calculating the entry key */
 };
 
 
@@ -577,45 +577,6 @@ trie_delete (Trie *trie, const AlphaChar *key)
     return TRUE;
 }
 
-typedef struct {
-    const Trie     *trie;
-    TrieEnumFunc    enum_func;
-    void           *user_data;
-} _TrieEnumData;
-
-static Bool
-trie_da_enum_func (const TrieChar *key, TrieIndex sep_node, void *user_data)
-{
-    _TrieEnumData  *enum_data;
-    TrieIndex       t;
-    const TrieChar *suffix;
-    AlphaChar      *full_key, *p;
-    Bool            ret;
-
-    enum_data = (_TrieEnumData *) user_data;
-
-    t = trie_da_get_tail_index (enum_data->trie->da, sep_node);
-    suffix = tail_get_suffix (enum_data->trie->tail, t);
-
-    full_key = (AlphaChar *) malloc ((strlen ((const char *)key)
-                                      + strlen ((const char *)suffix) + 1)
-                                     * sizeof (AlphaChar));
-    for (p = full_key; *key; p++, key++) {
-        *p = alpha_map_trie_to_char (enum_data->trie->alpha_map, *key);
-    }
-    for ( ; *suffix; p++, suffix++) {
-        *p = alpha_map_trie_to_char (enum_data->trie->alpha_map, *suffix);
-    }
-    *p = 0;
-
-    ret = (*enum_data->enum_func) (full_key,
-                                   tail_get_data (enum_data->trie->tail, t),
-                                   enum_data->user_data);
-
-    free (full_key);
-    return ret;
-}
-
 /**
  * @brief Enumerate entries in trie
  *
@@ -632,13 +593,33 @@ trie_da_enum_func (const TrieChar *key, TrieIndex sep_node, void *user_data)
 Bool
 trie_enumerate (const Trie *trie, TrieEnumFunc enum_func, void *user_data)
 {
-    _TrieEnumData   enum_data;
+    TrieState      *root;
+    TrieIterator   *iter;
+    Bool            cont = TRUE;
 
-    enum_data.trie      = trie;
-    enum_data.enum_func = enum_func;
-    enum_data.user_data = user_data;
+    root = trie_root (trie);
+    if (!root)
+        return FALSE;
 
-    return da_enumerate (trie->da, trie_da_enum_func, &enum_data);
+    iter = trie_iterator_new (root);
+    if (!iter)
+        goto exit_root_created;
+
+    while (cont && trie_iterator_next (iter)) {
+        AlphaChar *key = trie_iterator_get_key (iter);
+        TrieData   data = trie_iterator_get_data (iter);
+        cont = (*enum_func) (key, data, user_data);
+        free (key);
+    }
+
+    trie_iterator_free (iter);
+    trie_state_free (root);
+
+    return cont;
+
+exit_root_created:
+    trie_state_free (root);
+    return FALSE;
 }
 
 
@@ -882,40 +863,6 @@ trie_state_get_data (const TrieState *s)
                                   : TRIE_DATA_ERROR;
 }
 
-/**
- * @brief Get data from terminal state
- *
- * @param s    : a terminal state
- *
- * @return the data associated with the terminal state @a s,
- *         or TRIE_DATA_ERROR if @a s is not a terminal state
- *
- */
-TrieData
-trie_state_get_terminal_data (const TrieState *s)
-{
-    TrieIndex        tail_index;
-    TrieIndex index = s->index;
-
-    if (!s)
-        return TRIE_DATA_ERROR;
-
-    if (!s->is_suffix){
-        if (!trie_da_is_separate(s->trie->da, index)) {
-            /* walk to a terminal char to get the data */
-            Bool ret = da_walk (s->trie->da, &index, TRIE_CHAR_TERM);
-            if (!ret) {
-                return TRIE_DATA_ERROR;
-            }
-        }
-        tail_index = trie_da_get_tail_index (s->trie->da, index);
-    }
-    else {
-        tail_index = s->index;
-    }
-
-    return tail_get_data (s->trie->tail, tail_index);
-}
 
 /*---------------------*
  *   ENTRY ITERATION   *
@@ -969,7 +916,7 @@ trie_iterator_free (TrieIterator *iter)
         trie_state_free (iter->state);
     }
     if (iter->key) {
-        dstring_free (iter->key);
+        trie_string_free (iter->key);
     }
     free (iter);
 }
@@ -1001,7 +948,8 @@ trie_iterator_next (TrieIterator *iter)
         if (s->is_suffix)
             return TRUE;
 
-        sep = da_first_separate (s->trie->da, s->index);
+        iter->key = trie_string_new (20);
+        sep = da_first_separate (s->trie->da, s->index, iter->key);
         if (TRIE_INDEX_ERROR == sep)
             return FALSE;
 
@@ -1014,7 +962,8 @@ trie_iterator_next (TrieIterator *iter)
         return FALSE;
 
     /* iter->state is a separate node */
-    sep = da_next_separate (s->trie->da, iter->root->index, s->index);
+    sep = da_next_separate (s->trie->da, iter->root->index, s->index,
+                            iter->key);
     if (TRIE_INDEX_ERROR == sep)
         return FALSE;
 
@@ -1036,55 +985,54 @@ trie_iterator_next (TrieIterator *iter)
  * Available since: 0.2.6
  */
 AlphaChar *
-trie_iterator_get_key (TrieIterator *iter)
+trie_iterator_get_key (const TrieIterator *iter)
 {
     const TrieState *s;
     const TrieChar  *tail_str;
+    AlphaChar       *alpha_key, *alpha_p;
 
     s = iter->state;
     if (!s)
         return NULL;
 
-    if (!iter->key) {
-        iter->key = dstring_new (sizeof (TrieChar), 20);
-    }
-    dstring_clear (iter->key);
-
     /* if s is in tail, root == s */
     if (s->is_suffix) {
         tail_str = tail_get_suffix (s->trie->tail, s->index);
+        if (!tail_str)
+            return NULL;
+
         tail_str += s->suffix_idx;
+
+        alpha_key = (AlphaChar *) malloc (sizeof (AlphaChar)
+                                          * (strlen (tail_str) + 1));
+        alpha_p = alpha_key;
     } else {
         TrieIndex  tail_idx;
+        int        i, key_len;
+        const TrieChar  *key_p;
 
-        /* get key from branching zone */
-        if (!da_get_transition_key (s->trie->da,
-                                    iter->root->index, s->index,
-                                    iter->key))
-        {
-            return NULL;
-        }
-
-        /* prepare the tail string */
         tail_idx = trie_da_get_tail_index (s->trie->da, s->index);
         tail_str = tail_get_suffix (s->trie->tail, tail_idx);
-    }
-
-    if (!tail_str)
-        return NULL;
-
-    /* append tail string */
-    while (*tail_str) {
-        if (!dstring_append_char (iter->key, tail_str++))
+        if (!tail_str)
             return NULL;
-    }
-    if (!dstring_terminate (iter->key))
-        return NULL;
 
-    return alpha_map_trie_to_char_str (
-               s->trie->alpha_map,
-               (const TrieChar *) dstring_get_val (iter->key)
-           );
+        key_len = trie_string_length (iter->key);
+        key_p = trie_string_get_val (iter->key);
+        alpha_key = (AlphaChar *) malloc (
+                        sizeof (AlphaChar) * (key_len + strlen (tail_str) + 1)
+                    );
+        alpha_p = alpha_key;
+        for (i = key_len; i > 0; i--) {
+            *alpha_p++ = alpha_map_trie_to_char (s->trie->alpha_map, *key_p++);
+        }
+    }
+
+    while (*tail_str) {
+        *alpha_p++ = alpha_map_trie_to_char (s->trie->alpha_map, *tail_str++);
+    }
+    *alpha_p = 0;
+
+    return alpha_key;
 }
 
 /**

@@ -264,20 +264,28 @@ alpha_map_add_range (AlphaMap *alpha_map, AlphaChar begin, AlphaChar end)
             begin_node = r;
             break;
         }
+        if (r->end + 1 == begin) {
+            /* 'begin' is next to 'r'-end
+             * -> extend 'r'-end to cover 'begin'
+             */
+            r->end = begin;
+            begin_node = r;
+            break;
+        }
     }
-    if (!begin_node && r && r->begin <= end) {
+    if (!begin_node && r && r->begin <= end + 1) {
         /* ['begin', 'end'] overlaps into 'r'-begin
+         * or 'r' is next to 'end' if r->begin == end + 1
          * -> extend 'r'-begin to include the range
          */
         r->begin = begin;
         begin_node = r;
     }
     /* Run upto the first range that exceeds 'end' */
-    while (r && r->begin <= end) {
+    while (r && r->begin <= end + 1) {
         if (end <= r->end) {
             /* 'r' covers 'end' -> take 'r' as ending point */
             end_node = r;
-            break;
         } else if (r != begin_node) {
             /* ['begin', 'end'] covers the whole 'r' -> remove 'r' */
             if (q) {
@@ -289,10 +297,10 @@ alpha_map_add_range (AlphaMap *alpha_map, AlphaChar begin, AlphaChar end)
                 free (r);
                 r = alpha_map->first_range;
             }
-        } else {
-            q = r;
-            r = r->next;
+            continue;
         }
+        q = r;
+        r = r->next;
     }
     if (!end_node && q && begin <= q->end) {
         /* ['begin', 'end'] overlaps 'q' at the end

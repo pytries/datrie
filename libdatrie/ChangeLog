@@ -1,3 +1,60 @@
+2012-08-06  Theppitak Karoonboonyanan  <thep@linux.thai.net>
+
+	Improve AlphaMap range merging.
+
+	* datrie/alpha-map.c (alpha_map_add_range):
+	  - Also try to merge adjacent ranges. Otherwise, adding one by one
+	    character will result in linear search on alphabet set.
+
+	Thanks Mikhail Korobov <kmike84@gmail.com> for the report.
+
+2012-08-05  Theppitak Karoonboonyanan  <thep@linux.thai.net>
+
+	Migrate trie_enumerate() to the new TrieIterator.
+
+	This improves performance by 10%, and recursion stacks are also
+	eliminated.
+
+	* datrie/trie.c (trie_enumerate):
+	  - Replace da_enumerate() call with TrieIterator loop.
+	* datrie/trie.c (-trie_da_enum_func, -_TrieEnumData):
+	* datrie/darray.h, datrie/darray.c
+	  (-da_enumerate, -da_get_transition_key, -DAEnumFunc,
+	   -da_enumerate_recursive):
+	  - Drop now-unused codes.
+
+2012-08-05  Theppitak Karoonboonyanan  <thep@linux.thai.net>
+
+	Optimize key calculation for TrieIterator.
+
+	* datrie/Makefile.am +datrie/dstring.h +datrie/dstring-private.h
+	  +datrie/dstring.c +datrie/trie-string.h +datrie/trie-string.c:
+	  - Add dynamic string classes DString and TrieString.
+	* datrie/trie.c:
+	  - (TrieIterator): Add "key" dynamic trie string member for
+	    incrementally gathering the key while iterating.
+	  - Initialize "key" member to NULL on construction. Only allocate and
+	    free it on branching root states.
+	* datrie/darray.h, datrie/darray.c
+	  (da_first_separate, da_next_separate):
+	  - Instead of allocating memory for return string, accept a dynamic
+	    string object and update it while traversing.
+	* datrie/trie.c (trie_iterator_next):
+	  - For branching state, create the "key" dynamic string object on
+	    first iteration and pass it to da_first_separate() and
+	    da_next_separate() along the iterations.
+	* datrie/trie.c (trie_iterator_get_key):
+	  - Replace the total key reconstruction by da_get_transition_key()
+	    with simple string catenation of the dynamic "key" and the suffix
+	    string.
+	* datrie/darray.h, datrie/darray.c (da_get_transition_key):
+	  - Adjust to use dynamic string instead of total allocation.
+	* datrie/darray.c (da_enumerate_recursive):
+	  - Adjust the da_get_transition_key() call accordingly.
+
+	Thanks Mikhail Korobov <kmike84@gmail.com> for the suggested approach
+	and for profiling check.
+
 2012-07-31  Theppitak Karoonboonyanan  <thep@linux.thai.net>
 
 	Add TrieIterator and its operations.

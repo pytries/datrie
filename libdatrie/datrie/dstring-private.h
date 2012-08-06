@@ -19,43 +19,26 @@
  */
 
 /*
- * dstring.h - Dynamic string type
- * Created: 2012-08-01
+ * dstring-private.h - Dynamic string type
+ * Created: 2012-08-02
  * Author:  Theppitak Karoonboonyanan <thep@linux.thai.net>
  */
 
-#ifndef __DSTRING_H
-#define __DSTRING_H
+#ifndef __DSTRING_PRIVATE_H
+#define __DSTRING_PRIVATE_H
 
 #include "typedefs.h"
 
-typedef struct _DString DString;
 
-DString * dstring_new (int char_size, int n_elm);
+struct _DString {
+    int    char_size;
+    int    str_len;
+    int    alloc_size;
+    void * val;
+};
 
-void      dstring_free (DString *ds);
 
-int       dstring_length (const DString *ds);
-
-const void * dstring_get_val (const DString *ds);
-
-void *    dstring_get_val_rw (DString *ds);
-
-void      dstring_clear (DString *ds);
-
-Bool      dstring_copy (DString *dst, const DString *src);
-
-Bool      dstring_append (DString *dst, const DString *src);
-
-Bool      dstring_append_string (DString *ds, const void *data, int len);
-
-Bool      dstring_append_char (DString *ds, const void *data);
-
-Bool      dstring_terminate (DString *ds);
-
-Bool      dstring_cut_last (DString *ds);
-
-#endif  /* __DSTRING_H */
+#endif  /* __DSTRING_PRIVATE_H */
 
 /*
 vi:ts=4:ai:expandtab

@@ -6,7 +6,8 @@ from distutils.extension import Extension
 
 LIBDATRIE_DIR = 'libdatrie/datrie'
 LIBDATRIE_FILE_NAMES = [
-    'alpha-map.c', 'darray.c', 'fileutils.c', 'tail.c', 'trie.c', 'dstring.c',
+    'alpha-map.c', 'darray.c', 'fileutils.c', 'tail.c', 'trie.c',
+    'dstring.c', 'trie-string.c',
 ]
 LIBDATRIE_FILES = [os.path.join(LIBDATRIE_DIR, name) for name in LIBDATRIE_FILE_NAMES]
 
