@@ -2,6 +2,12 @@
 CHANGES
 =======
 
+0.4.2 (2012-09-02)
+------------------
+
+* Update to latest libdatrie; this makes ``.keys()`` method a bit slower but
+  removes a keys length limitation.
+
 0.4.1 (2012-07-29)
 ------------------
 
