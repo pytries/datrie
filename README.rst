@@ -184,7 +184,7 @@ on __getitem__. Benchmark results (macbook air i5 1.7GHz,
 
 Looking for prefixes of a given word is almost as fast as
 ``__getitem__`` (results are for Python 3.2, this is the slowest
-supported Python, results are better for 2.6, 2.7 and 3.3)::
+supported Python, results are better for 2.6, 2.7)::
 
     trie.iter_prefix_items (hits):      0.461M ops/sec
     trie.prefix_items (hits):           0.743M ops/sec
@@ -261,11 +261,9 @@ Current Limitations
 
 * keys must be unicode (no implicit conversion for byte strings
   under Python 2.x, sorry);
-* keys longer than 32768 are unsupported;
 * there are no iterator versions of keys/values/items (this is not
   implemented yet);
-* it doesn't work under pypy+MacOS X (some obscure error which I don't
-  understand);
+* it is painfully slow and maybe buggy under pypy;
 * library is not tested with narrow Python builds.
 
 Contributing
@@ -290,15 +288,7 @@ Make sure `tox`_ is installed and run
 
     $ tox
 
-from the source checkout. Tests should pass under python 2.6, 2.7, 3.2 and 3.3.
-
-.. note::
-
-    At the moment of writing the latest pip release (1.1) does not
-    support Python 3.3; in order to run tox tests under Python 3.3
-    find the "virtualenv_support" directory in site-packages
-    (of the env you run tox from) and place an sdist zip/tarball of the newer
-    pip (from github) there.
+from the source checkout. Tests should pass under python 2.6, 2.7 and 3.2.
 
 ::
 
@@ -328,10 +318,10 @@ Authors & Contributors
 
 * Mikhail Korobov <kmike84@gmail.com>
 
-This module is based on `libdatrie`_ C library and is inspired by
-`fast_trie`_ Ruby bindings, `PyTrie`_ pure Python implementation
-and `Tree::Trie`_ Perl implementation; some docs and API ideas are
-borrowed from these projects.
+This module is based on `libdatrie`_ C library by Theppitak Karoonboonyanan
+and is inspired by `fast_trie`_ Ruby bindings, `PyTrie`_ pure
+Python implementation and `Tree::Trie`_ Perl implementation;
+some docs and API ideas are borrowed from these projects.
 
 .. _fast_trie: https://github.com/tyler/trie
 .. _PyTrie: https://bitbucket.org/gsakkis/pytrie
