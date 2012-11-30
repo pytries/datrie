@@ -31,6 +31,21 @@ def test_trie():
     with pytest.raises(KeyError):
         x = trie['bar']
 
+def test_trie_invalid_alphabet():
+    t = datrie.Trie('abc')
+    t['a'] = 'a'
+    t['b'] = 'b'
+    t['c'] = 'c'
+
+    for k in 'abc':
+        assert t[k] == k
+
+    with pytest.raises(KeyError):
+        t['d']
+
+    with pytest.raises(KeyError):
+        t['e']
+
 def test_trie_save_load():
     fd, fname = tempfile.mkstemp()
     trie = datrie.Trie(string.printable)
