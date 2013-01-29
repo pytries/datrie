@@ -271,6 +271,11 @@ class TestPrefixSearch(object):
         with pytest.raises(KeyError):
             trie.longest_prefix('z')
 
+    def test_longest_prefix_bug(self):
+        trie = self._trie()
+        assert trie.longest_prefix("print") == "pr"
+        assert trie.longest_prefix_item("print") == ("pr", 3)
+
     def test_longest_prefix_item(self):
         trie = self._trie()
 
