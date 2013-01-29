@@ -167,10 +167,10 @@ cdef class BaseTrie:
     def __len__(self):
         # XXX: this is very slow
         cdef BaseState s = BaseState(self)
-        cdef BaseIterator iter = BaseIterator(s)
+        cdef BaseIterator iterator = BaseIterator(s)
         cdef int counter=0
 
-        while iter.next():
+        while iterator.next():
             counter += 1
 
         return counter
@@ -297,6 +297,7 @@ cdef class BaseTrie:
           - otherwise raises ``KeyError``.
         """
         cdef cdatrie.TrieState* state = cdatrie.trie_root(self._c_trie)
+
         if state == NULL:
             raise MemoryError()
 
@@ -631,11 +632,11 @@ cdef class _TrieState:
     cpdef walk(self, unicode to):
         cdef bint res
         for ch in to:
-            if not self._walk(<cdatrie.AlphaChar> ch):
+            if not self.walk_char(<cdatrie.AlphaChar> ch):
                 return False
         return True
 
-    cdef bint _walk(self, cdatrie.AlphaChar char):
+    cdef bint walk_char(self, cdatrie.AlphaChar char):
         """
         Walks the trie stepwise, using a given character ``char``.
         On return, the state is updated to the new state if successfully walked.
@@ -670,7 +671,7 @@ cdef class _TrieState:
         )
 
     def __repr__(self):
-        return self.__unicode__()
+        return self.__unicode__()  # XXX: this is incorrect under Python 2.x
 
 
 cdef class BaseState(_TrieState):
