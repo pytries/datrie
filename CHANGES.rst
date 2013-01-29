@@ -2,6 +2,12 @@
 CHANGES
 =======
 
+0.5.1 (2013-01-30)
+------------------
+
+* Recently introduced memory leak in ``longest_prefix``
+  and ``longest_prefix_item`` is fixed.
+
 0.5 (2013-01-29)
 ----------------
 
