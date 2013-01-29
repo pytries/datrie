@@ -163,28 +163,27 @@ as values.
 uses about 22M for this according to my unscientific tests.
 
 This trie implementation is 2-6 times slower than python's dict
-on __getitem__. Benchmark results (macbook air i5 1.7GHz,
+on __getitem__. Benchmark results (macbook air i5 1.8GHz,
 "1.000M ops/sec" == "1 000 000 operations per second")::
 
     Python 2.6:
-    dict __getitem__: 6.024M ops/sec
-    trie __getitem__: 2.272M ops/sec
+    dict __getitem__: 7.107M ops/sec
+    trie __getitem__: 2.478M ops/sec
 
     Python 2.7:
-    dict __getitem__: 6.693M ops/sec
-    trie __getitem__: 2.357M ops/sec
+    dict __getitem__: 6.550M ops/sec
+    trie __getitem__: 2.474M ops/sec
 
     Python 3.2:
-    dict __getitem__: 3.628M ops/sec
-    trie __getitem__: 1.980M ops/sec
+    dict __getitem__: 8.185M ops/sec
+    trie __getitem__: 2.684M ops/sec
 
-    Python 3.3b1:
-    dict __getitem__: 6.721M ops/sec
-    trie __getitem__: 2.584M ops/sec
+    Python 3.3:
+    dict __getitem__: 7.050M ops/sec
+    trie __getitem__: 2.755M ops/sec
 
 Looking for prefixes of a given word is almost as fast as
-``__getitem__`` (results are for Python 3.2, this is the slowest
-supported Python, results are better for 2.6, 2.7)::
+``__getitem__`` (results are for Python 3.3)::
 
     trie.iter_prefix_items (hits):      0.461M ops/sec
     trie.prefix_items (hits):           0.743M ops/sec
@@ -206,52 +205,52 @@ by overall result count (this can be improved in future because a
 lot of time is spent decoding strings from utf_32_le to Python's
 unicode)::
 
-    trie.items(prefix="xxx"), avg_len(res)==415:        0.721K ops/sec
-    trie.keys(prefix="xxx"), avg_len(res)==415:         0.723K ops/sec
-    trie.values(prefix="xxx"), avg_len(res)==415:       4.870K ops/sec
-    trie.items(prefix="xxxxx"), avg_len(res)==17:       18.084K ops/sec
-    trie.keys(prefix="xxxxx"), avg_len(res)==17:        18.279K ops/sec
-    trie.values(prefix="xxxxx"), avg_len(res)==17:      98.668K ops/sec
-    trie.items(prefix="xxxxxxxx"), avg_len(res)==3:     87.141K ops/sec
-    trie.keys(prefix="xxxxxxxx"), avg_len(res)==3:      90.251K ops/sec
-    trie.values(prefix="xxxxxxxx"), avg_len(res)==3:    346.981K ops/sec
-    trie.items(prefix="xxxxx..xx"), avg_len(res)==1.4:  202.346K ops/sec
-    trie.keys(prefix="xxxxx..xx"), avg_len(res)==1.4:   216.588K ops/sec
-    trie.values(prefix="xxxxx..xx"), avg_len(res)==1.4: 532.858K ops/sec
-    trie.items(prefix="xxx"), NON_EXISTING:             1864.411K ops/sec
-    trie.keys(prefix="xxx"), NON_EXISTING:              1857.531K ops/sec
-    trie.values(prefix="xxx"), NON_EXISTING:            1822.818K ops/sec
+    trie.items(prefix="xxx"), avg_len(res)==415:        0.609K ops/sec
+    trie.keys(prefix="xxx"), avg_len(res)==415:         0.642K ops/sec
+    trie.values(prefix="xxx"), avg_len(res)==415:       4.974K ops/sec
+    trie.items(prefix="xxxxx"), avg_len(res)==17:       14.781K ops/sec
+    trie.keys(prefix="xxxxx"), avg_len(res)==17:        15.766K ops/sec
+    trie.values(prefix="xxxxx"), avg_len(res)==17:      96.456K ops/sec
+    trie.items(prefix="xxxxxxxx"), avg_len(res)==3:     75.165K ops/sec
+    trie.keys(prefix="xxxxxxxx"), avg_len(res)==3:      77.225K ops/sec
+    trie.values(prefix="xxxxxxxx"), avg_len(res)==3:    320.755K ops/sec
+    trie.items(prefix="xxxxx..xx"), avg_len(res)==1.4:  173.591K ops/sec
+    trie.keys(prefix="xxxxx..xx"), avg_len(res)==1.4:   180.678K ops/sec
+    trie.values(prefix="xxxxx..xx"), avg_len(res)==1.4: 503.392K ops/sec
+    trie.items(prefix="xxx"), NON_EXISTING:             2023.647K ops/sec
+    trie.keys(prefix="xxx"), NON_EXISTING:              1976.928K ops/sec
+    trie.values(prefix="xxx"), NON_EXISTING:            2060.372K ops/sec
 
 Random insert time is very slow compared to dict, this is the limitation
 of double-array tries; updates are quite fast. If you want to build a trie,
 consider sorting keys before the insertion::
 
-    dict __setitem__ (updates):         3.489M ops/sec
-    trie __setitem__ (updates):         1.862M ops/sec
-    dict __setitem__ (inserts, random): 3.628M ops/sec
-    trie __setitem__ (inserts, random): 0.050M ops/sec
-    dict __setitem__ (inserts, sorted): 3.272M ops/sec
-    trie __setitem__ (inserts, sorted): 0.585M ops/sec
-    dict setdefault (updates):          2.575M ops/sec
-    trie setdefault (updates):          1.600M ops/sec
-    dict setdefault (inserts):          2.596M ops/sec
-    trie setdefault (inserts):          0.050M ops/sec
+    dict __setitem__ (updates):            6.497M ops/sec
+    trie __setitem__ (updates):            2.633M ops/sec
+    dict __setitem__ (inserts, random):    5.808M ops/sec
+    trie __setitem__ (inserts, random):    0.053M ops/sec
+    dict __setitem__ (inserts, sorted):    5.749M ops/sec
+    trie __setitem__ (inserts, sorted):    0.624M ops/sec
+    dict setdefault (updates):             3.455M ops/sec
+    trie setdefault (updates):             1.910M ops/sec
+    dict setdefault (inserts):             3.466M ops/sec
+    trie setdefault (inserts):             0.053M ops/sec
 
 Other results (note that ``len(trie)`` is currently implemented
 using trie traversal)::
 
-    dict __contains__ (hits):   3.905M ops/sec
-    trie __contains__ (hits):   2.017M ops/sec
-    dict __contains__ (misses): 3.296M ops/sec
-    trie __contains__ (misses): 2.633M ops/sec
-    dict __len__:               199728.762 ops/sec
-    trie __len__:               22.007 ops/sec
-    dict values():              360.243 ops/sec
-    trie values():              19.703 ops/sec
-    dict keys():                180.307 ops/sec
-    trie keys():                3.361 ops/sec
-    dict items():               49.029 ops/sec
-    trie items():               3.172 ops/sec
+    dict __contains__ (hits):    6.801M ops/sec
+    trie __contains__ (hits):    2.816M ops/sec
+    dict __contains__ (misses):  5.470M ops/sec
+    trie __contains__ (misses):  4.224M ops/sec
+    dict __len__:                334336.269 ops/sec
+    trie __len__:                22.900 ops/sec
+    dict values():               406.507 ops/sec
+    trie values():               20.864 ops/sec
+    dict keys():                 189.298 ops/sec
+    trie keys():                 2.773 ops/sec
+    dict items():                48.734 ops/sec
+    trie items():                2.611 ops/sec
 
 Please take this benchmark results with a grain of salt; this
 is a very simple benchmark and may not cover your use case.
