@@ -2,6 +2,14 @@
 CHANGES
 =======
 
+0.5 (2013-01-29)
+----------------
+
+* ``longest_prefix`` and ``longest_prefix_item`` methods are fixed;
+* datrie is rebuilt with Cython 0.18;
+* misleading benchmark results in README are fixed;
+* State._walk is renamed to State.walk_char.
+
 0.4.2 (2012-09-02)
 ------------------
 
