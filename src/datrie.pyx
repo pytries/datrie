@@ -303,20 +303,23 @@ cdef class BaseTrie:
 
         cdef int index = 0, last_terminal_index = 0
 
-        for ch in key:
-            if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> ch):
-                break
+        try:
+            for ch in key:
+                if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> ch):
+                    break
 
-            index += 1
-            if cdatrie.trie_state_is_terminal(state):
-                last_terminal_index = index
+                index += 1
+                if cdatrie.trie_state_is_terminal(state):
+                    last_terminal_index = index
 
-        if not last_terminal_index:
-            if default is RAISE_KEY_ERROR:
-                raise KeyError(key)
-            return default
+            if not last_terminal_index:
+                if default is RAISE_KEY_ERROR:
+                    raise KeyError(key)
+                return default
 
-        return key[:last_terminal_index]
+            return key[:last_terminal_index]
+        finally:
+            cdatrie.trie_state_free(state)
 
 
     def longest_prefix_item(self, unicode key, default=RAISE_KEY_ERROR):
@@ -338,21 +341,26 @@ cdef class BaseTrie:
 
         cdef int index = 0, last_terminal_index = 0, data
 
-        for ch in key:
-            if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> ch):
-                break
+        try:
+            for ch in key:
+                if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> ch):
+                    break
 
-            index += 1
-            if cdatrie.trie_state_is_terminal(state):
-                last_terminal_index = index
-                data = cdatrie.trie_state_get_terminal_data(state)
+                index += 1
+                if cdatrie.trie_state_is_terminal(state):
+                    last_terminal_index = index
+                    data = cdatrie.trie_state_get_terminal_data(state)
 
-        if not last_terminal_index:
-            if default is RAISE_KEY_ERROR:
-                raise KeyError(key)
-            return default
+            if not last_terminal_index:
+                if default is RAISE_KEY_ERROR:
+                    raise KeyError(key)
+                return default
 
-        return key[:last_terminal_index], data
+            return key[:last_terminal_index], data
+
+        finally:
+            cdatrie.trie_state_free(state)
+
 
 
     def has_keys_with_prefix(self, unicode prefix):
