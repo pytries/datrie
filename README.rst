@@ -316,6 +316,7 @@ Authors & Contributors
 ----------------------
 
 * Mikhail Korobov <kmike84@gmail.com>
+* Jared Suttles
 
 This module is based on `libdatrie`_ C library by Theppitak Karoonboonyanan
 and is inspired by `fast_trie`_ Ruby bindings, `PyTrie`_ pure
