@@ -2,6 +2,13 @@
 CHANGES
 =======
 
+0.6 (2013-07-09)
+----------------
+
+* datrie is rebuilt with Cython 0.19.1;
+* ``iter_prefix_values``, ``prefix_values`` and ``longest_prefix_value``
+  methods for ``datrie.BaseTrie`` and ``datrie.Trie`` (thanks Jared Suttles).
+
 0.5.1 (2013-01-30)
 ------------------
 
