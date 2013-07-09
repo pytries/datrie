@@ -114,6 +114,33 @@ NON_WORDS_1k = ['ыва', 'xyz', 'соы', 'Axx', 'avы']*200
     # trie-specific benchmarks
 
     bench(
+        'trie.iter_prefix_values (hits)',
+        timeit.Timer(
+            "for word in words:\n"
+            "   for it in data.iter_prefix_values(word):\n"
+            "       pass",
+            trie_setup
+        ),
+    )
+
+    bench(
+        'trie.prefix_values (hits)',
+        timeit.Timer(
+            "for word in words: data.prefix_values(word)",
+            trie_setup
+        )
+    )
+
+    bench(
+        'trie.prefix_values loop (hits)',
+        timeit.Timer(
+            "for word in words:\n"
+            "    for it in data.prefix_values(word):pass",
+            trie_setup
+        )
+    )
+
+    bench(
         'trie.iter_prefix_items (hits)',
         timeit.Timer(
             "for word in words:\n"
@@ -183,7 +210,7 @@ NON_WORDS_1k = ['ыва', 'xyz', 'соы', 'Axx', 'avы']*200
         )
     )
 
-    for meth in ('longest_prefix', 'longest_prefix_item'):
+    for meth in ('longest_prefix', 'longest_prefix_item', 'longest_prefix_value'):
         bench(
             'trie.%s (hits)' % meth,
             timeit.Timer(

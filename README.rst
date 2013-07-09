@@ -117,7 +117,7 @@ Trie and BaseTrie
 
 There are two Trie classes in datrie package: ``datrie.Trie`` and
 ``datrie.BaseTrie``. ``datrie.BaseTrie`` is slightly faster and uses less
-memory but it can store only integer numbers 0 <= x <= 2147483647.
+memory but it can store only integer numbers -2147483648 <= x <= 2147483647.
 ``datrie.Trie`` is a bit slower but can store any Python object as a value.
 
 If you don't need values or integer values are OK then use ``datrie.BaseTrie``::
@@ -316,6 +316,7 @@ Authors & Contributors
 ----------------------
 
 * Mikhail Korobov <kmike84@gmail.com>
+* Jared Suttles
 
 This module is based on `libdatrie`_ C library by Theppitak Karoonboonyanan
 and is inspired by `fast_trie`_ Ruby bindings, `PyTrie`_ pure
