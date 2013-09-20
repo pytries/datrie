@@ -2,6 +2,11 @@
 CHANGES
 =======
 
+0.6.1 (2013-09-21)
+------------------
+
+* fixed build for Visual Studio (thanks Gabi Davar).
+
 0.6 (2013-07-09)
 ----------------
 
