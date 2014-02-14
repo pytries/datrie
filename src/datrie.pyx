@@ -275,6 +275,34 @@ cdef class BaseTrie:
         finally:
             cdatrie.trie_state_free(state)
 
+
+    cpdef suffixes(self, unicode prefix=None):
+        """
+        Returns a list of this trie's suffixes.
+
+        If ``prefix`` is not None, returns only the keys prefixed by ``prefix``.
+        """
+        cdef bint success
+        cdef list res = []
+        cdef BaseState state = BaseState(self)
+
+        if prefix is not None:
+            success = state.walk(prefix)
+            if not success:
+                return res
+
+        cdef BaseIterator iter = BaseIterator(state)
+
+		#all keys are suffixes of '' empty prefix
+        if prefix is None:
+            while iter.next():
+                res.append(iter.key())
+        else:
+            while iter.next():
+                res.append(iter.key())
+        return res
+
+
     def prefix_items(self, unicode key):
         '''
         Returns a list of the items (``(key,value)`` tuples)
