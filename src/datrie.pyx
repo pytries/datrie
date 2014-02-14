@@ -293,13 +293,16 @@ cdef class BaseTrie:
 
         cdef BaseIterator iter = BaseIterator(state)
 
-		#all keys are suffixes of '' empty prefix
-        if prefix is None:
-            while iter.next():
-                res.append(iter.key())
-        else:
-            while iter.next():
-                res.append(iter.key())
+#       #all keys are suffixes of '' empty prefix
+#        if prefix is None:
+#            while iter.next():
+#                res.append(iter.key())
+#        else:
+#            while iter.next():
+#                res.append(iter.key())
+        while iter.next():
+            res.append(iter.key())
+            
         return res
 
 
