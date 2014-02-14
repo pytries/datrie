@@ -148,7 +148,7 @@ def test_trie_suffixes():
     trie[u'producer'] = 5
     trie[u'producers']= 6
     trie[u'productivity']=7
-	
+    
     assert trie.suffixes(u'pro') == [u'', u'ducer', u'ducers', u'duct', u'duction', u'ductivity', u'f']
 
 def test_trie_len():
