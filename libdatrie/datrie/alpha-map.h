@@ -39,6 +39,25 @@ extern "C" {
 /**
  * @file alpha-map.h
  * @brief AlphaMap data type and functions
+ *
+ * AlphaMap is a mapping between AlphaChar and TrieChar. AlphaChar is the
+ * alphabet character used in words of a target language, while TrieChar
+ * is a small integer with packed range of values and is actually used in
+ * trie state transition calculations.
+ *
+ * Since double-array trie relies on sparse state transition table,
+ * a small set of input characters can make the table small, i.e. with
+ * small number of columns. But in real life, alphabet characters can be
+ * of non-continuous range of values. The unused slots between them can
+ * waste the space in the table, and can increase the chance of unused
+ * array cells.
+ *
+ * AlphaMap is thus defined for mapping between non-continuous ranges of
+ * values of AlphaChar and packed and continuous range of Triechar.
+ *
+ * In this implementation, TrieChar is defined as a single-byte integer,
+ * which means the largest AlphaChar set that is supported is of 255
+ * values, as the special value of 0 is reserved for null-termination code.
  */
 
 /**
@@ -57,6 +76,7 @@ int         alpha_map_add_range (AlphaMap  *alpha_map,
                                  AlphaChar  end);
 
 int         alpha_char_strlen (const AlphaChar *str);
+int         alpha_char_strcmp (const AlphaChar *str1, const AlphaChar *str2);
 
 #ifdef __cplusplus
 }

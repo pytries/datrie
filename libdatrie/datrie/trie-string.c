@@ -87,7 +87,8 @@ trie_string_append (TrieString *dst, const TrieString *src)
 Bool
 trie_string_append_string (TrieString *ts, const TrieChar *str)
 {
-    return dstring_append_string ((DString *)ts, str, strlen (str));
+    return dstring_append_string ((DString *)ts,
+                                  str, strlen ((const char *)str));
 }
 
 Bool

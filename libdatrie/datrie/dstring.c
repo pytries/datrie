@@ -126,7 +126,7 @@ dstring_append (DString *dst, const DString *src)
         return FALSE;
     }
 
-    memcpy ((char *)dst->val + (dst->char_size * dst->str_len), (char *)src->val,
+    memcpy ((char *)dst->val + (dst->char_size * dst->str_len), src->val,
             (src->str_len + 1) * dst->char_size);
 
     dst->str_len += src->str_len;
@@ -140,7 +140,8 @@ dstring_append_string (DString *ds, const void *data, int len)
     if (!dstring_ensure_space (ds, (ds->str_len + len + 1) * ds->char_size))
         return FALSE;
 
-    memcpy ((char *)ds->val + (ds->char_size * ds->str_len), data, ds->char_size * len);
+    memcpy ((char  *)ds->val + (ds->char_size * ds->str_len), data,
+            ds->char_size * len);
 
     ds->str_len += len;
 
@@ -153,7 +154,8 @@ dstring_append_char (DString *ds, const void *data)
     if (!dstring_ensure_space (ds, (ds->str_len + 2) * ds->char_size))
         return FALSE;
 
-    memcpy ((char *)ds->val + (ds->char_size * ds->str_len), data, ds->char_size);
+    memcpy ((char *)ds->val + (ds->char_size * ds->str_len), data,
+            ds->char_size);
 
     ds->str_len++;
 

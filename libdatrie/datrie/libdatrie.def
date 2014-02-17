@@ -3,6 +3,7 @@ alpha_map_clone
 alpha_map_free
 alpha_map_add_range
 alpha_char_strlen
+alpha_char_strcmp
 trie_new
 trie_new_from_file
 trie_fread

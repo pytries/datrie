@@ -2,23 +2,25 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(libdatrie, 0.2.5svn, thep@linux.thai.net)
+AC_INIT(libdatrie, 0.2.8, thep@linux.thai.net)
 AC_CONFIG_SRCDIR([datrie/trie.h])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE(dist-xz no-dist-gzip)
 
 # Library versioning
 # Library code modified:                    REVISION++
 # Interfaces added:              CURRENT++  REVISION=0  AGE++
 # Interfaces changed/removed:    CURRENT++  REVISION=0  AGE=0
-LT_CURRENT=3
-LT_REVISION=0
-LT_AGE=2
+LT_CURRENT=4
+LT_REVISION=1
+LT_AGE=3
 AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
+
+DOXYGEN_REQ_VER=1.8.4
 
 # Checks for programs.
 AC_PROG_CC
@@ -107,6 +109,15 @@ if test "x$enable_doxygen_doc" = "xyes"; then
   AC_CHECK_PROG(DOXYGEN,doxygen,doxygen,no)
   if test "x$DOXYGEN" = "xno"; then
     enable_doxygen_doc="no"
+  else
+    AC_MSG_CHECKING([doxygen >= $DOXYGEN_REQ_VER])
+    DOXYGEN_VER=$($DOXYGEN --version)
+    if expr $DOXYGEN_VER \< $DOXYGEN_REQ_VER > /dev/null; then
+      AC_MSG_RESULT([$DOXYGEN_VER, no, documentation disabled])
+      enable_doxygen_doc="no"
+    else
+      AC_MSG_RESULT([$DOXYGEN_VER, yes])
+    fi
   fi
 fi
 
@@ -128,5 +139,6 @@ AC_CONFIG_FILES([Makefile
                  tools/Makefile
                  man/Makefile
                  doc/Makefile
-                 doc/Doxyfile])
+                 doc/Doxyfile
+                 tests/Makefile])
 AC_OUTPUT

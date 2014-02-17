@@ -51,6 +51,31 @@ alpha_char_strlen (const AlphaChar *str)
     return p - str;
 }
 
+/**
+ * @brief Compare alphabet strings
+ *
+ * @param str1, str2  : the arrays of null-terminated AlphaChar strings
+ *                      to compare
+ *
+ * @return negative if @a str1 < @a str2;
+ *         0 if @a str1 == @a str2; 
+ *         positive if @a str1 > @a str2
+ *
+ * Available since: 0.2.7
+ */
+int
+alpha_char_strcmp (const AlphaChar *str1, const AlphaChar *str2)
+{
+    while (*str1 && *str1 == *str2) {
+        str1++; str2++;
+    }
+    if (*str1 < *str2)
+        return -1;
+    if (*str1 > *str2)
+        return 1;
+    return 0;
+}
+
 /*------------------------------*
  *    PRIVATE DATA DEFINITONS   *
  *------------------------------*/
@@ -241,6 +266,8 @@ alpha_map_fwrite_bin (const AlphaMap *alpha_map, FILE *file)
  * @param begin     : the first character of the range
  * @param end       : the last character of the range
  *
+ * @return 0 on success, non-zero on failure
+ *
  * Add a range of character codes from @a begin to @a end to the
  * alphabet set.
  */
@@ -342,10 +369,10 @@ alpha_map_add_range (AlphaMap *alpha_map, AlphaChar begin, AlphaChar end)
     return 0;
 }
 
-TrieChar
+TrieIndex
 alpha_map_char_to_trie (const AlphaMap *alpha_map, AlphaChar ac)
 {
-    TrieChar    alpha_begin;
+    TrieIndex   alpha_begin;
     AlphaRange *range;
 
     if (0 == ac)
@@ -359,7 +386,7 @@ alpha_map_char_to_trie (const AlphaMap *alpha_map, AlphaChar ac)
         alpha_begin += range->end - range->begin + 1;
     }
 
-    return TRIE_CHAR_MAX;
+    return TRIE_INDEX_MAX;
 }
 
 AlphaChar
@@ -388,12 +415,22 @@ alpha_map_char_to_trie_str (const AlphaMap *alpha_map, const AlphaChar *str)
     TrieChar   *trie_str, *p;
 
     trie_str = (TrieChar *) malloc (alpha_char_strlen (str) + 1);
+    if (!trie_str)
+        return NULL;
+
     for (p = trie_str; *str; p++, str++) {
-        *p = alpha_map_char_to_trie (alpha_map, *str);
+        TrieIndex tc = alpha_map_char_to_trie (alpha_map, *str);
+        if (TRIE_INDEX_MAX == tc)
+            goto error_str_allocated;
+        *p = (TrieChar) tc;
     }
     *p = 0;
 
     return trie_str;
+
+error_str_allocated:
+    free (trie_str);
+    return NULL;
 }
 
 AlphaChar *
@@ -403,6 +440,9 @@ alpha_map_trie_to_char_str (const AlphaMap *alpha_map, const TrieChar *str)
 
     alpha_str = (AlphaChar *) malloc ((strlen ((const char *)str) + 1)
                                       * sizeof (AlphaChar));
+    if (!alpha_str)
+        return NULL;
+
     for (p = alpha_str; *str; p++, str++) {
         *p = (AlphaChar) alpha_map_trie_to_char (alpha_map, *str);
     }

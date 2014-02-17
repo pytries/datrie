@@ -333,11 +333,11 @@ trie_retrieve (const Trie *trie, const AlphaChar *key, TrieData *o_data)
     /* walk through branches */
     s = da_get_root (trie->da);
     for (p = key; !trie_da_is_separate (trie->da, s); p++) {
-        if (!da_walk (trie->da, &s,
-                      alpha_map_char_to_trie (trie->alpha_map, *p)))
-        {
+        TrieIndex tc = alpha_map_char_to_trie (trie->alpha_map, *p);
+        if (TRIE_INDEX_MAX == tc)
             return FALSE;
-        }
+        if (!da_walk (trie->da, &s, (TrieChar) tc))
+            return FALSE;
         if (0 == *p)
             break;
     }
@@ -346,11 +346,11 @@ trie_retrieve (const Trie *trie, const AlphaChar *key, TrieData *o_data)
     s = trie_da_get_tail_index (trie->da, s);
     suffix_idx = 0;
     for ( ; ; p++) {
-        if (!tail_walk_char (trie->tail, s, &suffix_idx,
-                             alpha_map_char_to_trie (trie->alpha_map, *p)))
-        {
+        TrieIndex tc = alpha_map_char_to_trie (trie->alpha_map, *p);
+        if (TRIE_INDEX_MAX == tc)
             return FALSE;
-        }
+        if (!tail_walk_char (trie->tail, s, &suffix_idx, (TrieChar) tc))
+            return FALSE;
         if (0 == *p)
             break;
     }
@@ -368,7 +368,7 @@ trie_retrieve (const Trie *trie, const AlphaChar *key, TrieData *o_data)
  * @param key   : the key for the entry to retrieve
  * @param data  : the data associated to the entry
  *
- * @return boolean value indicating the success of the process
+ * @return boolean value indicating the success of the operation
  *
  * Store a @a data for the given @a key in @a trie. If @a key does not
  * exist in @a trie, it will be appended. If it does, its current data will
@@ -387,7 +387,7 @@ trie_store (Trie *trie, const AlphaChar *key, TrieData data)
  * @param key   : the key for the entry to retrieve
  * @param data  : the data associated to the entry
  *
- * @return boolean value indicating the success of the process
+ * @return boolean value indicating the success of the operation
  *
  * Store a @a data for the given @a key in @a trie. If @a key does not
  * exist in @a trie, it will be appended. If it does, the function will
@@ -417,13 +417,16 @@ trie_store_conditionally (Trie            *trie,
     /* walk through branches */
     s = da_get_root (trie->da);
     for (p = key; !trie_da_is_separate (trie->da, s); p++) {
-        if (!da_walk (trie->da, &s,
-                      alpha_map_char_to_trie (trie->alpha_map, *p)))
-        {
+        TrieIndex tc = alpha_map_char_to_trie (trie->alpha_map, *p);
+        if (TRIE_INDEX_MAX == tc)
+            return FALSE;
+        if (!da_walk (trie->da, &s, (TrieChar) tc)) {
             TrieChar *key_str;
             Bool      res;
 
             key_str = alpha_map_char_to_trie_str (trie->alpha_map, p);
+            if (!key_str)
+                return FALSE;
             res = trie_branch_in_branch (trie, s, key_str, data);
             free (key_str);
 
@@ -438,13 +441,16 @@ trie_store_conditionally (Trie            *trie,
     t = trie_da_get_tail_index (trie->da, s);
     suffix_idx = 0;
     for ( ; ; p++) {
-        if (!tail_walk_char (trie->tail, t, &suffix_idx,
-                             alpha_map_char_to_trie (trie->alpha_map, *p)))
-        {
+        TrieIndex tc = alpha_map_char_to_trie (trie->alpha_map, *p);
+        if (TRIE_INDEX_MAX == tc)
+            return FALSE;
+        if (!tail_walk_char (trie->tail, t, &suffix_idx, (TrieChar) tc)) {
             TrieChar *tail_str;
             Bool      res;
 
             tail_str = alpha_map_char_to_trie_str (trie->alpha_map, sep);
+            if (!tail_str)
+                return FALSE;
             res = trie_branch_in_tail (trie, s, tail_str, data);
             free (tail_str);
 
@@ -547,11 +553,11 @@ trie_delete (Trie *trie, const AlphaChar *key)
     /* walk through branches */
     s = da_get_root (trie->da);
     for (p = key; !trie_da_is_separate (trie->da, s); p++) {
-        if (!da_walk (trie->da, &s,
-                      alpha_map_char_to_trie (trie->alpha_map, *p)))
-        {
+        TrieIndex tc = alpha_map_char_to_trie (trie->alpha_map, *p);
+        if (TRIE_INDEX_MAX == tc)
             return FALSE;
-        }
+        if (!da_walk (trie->da, &s, (TrieChar) tc))
+            return FALSE;
         if (0 == *p)
             break;
     }
@@ -560,11 +566,11 @@ trie_delete (Trie *trie, const AlphaChar *key)
     t = trie_da_get_tail_index (trie->da, s);
     suffix_idx = 0;
     for ( ; ; p++) {
-        if (!tail_walk_char (trie->tail, t, &suffix_idx,
-                             alpha_map_char_to_trie (trie->alpha_map, *p)))
-        {
+        TrieIndex tc = alpha_map_char_to_trie (trie->alpha_map, *p);
+        if (TRIE_INDEX_MAX == tc)
             return FALSE;
-        }
+        if (!tail_walk_char (trie->tail, t, &suffix_idx, (TrieChar) tc))
+            return FALSE;
         if (0 == *p)
             break;
     }
@@ -742,12 +748,14 @@ trie_state_rewind (TrieState *s)
 Bool
 trie_state_walk (TrieState *s, AlphaChar c)
 {
-    TrieChar tc = alpha_map_char_to_trie (s->trie->alpha_map, c);
+    TrieIndex tc = alpha_map_char_to_trie (s->trie->alpha_map, c);
+    if (TRIE_INDEX_MAX == tc)
+        return FALSE;
 
     if (!s->is_suffix) {
         Bool ret;
 
-        ret = da_walk (s->trie->da, &s->index, tc);
+        ret = da_walk (s->trie->da, &s->index, (TrieChar) tc);
 
         if (ret && trie_da_is_separate (s->trie->da, s->index)) {
             s->index = trie_da_get_tail_index (s->trie->da, s->index);
@@ -757,7 +765,8 @@ trie_state_walk (TrieState *s, AlphaChar c)
 
         return ret;
     } else {
-        return tail_walk_char (s->trie->tail, s->index, &s->suffix_idx, tc);
+        return tail_walk_char (s->trie->tail, s->index, &s->suffix_idx,
+                               (TrieChar) tc);
     }
 }
 
@@ -774,13 +783,15 @@ trie_state_walk (TrieState *s, AlphaChar c)
 Bool
 trie_state_is_walkable (const TrieState *s, AlphaChar c)
 {
-    TrieChar tc = alpha_map_char_to_trie (s->trie->alpha_map, c);
+    TrieIndex tc = alpha_map_char_to_trie (s->trie->alpha_map, c);
+    if (TRIE_INDEX_MAX == tc)
+        return FALSE;
 
     if (!s->is_suffix)
-        return da_is_walkable (s->trie->da, s->index, tc);
+        return da_is_walkable (s->trie->da, s->index, (TrieChar) tc);
     else
         return tail_is_walkable_char (s->trie->tail, s->index, s->suffix_idx,
-                                      tc);
+                                      (TrieChar) tc);
 }
 
 /**
@@ -913,7 +924,7 @@ trie_state_get_terminal_data (const TrieState *s)
  * Create a new trie iterator for iterating entries of a sub-trie rooted at
  * state @a s.
  *
- * Use it with the result of trie_get_root() to iterate the whole trie.
+ * Use it with the result of trie_root() to iterate the whole trie.
  *
  * The created object must be freed with trie_iterator_free().
  *
@@ -1039,7 +1050,8 @@ trie_iterator_get_key (const TrieIterator *iter)
         tail_str += s->suffix_idx;
 
         alpha_key = (AlphaChar *) malloc (sizeof (AlphaChar)
-                                          * (strlen (tail_str) + 1));
+                                          * (strlen ((const char *)tail_str)
+                                             + 1));
         alpha_p = alpha_key;
     } else {
         TrieIndex  tail_idx;
@@ -1054,7 +1066,8 @@ trie_iterator_get_key (const TrieIterator *iter)
         key_len = trie_string_length (iter->key);
         key_p = trie_string_get_val (iter->key);
         alpha_key = (AlphaChar *) malloc (
-                        sizeof (AlphaChar) * (key_len + strlen (tail_str) + 1)
+                        sizeof (AlphaChar)
+                        * (key_len + strlen ((const char *)tail_str) + 1)
                     );
         alpha_p = alpha_key;
         for (i = key_len; i > 0; i--) {

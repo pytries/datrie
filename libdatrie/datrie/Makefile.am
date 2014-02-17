@@ -8,7 +8,7 @@ pkginclude_HEADERS =	\
 
 EXTRA_DIST = libdatrie.map libdatrie.def
 
-INCLUDES = -I$(top_srcdir)
+AM_CPPFLAGS = -I$(top_srcdir)
 
 lib_LTLIBRARIES = libdatrie.la
 

@@ -1,7 +1,7 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * libdatrie - Double-Array Trie Library
- * Copyright (C) 2006  Theppitak Karoonboonyanan <thep@linux.thai.net>
+ * Copyright (C) 2013  Theppitak Karoonboonyanan <thep@linux.thai.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,38 +19,41 @@
  */
 
 /*
- * alpha-map-private.h - private APIs for alpha-map
- * Created: 2008-12-04
+ * utils.h - Utility functions for datrie test cases
+ * Created: 2013-10-16
  * Author:  Theppitak Karoonboonyanan <thep@linux.thai.net>
  */
 
-#ifndef __ALPHA_MAP_PRIVATE_H
-#define __ALPHA_MAP_PRIVATE_H
+#include <datrie/trie.h>
 
-#include <stdio.h>
-#include "alpha-map.h"
+/*---------------------*
+ *  Debugging helpers  *
+ *---------------------*/
+void msg_step (const char *msg);
 
-AlphaMap *  alpha_map_fread_bin (FILE *file);
+/*-------------------------*
+ *  Trie creation helpers  *
+ *-------------------------*/
+Trie * en_trie_new ();
 
-int         alpha_map_fwrite_bin (const AlphaMap *alpha_map, FILE *file);
+/*---------------------------*
+ *  Dict source for testing  *
+ *---------------------------*/
+typedef struct _DictRec DictRec;
+struct _DictRec {
+    AlphaChar *key;
+    TrieData   data;
+};
 
-TrieIndex   alpha_map_char_to_trie (const AlphaMap *alpha_map,
-                                    AlphaChar       ac);
+#define TRIE_DATA_UNREAD    1
+#define TRIE_DATA_READ      2
 
-AlphaChar   alpha_map_trie_to_char (const AlphaMap *alpha_map,
-                                    TrieChar        tc);
+extern DictRec dict_src[];
 
-TrieChar *  alpha_map_char_to_trie_str (const AlphaMap  *alpha_map,
-                                        const AlphaChar *str);
-
-AlphaChar * alpha_map_trie_to_char_str (const AlphaMap  *alpha_map,
-                                        const TrieChar  *str);
-
-
-#endif /* __ALPHA_MAP_PRIVATE_H */
-
+int      dict_src_n_entries ();
+TrieData dict_src_get_data (const AlphaChar *key);
+int      dict_src_set_data (const AlphaChar *key, TrieData data);
 
 /*
 vi:ts=4:ai:expandtab
 */
-

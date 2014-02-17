@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = datrie tools man doc
+SUBDIRS = datrie tools man doc tests
 
 EXTRA_DIST = README.migration
 

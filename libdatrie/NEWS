@@ -1,5 +1,38 @@
 libdatrie
 
+0.2.8 (2014-01-10)
+=====
+- Fix compiler warnings in test suites.
+- Fix edge-case error on alphabet set of size 255.
+  (Thanks Naoki Youshinaga for the report, test case, and analysis.)
+- Fail trie operations on non-alphabet inputs, rather than silently allowing
+  them to sneak in as false keys.
+  (Thanks Naoki Youshinaga for the suggestion.)
+- Improved documentation.
+
+0.2.7.1 (2013-10-22)
+=======
+- Bump library versioning to reflect API addition.
+  (Change missing in previous release)
+
+0.2.7 (2013-10-21)
+=====
+- Fix portability issue with non-GCC compilers.
+  [Thanks Gabi Daver for the report and fix (via Mikhail Korobov).]
+- Fix compiler warnings.
+- New utility API for comparing AlphaChar strings.
+- Add test suites.
+- Update doxygen doc generation.
+
+0.2.6 (2013-01-23)
+=====
+- New API trie_state_walkable_chars() for breadth-first traversal.
+- New class TrieIterator for callback-free enumeration.
+- Improved performance on key enumeration.
+- Improved AlphaMap range merging.
+- Bug fixes.
+[Many thanks to Mikhail Korobov for improvements in this version.]
+
 0.2.5 (2011-11-04)
 =====
 - Fix missing 'extern "C"' in header file. [Patch from Aurimas Černius]

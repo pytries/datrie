@@ -499,7 +499,7 @@ da_has_children    (const DArray   *d,
         return FALSE;
 
     max_c = MIN_VAL (TRIE_CHAR_MAX, d->num_cells - base);
-    for (c = 0; c < max_c; c++) {
+    for (c = 0; c <= max_c; c++) {
         if (da_get_check (d, base + c) == s)
             return TRUE;
     }
@@ -519,7 +519,7 @@ da_output_symbols  (const DArray   *d,
 
     base = da_get_base (d, s);
     max_c = MIN_VAL (TRIE_CHAR_MAX, d->num_cells - base);
-    for (c = 0; c < max_c; c++) {
+    for (c = 0; c <= max_c; c++) {
         if (da_get_check (d, base + c) == s)
             symbols_add_fast (syms, (TrieChar) c);
     }
@@ -617,7 +617,7 @@ da_relocate_base   (DArray         *d,
             TrieIndex   c, max_c;
 
             max_c = MIN_VAL (TRIE_CHAR_MAX, d->num_cells - old_next_base);
-            for  (c = 0; c < max_c; c++) {
+            for  (c = 0; c <= max_c; c++) {
                 if (da_get_check (d, old_next_base + c) == old_next)
                     da_set_check (d, old_next_base + c, new_next);
             }
@@ -765,11 +765,11 @@ TrieIndex
 da_first_separate (DArray *d, TrieIndex root, TrieString *keybuff)
 {
     TrieIndex base;
-    TrieChar  c, max_c;
+    TrieIndex c, max_c;
 
     while ((base = da_get_base (d, root)) >= 0) {
         max_c = MIN_VAL (TRIE_CHAR_MAX, d->num_cells - base);
-        for (c = 0; c < max_c; c++) {
+        for (c = 0; c <= max_c; c++) {
             if (da_get_check (d, base + c) == root)
                 break;
         }
@@ -811,7 +811,7 @@ da_next_separate (DArray *d, TrieIndex root, TrieIndex sep, TrieString *keybuff)
 {
     TrieIndex parent;
     TrieIndex base;
-    TrieChar  c, max_c;
+    TrieIndex c, max_c;
 
     while (sep != root) {
         parent = da_get_check (d, sep);
@@ -822,7 +822,7 @@ da_next_separate (DArray *d, TrieIndex root, TrieIndex sep, TrieString *keybuff)
 
         /* find next sibling of sep */
         max_c = MIN_VAL (TRIE_CHAR_MAX, d->num_cells - base);
-        while (++c < max_c) {
+        while (++c <= max_c) {
             if (da_get_check (d, base + c) == parent) {
                 trie_string_append_char (keybuff, c);
                 return da_first_separate (d, base + c, keybuff);

@@ -41,3 +41,7 @@ DATRIE_0.2.6 {
   trie_iterator_get_data;
 } DATRIE_0.2.4;
 
+DATRIE_0.2.7 {
+  alpha_char_strcmp;
+} DATRIE_0.2.6;
+
