@@ -106,10 +106,18 @@ Get all items with a given prefix from a trie::
     >>> trie.values(u'foob')
     [10]
 
+Get all suffixes of certain word starting with a given prefix from a trie::
+>>> trie.suffixes()
+[u'pro', u'producer', u'producers', u'product', u'production', u'productivity', u'prof']
+>>> trie.suffixes(u'prod')
+[u'ucer', u'ucers', u'uct', u'uction', u'uctivity']
+
+
 Save & load a trie (values must be picklable)::
 
     >>> trie.save('my.trie')
     >>> trie2 = datrie.Trie.load('my.trie')
+
 
 
 Trie and BaseTrie
