@@ -276,11 +276,10 @@ cdef class BaseTrie:
             cdatrie.trie_state_free(state)
 
 
-    cpdef suffixes(self, unicode prefix=None):
+    cpdef suffixes(self, unicode prefix=''):
         """
         Returns a list of this trie's suffixes.
-
-        If ``prefix`` is not None, returns only the keys prefixed by ``prefix``.
+        If ``prefix`` is not empty, returns only the suffixes of words prefixed by ``prefix``.
         """
         cdef bint success
         cdef list res = []
