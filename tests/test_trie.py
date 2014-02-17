@@ -141,15 +141,15 @@ def test_trie_items():
 def test_trie_suffixes():
     trie = datrie.Trie(string.ascii_lowercase)
    
-    trie[u'pro']=1
-    trie[u'prof']=2
-    trie[u'product']=3
-    trie[u'production']=4
-    trie[u'producer'] = 5
-    trie[u'producers']= 6
-    trie[u'productivity']=7
+    trie['pro']=1
+    trie['prof']=2
+    trie['product']=3
+    trie['production']=4
+    trie['producer'] = 5
+    trie['producers']= 6
+    trie['productivity']=7
     
-    assert trie.suffixes(u'pro') == [u'', u'ducer', u'ducers', u'duct', u'duction', u'ductivity', u'f']
+    assert trie.suffixes('pro') == ['', 'ducer', 'ducers', 'duct', 'duction', 'ductivity', 'f']
 
 def test_trie_len():
     trie = datrie.Trie(string.ascii_lowercase)
