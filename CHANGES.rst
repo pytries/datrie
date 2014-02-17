@@ -2,6 +2,13 @@
 CHANGES
 =======
 
+0.7 (2014-02-18)
+----------------
+
+* bundled libdatrie C library is updated to version 0.2.8;
+* new `.suffixes()` method (thanks Ahmed T. Youssef);
+* wrapper is rebuilt with Cython 0.20.1.
+
 0.6.1 (2013-09-21)
 ------------------
 
