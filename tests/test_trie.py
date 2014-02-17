@@ -138,6 +138,18 @@ def test_trie_items():
     assert trie.items() == [('bar', 'foo'), ('foo', 10), ('foobar', 30)]
     assert trie.keys() == ['bar', 'foo', 'foobar']
 
+def test_trie_suffixes():
+    trie = datrie.Trie(string.ascii_lowercase)
+   
+    trie['pro']=1
+    trie['prof']=2
+    trie['product']=3
+    trie['production']=4
+    trie['producer'] = 5
+    trie['producers']= 6
+    trie['productivity']=7
+    
+    assert trie.suffixes('pro') == ['', 'ducer', 'ducers', 'duct', 'duction', 'ductivity', 'f']
 
 def test_trie_len():
     trie = datrie.Trie(string.ascii_lowercase)

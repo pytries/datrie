@@ -106,10 +106,19 @@ Get all items with a given prefix from a trie::
     >>> trie.values(u'foob')
     [10]
 
+Get all suffixes of certain word starting with a given prefix from a trie::
+
+    >>> trie.suffixes()
+    [u'pro', u'producer', u'producers', u'product', u'production', u'productivity', u'prof']
+    >>> trie.suffixes(u'prod')
+    [u'ucer', u'ucers', u'uct', u'uction', u'uctivity']
+
+
 Save & load a trie (values must be picklable)::
 
     >>> trie.save('my.trie')
     >>> trie2 = datrie.Trie.load('my.trie')
+
 
 
 Trie and BaseTrie
@@ -318,6 +327,7 @@ Authors & Contributors
 * Mikhail Korobov <kmike84@gmail.com>
 * Jared Suttles
 * Gabi Davar
+* Ahmed T. Youssef
 
 This module is based on `libdatrie`_ C library by Theppitak Karoonboonyanan
 and is inspired by `fast_trie`_ Ruby bindings, `PyTrie`_ pure
