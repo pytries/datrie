@@ -1,6 +1,8 @@
 datrie
 ======
 
+.. image:: https://travis-ci.org/kmike/datrie.png   :target: https://travis-ci.org/kmike/datrie
+
 Super-fast, efficiently stored Trie for Python (2.x and 3.x).
 Uses `libdatrie`_.
 
