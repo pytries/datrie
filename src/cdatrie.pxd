@@ -31,8 +31,11 @@ cdef extern from "../libdatrie/datrie/trie.h":
     ctypedef struct TrieIterator:
         pass
 
-
     ctypedef int TrieData
+
+    ctypedef bint (*TrieEnumFunc) (AlphaChar *key,
+                                   TrieData key_data,
+                                   void *user_data)
 
     int TRIE_CHAR_TERM
     int TRIE_DATA_ERROR
@@ -63,6 +66,8 @@ cdef extern from "../libdatrie/datrie/trie.h":
     bint trie_store_if_absent (Trie *trie, AlphaChar *key, TrieData data)
 
     bint trie_delete (Trie *trie, AlphaChar *key)
+
+    bint trie_enumerate (Trie *trie, TrieEnumFunc enum_func, void *user_data);
 
     # ======== STEPWISE QUERY OPERATIONS ========
 
@@ -105,4 +110,3 @@ cdef extern from "../libdatrie/datrie/trie.h":
     AlphaChar *     trie_iterator_get_key (TrieIterator *iter)
 
     TrieData        trie_iterator_get_data (TrieIterator *iter)
-

@@ -3,6 +3,7 @@
 Cython wrapper for libdatrie.
 """
 
+from cython.operator cimport dereference as deref
 from libc.stdlib cimport malloc, free
 from libc cimport stdio
 from libc cimport string
@@ -164,15 +165,17 @@ cdef class BaseTrie:
         finally:
             free(c_key)
 
+    @staticmethod
+    cdef int len_enumerator(cdatrie.AlphaChar *key, cdatrie.TrieData key_data,
+                            void *counter_ptr):
+        (<int *>counter_ptr)[0] += 1
+        return True
+
     def __len__(self):
-        # XXX: this is very slow
-        cdef BaseState s = BaseState(self)
-        cdef BaseIterator iterator = BaseIterator(s)
-        cdef int counter=0
-
-        while iterator.next():
-            counter += 1
-
+        cdef int counter = 0
+        cdatrie.trie_enumerate(self._c_trie,
+                               <cdatrie.TrieEnumFunc>(&self.len_enumerator),
+                               &counter);
         return counter
 
     def setdefault(self, unicode key, cdatrie.TrieData value):
@@ -191,7 +194,6 @@ cdef class BaseTrie:
                 return value
         finally:
             free(c_key)
-
 
     def iter_prefixes(self, unicode key):
         '''
@@ -294,7 +296,7 @@ cdef class BaseTrie:
 
         while iter.next():
             res.append(iter.key())
-            
+
         return res
 
 
@@ -1026,11 +1028,13 @@ def to_ranges(lst):
         b = list(b)
         yield b[0][1], b[-1][1]
 
+
 def alphabet_to_ranges(alphabet):
     for begin, end in to_ranges(sorted(map(ord, iter(alphabet)))):
         yield begin, end
 
-def new(alphabet=None, ranges=None, AlphaMap alpha_map=None):
-    warnings.warn('datrie.new is deprecated; please use datrie.Trie.', DeprecationWarning)
-    return Trie(alphabet, ranges, alpha_map)
 
+def new(alphabet=None, ranges=None, AlphaMap alpha_map=None):
+    warnings.warn('datrie.new is deprecated; please use datrie.Trie.',
+                  DeprecationWarning)
+    return Trie(alphabet, ranges, alpha_map)
