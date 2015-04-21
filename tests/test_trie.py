@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, unicode_literals
-import tempfile
-import string
-import random
-import pickle
 
-import pytest
+from __future__ import absolute_import, unicode_literals
+
+import pickle
+import random
+import string
+import tempfile
+
 import datrie
+import pytest
+
 
 def test_trie():
     trie = datrie.Trie(string.printable)
-    assert trie.is_dirty() == True
+    assert trie.is_dirty()
 
     assert 'foo' not in trie
     assert 'Foo' not in trie
@@ -29,7 +32,8 @@ def test_trie():
     assert trie['Foo'] == 10
 
     with pytest.raises(KeyError):
-        x = trie['bar']
+        trie['bar']
+
 
 def test_trie_invalid_alphabet():
     t = datrie.Trie('abc')
@@ -45,6 +49,7 @@ def test_trie_invalid_alphabet():
 
     with pytest.raises(KeyError):
         t['e']
+
 
 def test_trie_save_load():
     fd, fname = tempfile.mkstemp()
@@ -63,6 +68,7 @@ def test_trie_save_load():
     assert trie2['fo'] == 4
     assert trie2['foovar'] == 2
     assert trie2['Foo'] == 'vasia'
+
 
 def test_save_load_base():
     fd, fname = tempfile.mkstemp()
@@ -106,8 +112,6 @@ def test_trie_file_io():
     assert len(trie2) == len(trie)
 
 
-
-
 def test_trie_unicode():
     # trie for lowercase Russian characters
     trie = datrie.Trie(ranges=[('а', 'я')])
@@ -119,6 +123,7 @@ def test_trie_unicode():
     assert trie['б'] == 2
     assert trie['аб'] == 'vasia'
 
+
 def test_trie_ascii():
     trie = datrie.Trie(string.ascii_letters)
     trie['x'] = 1
@@ -129,6 +134,7 @@ def test_trie_ascii():
     assert trie['y'] == 'foo'
     assert trie['xx'] == 2
 
+
 def test_trie_items():
     trie = datrie.Trie(string.ascii_lowercase)
     trie['foo'] = 10
@@ -137,6 +143,7 @@ def test_trie_items():
     assert trie.values() == ['foo', 10, 30]
     assert trie.items() == [('bar', 'foo'), ('foo', 10), ('foobar', 30)]
     assert trie.keys() == ['bar', 'foo', 'foobar']
+
 
 def test_trie_suffixes():
     trie = datrie.Trie(string.ascii_lowercase)
@@ -192,16 +199,23 @@ class TestPrefixLookups(object):
         assert trie.keys('foobarzart') == ['foobarzartic']
         assert trie.keys('foo') == ['foo', 'foobar', 'foobarzartic', 'foovar']
         assert trie.keys('foobar') == ['foobar', 'foobarzartic']
-        assert trie.keys('') == ['bar', 'foo', 'foobar', 'foobarzartic', 'foovar']
+        assert trie.keys('') == [
+            'bar', 'foo', 'foobar', 'foobarzartic', 'foovar'
+        ]
         assert trie.keys('x') == []
 
     def test_trie_items_prefix(self):
         trie = self._trie()
         assert trie.items('foobarz') == [('foobarzartic', None)]
         assert trie.items('foobarzart') == [('foobarzartic', None)]
-        assert trie.items('foo') == [('foo', 10), ('foobar', 30), ('foobarzartic', None), ('foovar', 40)]
+        assert trie.items('foo') == [
+            ('foo', 10), ('foobar', 30), ('foobarzartic', None), ('foovar', 40)
+        ]
         assert trie.items('foobar') == [('foobar', 30), ('foobarzartic', None)]
-        assert trie.items('') == [('bar', 20), ('foo', 10), ('foobar', 30), ('foobarzartic', None), ('foovar', 40)]
+        assert trie.items('') == [
+            ('bar', 20), ('foo', 10), ('foobar', 30),
+            ('foobarzartic', None), ('foovar', 40)
+        ]
         assert trie.items('x') == []
 
     def test_trie_values_prefix(self):
@@ -216,7 +230,8 @@ class TestPrefixLookups(object):
 
 class TestPrefixSearch(object):
 
-    WORDS = ['producers', 'producersz', 'pr', 'pool', 'prepare', 'preview', 'prize', 'produce', 'producer', 'progress']
+    WORDS = ['producers', 'producersz', 'pr', 'pool', 'prepare', 'preview',
+             'prize', 'produce', 'producer', 'progress']
 
     def _trie(self):
         trie = datrie.Trie(string.ascii_lowercase)
@@ -259,12 +274,12 @@ class TestPrefixSearch(object):
         assert values == [3, 8, 9, 1]
 
         items = trie.prefix_items('producers')
-        assert items == [('pr', 3), ('produce', 8), ('producer', 9), ('producers', 1)]
+        assert items == [('pr', 3), ('produce', 8),
+                         ('producer', 9), ('producers', 1)]
 
         assert trie.prefixes('vasia') == []
         assert trie.prefix_values('vasia') == []
         assert trie.prefix_items('vasia') == []
-
 
     def test_has_keys_with_prefix(self):
         trie = self._trie()
@@ -282,7 +297,6 @@ class TestPrefixSearch(object):
         assert not trie.has_keys_with_prefix('ops')
         assert not trie.has_keys_with_prefix('progn')
 
-
     def test_longest_prefix(self):
         trie = self._trie()
 
@@ -293,9 +307,9 @@ class TestPrefixSearch(object):
         assert trie.longest_prefix('producers') == 'producers'
         assert trie.longest_prefix('progressor') == 'progress'
 
-        assert trie.longest_prefix('paol', default=None) == None
-        assert trie.longest_prefix('p', default=None) == None
-        assert trie.longest_prefix('z', default=None) == None
+        assert trie.longest_prefix('paol', default=None) is None
+        assert trie.longest_prefix('p', default=None) is None
+        assert trie.longest_prefix('z', default=None) is None
 
         with pytest.raises(KeyError):
             trie.longest_prefix('z')
@@ -316,9 +330,10 @@ class TestPrefixSearch(object):
         assert trie.longest_prefix_item('producers') == ('producers', 1)
         assert trie.longest_prefix_item('progressor') == ('progress', 10)
 
-        assert trie.longest_prefix_item('paol', default=(None, None)) == (None, None)
-        assert trie.longest_prefix_item('p', default=(None, None)) == (None, None)
-        assert trie.longest_prefix_item('z', default=(None, None)) == (None, None)
+        dummy = (None, None)
+        assert trie.longest_prefix_item('paol', default=dummy) == dummy
+        assert trie.longest_prefix_item('p', default=dummy) == dummy
+        assert trie.longest_prefix_item('z', default=dummy) == dummy
 
         with pytest.raises(KeyError):
             trie.longest_prefix_item('z')
@@ -333,20 +348,19 @@ class TestPrefixSearch(object):
         assert trie.longest_prefix_value('producers') == 1
         assert trie.longest_prefix_value('progressor') == 10
 
-        assert trie.longest_prefix_value('paol', default=None) == None
-        assert trie.longest_prefix_value('p', default=None) == None
-        assert trie.longest_prefix_value('z', default=None) == None
+        assert trie.longest_prefix_value('paol', default=None) is None
+        assert trie.longest_prefix_value('p', default=None) is None
+        assert trie.longest_prefix_value('z', default=None) is None
 
         with pytest.raises(KeyError):
             trie.longest_prefix_value('z')
-
 
 
 def test_trie_fuzzy():
     russian = 'абвгдеёжзиклмнопрстуфхцчъыьэюя'
     alphabet = russian.upper() + string.ascii_lowercase
     words = list(set([
-        "".join([random.choice(alphabet) for x in range(random.randint(2,10))])
+        "".join(random.choice(alphabet) for x in range(random.randint(8, 16)))
         for y in range(1000)
     ]))
 
@@ -357,12 +371,9 @@ def test_trie_fuzzy():
     for index, word in enumerated_words:
         trie[word] = index
 
+    assert len(trie) == len(words)
+
     random.shuffle(enumerated_words)
     for index, word in enumerated_words:
         assert word in trie, word
         assert trie[word] == index, (word, index)
-
-
-#def test_large_trie():
-#    zf = zipfile.ZipFile('words100k.txt.zip')
-#    words = zf.open(zf.namelist()[0]).read().decode('utf8').splitlines()
