@@ -110,11 +110,3 @@ def test_keys_tail():
         keys.append(it.key())
 
     assert keys == ['duce', 'ducer', 'ducers', 'gress']
-
-
-def test_len():
-    trie = datrie.Trie(ranges=[(chr(0), chr(127))])
-    # Calling len on an empty trie caused segfault, see #17 on GitHub.
-    assert len(trie) == 0
-    trie['producer'] = 42
-    assert len(trie) == 1

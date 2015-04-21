@@ -140,16 +140,19 @@ def test_trie_items():
 
 def test_trie_suffixes():
     trie = datrie.Trie(string.ascii_lowercase)
-   
-    trie['pro']=1
-    trie['prof']=2
-    trie['product']=3
-    trie['production']=4
+
+    trie['pro'] = 1
+    trie['prof'] = 2
+    trie['product'] = 3
+    trie['production'] = 4
     trie['producer'] = 5
-    trie['producers']= 6
-    trie['productivity']=7
-    
-    assert trie.suffixes('pro') == ['', 'ducer', 'ducers', 'duct', 'duction', 'ductivity', 'f']
+    trie['producers'] = 6
+    trie['productivity'] = 7
+
+    assert trie.suffixes('pro') == [
+        '', 'ducer', 'ducers', 'duct', 'duction', 'ductivity', 'f'
+    ]
+
 
 def test_trie_len():
     trie = datrie.Trie(string.ascii_lowercase)
@@ -157,6 +160,10 @@ def test_trie_len():
     for word in words:
         trie[word] = None
     assert len(trie) == len(words)
+
+    # Calling len on an empty trie caused segfault, see #17 on GitHub.
+    trie = datrie.Trie(string.ascii_lowercase)
+    assert len(trie) == 0
 
 
 def test_setdefault():
@@ -359,4 +366,3 @@ def test_trie_fuzzy():
 #def test_large_trie():
 #    zf = zipfile.ZipFile('words100k.txt.zip')
 #    words = zf.open(zf.namelist()[0]).read().decode('utf8').splitlines()
-
