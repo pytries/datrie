@@ -774,7 +774,7 @@ da_first_separate (DArray *d, TrieIndex root, TrieString *keybuff)
                 break;
         }
 
-        if (c == max_c)
+        if (c > max_c)
             return TRIE_INDEX_ERROR;
 
         trie_string_append_char (keybuff, c);

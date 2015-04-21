@@ -1,3 +1,18 @@
+2015-04-21  Theppitak Karoonboonyanan  <theppitak@gmail.com>
+
+        Fix infinite loop on empty trie iteration.
+
+        * tests/Makefile.am, +tests/test_null_trie.c:
+          - Add test case for empty trie iteration.
+
+        * datrie/darray.c (da_first_separate):
+          - Fix error condition after loop ending.
+
+        Thanks Sergei Lebedev <sergei.a.lebedev@gmail.com> for the report
+        via personal mail.
+
+        Original report: https://github.com/kmike/datrie/issues/17
+
 2014-01-10  Theppitak Karoonboonyanan  <thep@linux.thai.net>
 
 	* configure.ac:
@@ -1365,7 +1380,7 @@
 2006-08-18  Theppitak Karoonboonyanan  <thep@linux.thai.net>
 
 	* datrie/trie.c (trie_retrieve, trie_store, trie_delete): Always walk
-	the null-terminator in tail. Otherwise, comparison with shorter key 
+	the null-terminator in tail. Otherwise, comparison with shorter key
 	will terminate at separate node.
 
 2006-08-18  Theppitak Karoonboonyanan  <thep@linux.thai.net>
@@ -1380,7 +1395,7 @@
 	key data.
 
 2006-08-17  Theppitak Karoonboonyanan  <thep@linux.thai.net>
-	
+
 	* configure.ac, Makefile.am, +doc/Makefile.am, +doc/Doxyfile.in:
 	Generated document using doxygen.
 
@@ -1415,7 +1430,7 @@
 
 2006-08-17  Theppitak Karoonboonyanan  <thep@linux.thai.net>
 
-	* datrie/darray.c (da_find_free_base): Made sure the free cell for 
+	* datrie/darray.c (da_find_free_base): Made sure the free cell for
 	first symbol is beyond header cells. Also repeatedly extended the pool
 	until a free cell is found, in case free list is restarted.
 
@@ -1441,7 +1456,7 @@
 
 	* datrie/darray.c (da_get_free_list): Fixed typo in macro name.
 
-	* datrie/datrie.c (da_extend_pool): Updated num_cells immediately 
+	* datrie/datrie.c (da_extend_pool): Updated num_cells immediately
 	after realloc(), to let the cell accesses pass boundary checks.
 
 	* datrie/tail.c (tail_get_suffix, tail_set_suffix, tail_alloc_block,
@@ -1479,7 +1494,7 @@
 2006-08-14  Theppitak Karoonboonyanan  <thep@linux.thai.net>
 
 	* datrie/Makefile.am, +datrie/darray.c, +datrie/fileutils.h:
-	Added darray.c for double-array structure implementation, and 
+	Added darray.c for double-array structure implementation, and
 	fileutils.h declarations for keeping file manipulation functions.
 
 	* datrie/triedefs.h: Added TRIE_CHAR_MAX constant for alphabet
