@@ -1,6 +1,7 @@
 version: "{build}"
 clone_depth: 10
 environment:
+  global:
     # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
     # /E:ON and /V:ON options are not enabled in the batch script intepreter
     # See: http://stackoverflow.com/a/13751649/163740
@@ -32,17 +33,30 @@ environment:
       PYTHON_ARCH: "64"
 
 install:
-  - "%PYTHON%/Scripts/pip.exe install --timeout=60 -r continuous_integration/appveyor/requirements.txt"
+  # Install Python (from the official .msi of http://python.org) and pip when
+  # not already installed.
+  - "powershell ./continuous_integration/appveyor/install.ps1"
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+
+  # Install the build and runtime dependencies of the project.
+  - "%CMD_IN_ENV% pip install --timeout=60 -r continuous_integration/appveyor/requirements.txt"
+  - "%CMD_IN_ENV% python setup.py bdist_wheel bdist_wininst"
+
+  # Install the genreated wheel package to test it
+  - "pip install --pre --no-index --find-links dist/ datrie"
 
 build: false
 
 test_script:
-  - "%PYTHON%/python.exe setup.py test"
+  # Change to a non-source folder to make sure we run the tests on the
+  # installed library.
+  - "mkdir empty_folder"
+  - "cd empty_folder"
 
-after_test:
-  # If tests are successful, create a whl package for the project.
-  - "%PYTHON%/python.exe setup.py bdist_wheel bdist_wininst"
-  - ps: "ls dist"
+  - "python -c \"import pytest; pytest.main()\" -s -v datrie"
+
+  # Move back to the project folder
+  - "cd .."
 
 artifacts:
   # Archive the generated wheel package in the ci.appveyor.com build report.
