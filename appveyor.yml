@@ -1,0 +1,52 @@
+version: "{build}"
+clone_depth: 10
+environment:
+  matrix:
+    - PYTHON: "C:\\Python27"
+      PYTHON_VERSION: "2.7.8"
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Python27-x64"
+      PYTHON_VERSION: "2.7.8"
+      PYTHON_ARCH: "64"
+
+    - PYTHON: "C:\\Python33"
+      PYTHON_VERSION: "3.3.5"
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Python33-x64"
+      PYTHON_VERSION: "3.3.5"
+      PYTHON_ARCH: "64"
+
+    - PYTHON: "C:\\Python34"
+      PYTHON_VERSION: "3.4.1"
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Python34-x64"
+      PYTHON_VERSION: "3.4.1"
+      PYTHON_ARCH: "64"
+
+install:
+  - "python --version"
+
+build: false
+
+test_script:
+  # Build the compiled extension and run the project tests
+  - "%CMD_IN_ENV% python setup.py nosetests"
+
+after_test:
+  # If tests are successful, create a whl package for the project.
+  - "%CMD_IN_ENV% python setup.py bdist_wheel bdist_wininst"
+  - ps: "ls dist"
+
+artifacts:
+  # Archive the generated wheel package in the ci.appveyor.com build report.
+  - path: dist\*
+
+matrix:
+  fast_finish: true
+
+#on_success:
+#  - TODO: upload the content of dist/*.whl to a public wheelhouse
+#
