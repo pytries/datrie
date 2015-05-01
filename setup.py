@@ -71,5 +71,6 @@ setup(
             'src/stdio_ext.c'
         ] + LIBDATRIE_FILES, include_dirs=['libdatrie'])
     ],
-    tests_require=["pytest", "hypothesis"]
+    tests_require=["pytest", "hypothesis"],
+    cmdclass={"test": PyTest}
 )
