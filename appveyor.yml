@@ -1,6 +1,11 @@
 version: "{build}"
 clone_depth: 10
 environment:
+    # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
+    # /E:ON and /V:ON options are not enabled in the batch script intepreter
+    # See: http://stackoverflow.com/a/13751649/163740
+    CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\continuous_integration\\appveyor\\run_with_env.cmd"
+
   matrix:
     - PYTHON: "C:\\Python27"
       PYTHON_VERSION: "2.7.8"
@@ -27,12 +32,21 @@ environment:
       PYTHON_ARCH: "64"
 
 install:
-  - "%PYTHON%/Scripts/pip.exe install pytest hypothesis"
+  - "%PYTHON%/Scripts/pip.exe install --timeout=60 -r continuous_integration/appveyor/requirements.txt"
 
 build: false
 
 test_script:
   - "%PYTHON%/python.exe setup.py test"
+
+after_test:
+  # If tests are successful, create a whl package for the project.
+  - "%PYTHON%/python.exe setup.py bdist_wheel bdist_wininst"
+  - ps: "ls dist"
+
+artifacts:
+  # Archive the generated wheel package in the ci.appveyor.com build report.
+  - path: dist\*
 
 matrix:
   fast_finish: true
