@@ -3810,7 +3810,7 @@ static Py_ssize_t __pyx_pf_6datrie_8BaseTrie_24__len__(struct __pyx_obj_6datrie_
  *     def __len__(self):
  *         cdef int counter = 0             # <<<<<<<<<<<<<<
  *         cdatrie.trie_enumerate(self._c_trie,
- *                                <cdatrie.TrieEnumFunc>(&self.len_enumerator),
+ *                                <cdatrie.TrieEnumFunc>(self.len_enumerator),
  */
   __pyx_v_counter = 0;
 
@@ -3818,13 +3818,13 @@ static Py_ssize_t __pyx_pf_6datrie_8BaseTrie_24__len__(struct __pyx_obj_6datrie_
  *     def __len__(self):
  *         cdef int counter = 0
  *         cdatrie.trie_enumerate(self._c_trie,             # <<<<<<<<<<<<<<
- *                                <cdatrie.TrieEnumFunc>(&self.len_enumerator),
+ *                                <cdatrie.TrieEnumFunc>(self.len_enumerator),
  *                                &counter);
  */
-  trie_enumerate(__pyx_v_self->_c_trie, ((TrieEnumFunc)(&((struct __pyx_vtabstruct_6datrie_BaseTrie *)__pyx_v_self->__pyx_vtab)->len_enumerator)), (&__pyx_v_counter));
+  trie_enumerate(__pyx_v_self->_c_trie, ((TrieEnumFunc)((struct __pyx_vtabstruct_6datrie_BaseTrie *)__pyx_v_self->__pyx_vtab)->len_enumerator), (&__pyx_v_counter));
 
   /* "datrie.pyx":179
- *                                <cdatrie.TrieEnumFunc>(&self.len_enumerator),
+ *                                <cdatrie.TrieEnumFunc>(self.len_enumerator),
  *                                &counter);
  *         return counter             # <<<<<<<<<<<<<<
  * 

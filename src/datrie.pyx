@@ -174,7 +174,7 @@ cdef class BaseTrie:
     def __len__(self):
         cdef int counter = 0
         cdatrie.trie_enumerate(self._c_trie,
-                               <cdatrie.TrieEnumFunc>(&self.len_enumerator),
+                               <cdatrie.TrieEnumFunc>(self.len_enumerator),
                                &counter);
         return counter
 
