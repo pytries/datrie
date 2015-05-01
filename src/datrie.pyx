@@ -116,11 +116,12 @@ cdef class BaseTrie:
         trie._c_trie = _load_from_file(f)
         return trie
 
-    def __getstate__(self):
+    def __reduce__(self):
         with tempfile.NamedTemporaryFile() as f:
             self.write(f)
             f.seek(0)
-            return f.read()
+            state = f.read()
+            return BaseTrie, (None, None, None, False), state
 
     def __setstate__(self, bytes state):
         assert self._c_trie is NULL
@@ -586,12 +587,13 @@ cdef class Trie(BaseTrie):
         self._values = []
         super(Trie, self).__init__(alphabet, ranges, alpha_map, _create)
 
-    def __getstate__(self):
+    def __reduce__(self):
         with tempfile.NamedTemporaryFile() as f:
             self.write(f)
             pickle.dump(self._values, f)
             f.seek(0)
-            return f.read()
+            state = f.read()
+            return Trie, (None, None, None, False), state
 
     def __setstate__(self, bytes state):
         assert self._c_trie is NULL
