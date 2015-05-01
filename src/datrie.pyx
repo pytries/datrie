@@ -10,9 +10,10 @@ from libc cimport string
 cimport stdio_ext
 cimport cdatrie
 
+import itertools
 import warnings
 import sys
-import itertools
+import tempfile
 
 try:
     import cPickle as pickle
@@ -95,7 +96,6 @@ cdef class BaseTrie:
 
         stdio.fflush(f_ptr)
 
-
     @classmethod
     def load(cls, path):
         """
@@ -115,6 +115,20 @@ cdef class BaseTrie:
         cdef BaseTrie trie = cls(_create=False)
         trie._c_trie = _load_from_file(f)
         return trie
+
+    def __getstate__(self):
+        with tempfile.NamedTemporaryFile() as f:
+            self.write(f)
+            f.seek(0)
+            return f.read()
+
+    def __setstate__(self, bytes state):
+        assert self._c_trie is NULL
+        with tempfile.NamedTemporaryFile() as f:
+            f.write(state)
+            f.flush()
+            f.seek(0)
+            self._c_trie = _load_from_file(f)
 
     def __setitem__(self, unicode key, cdatrie.TrieData value):
         self._setitem(key, value)
@@ -141,7 +155,6 @@ cdef class BaseTrie:
         if not found:
             raise KeyError(key)
         return data
-
 
     def __contains__(self, unicode key):
         cdef cdatrie.AlphaChar* c_key = new_alpha_char_from_unicode(key)
@@ -255,7 +268,6 @@ cdef class BaseTrie:
         finally:
             cdatrie.trie_state_free(state)
 
-
     def prefixes(self, unicode key):
         '''
         Returns a list with keys of this trie that are prefixes of ``key``.
@@ -277,7 +289,6 @@ cdef class BaseTrie:
         finally:
             cdatrie.trie_state_free(state)
 
-
     cpdef suffixes(self, unicode prefix=u''):
         """
         Returns a list of this trie's suffixes.
@@ -293,12 +304,10 @@ cdef class BaseTrie:
                 return res
 
         cdef BaseIterator iter = BaseIterator(state)
-
         while iter.next():
             res.append(iter.key())
 
         return res
-
 
     def prefix_items(self, unicode key):
         '''
@@ -354,7 +363,6 @@ cdef class BaseTrie:
         finally:
             cdatrie.trie_state_free(state)
 
-
     def longest_prefix(self, unicode key, default=RAISE_KEY_ERROR):
         """
         Returns the longest key in this trie that is a prefix of ``key``.
@@ -387,7 +395,6 @@ cdef class BaseTrie:
             return key[:last_terminal_index]
         finally:
             cdatrie.trie_state_free(state)
-
 
     def longest_prefix_item(self, unicode key, default=RAISE_KEY_ERROR):
         """
@@ -428,7 +435,6 @@ cdef class BaseTrie:
         finally:
             cdatrie.trie_state_free(state)
 
-
     def longest_prefix_value(self, unicode key, default=RAISE_KEY_ERROR):
         """
         Returns the value associated with the longest key in this trie that is
@@ -467,8 +473,6 @@ cdef class BaseTrie:
 
         finally:
             cdatrie.trie_state_free(state)
-
-
 
     def has_keys_with_prefix(self, unicode prefix):
         """
@@ -511,7 +515,6 @@ cdef class BaseTrie:
                 res.append((prefix+iter.key(), iter.data()))
 
         return res
-
 
     cpdef keys(self, unicode prefix=None):
         """
@@ -580,9 +583,24 @@ cdef class Trie(BaseTrie):
         ``ranges`` (a list of (begin, end) pairs, e.g. [('a', 'z')])
         or ``alpha_map`` (:class:`datrie.AlphaMap` instance).
         """
-
         self._values = []
         super(Trie, self).__init__(alphabet, ranges, alpha_map, _create)
+
+    def __getstate__(self):
+        with tempfile.NamedTemporaryFile() as f:
+            self.write(f)
+            pickle.dump(self._values, f)
+            f.seek(0)
+            return f.read()
+
+    def __setstate__(self, bytes state):
+        assert self._c_trie is NULL
+        with tempfile.NamedTemporaryFile() as f:
+            f.write(state)
+            f.flush()
+            f.seek(0)
+            self._c_trie = _load_from_file(f)
+            self._values = pickle.load(f)
 
     def __getitem__(self, unicode key):
         cdef cdatrie.TrieData index = self._getitem(key)
@@ -592,9 +610,9 @@ cdef class Trie(BaseTrie):
         cdef cdatrie.TrieData next_index = len(self._values)
         cdef cdatrie.TrieData index = self._setdefault(key, next_index)
         if index == next_index:
-            self._values.append(value) # insert
+            self._values.append(value)   # insert
         else:
-            self._values[index] = value # update
+            self._values[index] = value  # update
 
     def setdefault(self, unicode key, object value):
         cdef cdatrie.TrieData next_index = len(self._values)
@@ -630,7 +648,6 @@ cdef class Trie(BaseTrie):
         cdef Trie trie = super(Trie, cls).read(f)
         trie._values = pickle.load(f)
         return trie
-
 
     cpdef items(self, unicode prefix=None):
         """
@@ -695,7 +712,6 @@ cdef class Trie(BaseTrie):
             res.append(self._values[iter.data()])
 
         return res
-
 
     def longest_prefix_item(self, unicode key, default=RAISE_KEY_ERROR):
         """
@@ -805,7 +821,6 @@ cdef class _TrieState:
         return cdatrie.trie_state_is_leaf(self._state)
 
     def __unicode__(self):
-
         return u"data:%d, term:%s, leaf:%s, single: %s" % (
             self.data(),
             self.is_terminal(),
@@ -971,6 +986,7 @@ cdef class AlphaMap:
         if code != 0:
             raise MemoryError()
 
+
 cdef cdatrie.AlphaChar* new_alpha_char_from_unicode(unicode txt):
     """
     Converts Python unicode string to libdatrie's AlphaChar* format.
@@ -1004,6 +1020,7 @@ cdef cdatrie.AlphaChar* new_alpha_char_from_unicode(unicode txt):
     # Buffer must be null-terminated (last 4 bytes must be zero).
     data[txt_len] = 0
     return data
+
 
 cdef unicode unicode_from_alpha_char(cdatrie.AlphaChar* key, int len=0):
     """
