@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+
 from __future__ import absolute_import, unicode_literals
+
 import datrie
+
 
 def _trie():
     trie = datrie.Trie(ranges=[(chr(0), chr(127))])
@@ -13,6 +16,7 @@ def _trie():
     trie['fauzoy'] = 20
     return trie
 
+
 def test_trie_state():
     trie = _trie()
     state = datrie.State(trie)
@@ -20,4 +24,3 @@ def test_trie_state():
     assert state.data() == 1
     state.walk('o')
     assert state.data() == 2
-
