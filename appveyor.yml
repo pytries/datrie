@@ -33,9 +33,7 @@ build: false
 
 test_script:
   # Hack to overcome pkg_resources.DistributionNotFound: hypothesis
-  - ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:/get-pip.py')
-  - "%CMD_IN_ENV% python C:/get-pip.py"
-  - "%CMD_IN_ENV% pip install hypothesis"
+  - "%PYTHON%/Scripts/pip.exe install hypothesis"
   - "%CMD_IN_ENV% python setup.py test"
 
 after_test:
