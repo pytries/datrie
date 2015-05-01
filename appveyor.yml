@@ -27,26 +27,12 @@ environment:
       PYTHON_ARCH: "64"
 
 install:
-  - "python --version"
+  - "%PYTHON%/Scripts/pip.exe install pytest hypothesis"
 
 build: false
 
 test_script:
-  # Hack to overcome pkg_resources.DistributionNotFound: hypothesis
-  - "%PYTHON%/Scripts/pip.exe install hypothesis"
   - "%CMD_IN_ENV% python setup.py test"
-
-after_test:
-  - "%CMD_IN_ENV% python setup.py bdist_wheel bdist_wininst"
-  - ps: "ls dist"
-
-artifacts:
-  # Archive the generated wheel package in the ci.appveyor.com build report.
-  - path: dist\*
 
 matrix:
   fast_finish: true
-
-#on_success:
-#  - TODO: upload the content of dist/*.whl to a public wheelhouse
-#
