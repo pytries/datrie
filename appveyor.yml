@@ -9,11 +9,11 @@ environment:
 
   matrix:
     - PYTHON: "C:\\Python26"
-      PYTHON_VERSION: "2.6.9"
+      PYTHON_VERSION: "2.6.6"
       PYTHON_ARCH: "32"
 
     - PYTHON: "C:\\Python26-x64"
-      PYTHON_VERSION: "2.6.9"
+      PYTHON_VERSION: "2.6.6"
       PYTHON_ARCH: "64"
 
     - PYTHON: "C:\\Python27"
