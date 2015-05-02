@@ -3,7 +3,8 @@
 Cython wrapper for libdatrie.
 """
 
-from cython.operator cimport dereference as deref
+from cpython.version cimport PY_MAJOR_VERSION
+from cython.operator import dereference as deref
 from libc.stdlib cimport malloc, free
 from libc cimport stdio
 from libc cimport string
@@ -54,7 +55,8 @@ cdef class BaseTrie:
             return
 
         if alphabet is None and ranges is None and alpha_map is None:
-            raise ValueError("Please provide alphabet, ranges or alpha_map argument.")
+            raise ValueError(
+                "Please provide alphabet, ranges or alpha_map argument.")
 
         if alpha_map is None:
             alpha_map = AlphaMap(alphabet, ranges)
@@ -68,7 +70,11 @@ cdef class BaseTrie:
         if self._c_trie is not NULL:
             cdatrie.trie_free(self._c_trie)
 
-    def update(self, other, **kwargs):
+    def update(self, other=(), **kwargs):
+        if PY_MAJOR_VERSION == 2:
+            if kwargs:
+                raise TypeError("keyword arguments are not supported.")
+
         if hasattr(other, "keys"):
             for key in other:
                 self[key] = other[key]

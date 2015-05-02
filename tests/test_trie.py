@@ -5,6 +5,7 @@ from __future__ import absolute_import, unicode_literals
 import pickle
 import random
 import string
+import sys
 import tempfile
 
 import datrie
@@ -175,12 +176,19 @@ def test_trie_comparison():
 
 def test_trie_update():
     trie = datrie.Trie(string.ascii_lowercase)
-    trie.update([("foo", 42)], bar=24)
+    trie.update([("foo", 42)])
     assert trie["foo"] == 42
-    assert trie["bar"] == 24
 
-    trie.update({"foobar": 123})
-    assert trie["foobar"] == 123
+    trie.update({"bar": 123})
+    assert trie["bar"] == 123
+
+    if sys.version[0] == 2:
+        with pytest.raises(TypeError):
+            trie.update(bar=24)
+    else:
+        trie.update(bar=24)
+        assert trie["bar"] == 24
+
 
 
 def test_trie_suffixes():
