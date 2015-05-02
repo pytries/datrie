@@ -48,15 +48,7 @@ install:
 build: false
 
 test_script:
-  # Change to a non-source folder to make sure we run the tests on the
-  # installed library.
-  - "mkdir empty_folder"
-  - "cd empty_folder"
-
-  - "python -c \"import pytest; pytest.main()\" -s -v datrie"
-
-  # Move back to the project folder
-  - "cd .."
+  - "%CMD_IN_ENV% py.test"
 
 artifacts:
   # Archive the generated wheel package in the ci.appveyor.com build report.
