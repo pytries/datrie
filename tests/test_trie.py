@@ -182,7 +182,7 @@ def test_trie_update():
     trie.update({"bar": 123})
     assert trie["bar"] == 123
 
-    if sys.version[0] == 2:
+    if sys.version_info[0] == 2:
         with pytest.raises(TypeError):
             trie.update(bar=24)
     else:
