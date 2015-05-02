@@ -145,6 +145,44 @@ def test_trie_items():
     assert trie.keys() == ['bar', 'foo', 'foobar']
 
 
+def test_trie_iter():
+    trie = datrie.Trie(string.ascii_lowercase)
+    assert list(trie) == []
+
+    trie['foo'] = trie['bar'] = trie['foobar'] = 42
+    assert list(trie) == ['bar', 'foo', 'foobar']
+
+
+def test_trie_comparison():
+    trie = datrie.Trie(string.ascii_lowercase)
+    assert trie == trie
+    assert trie == datrie.Trie(string.ascii_lowercase)
+
+    other = datrie.Trie(string.ascii_lowercase)
+    trie['foo'] = 42
+    other['foo'] = 24
+    assert trie != other
+
+    other['foo'] = trie['foo']
+    assert trie == other
+
+    other['bar'] = 42
+    assert trie != other
+
+    with pytest.raises(TypeError):
+        trie < other  # same for other comparisons
+
+
+def test_trie_update():
+    trie = datrie.Trie(string.ascii_lowercase)
+    trie.update([("foo", 42)], bar=24)
+    assert trie["foo"] == 42
+    assert trie["bar"] == 24
+
+    trie.update({"foobar": 123})
+    assert trie["foobar"] == 123
+
+
 def test_trie_suffixes():
     trie = datrie.Trie(string.ascii_lowercase)
 

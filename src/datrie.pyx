@@ -14,6 +14,7 @@ import itertools
 import warnings
 import sys
 import tempfile
+from collections import MutableMapping
 
 try:
     import cPickle as pickle
@@ -35,6 +36,7 @@ cdef class BaseTrie:
     Keys are unicode strings, values are integers -2147483648 <= x <= 2147483647.
     """
 
+    cdef AlphaMap alpha_map
     cdef cdatrie.Trie *_c_trie
 
     def __init__(self, alphabet=None, ranges=None, AlphaMap alpha_map=None, _create=True):
@@ -57,6 +59,7 @@ cdef class BaseTrie:
         if alpha_map is None:
             alpha_map = AlphaMap(alphabet, ranges)
 
+        self.alpha_map = alpha_map
         self._c_trie = cdatrie.trie_new(alpha_map._c_alpha_map)
         if self._c_trie is NULL:
             raise MemoryError()
@@ -64,6 +67,26 @@ cdef class BaseTrie:
     def __dealloc__(self):
         if self._c_trie is not NULL:
             cdatrie.trie_free(self._c_trie)
+
+    def update(self, other, **kwargs):
+        if hasattr(other, "keys"):
+            for key in other:
+                self[key] = other[key]
+        else:
+            for key, value in other:
+                self[key] = value
+
+        for key in kwargs:
+            self[key] = kwargs[key]
+
+    def clear(self):
+        cdef AlphaMap alpha_map = self.alpha_map.copy()
+        _c_trie = cdatrie.trie_new(alpha_map._c_alpha_map)
+        if _c_trie is NULL:
+            raise MemoryError()
+
+        cdatrie.trie_free(self._c_trie)
+        self._c_trie = _c_trie
 
     cpdef bint is_dirty(self):
         """
@@ -144,6 +167,12 @@ cdef class BaseTrie:
     def __getitem__(self, unicode key):
         return self._getitem(key)
 
+    def get(self, unicode key, default=None):
+        try:
+            return self._getitem(key)
+        except KeyError:
+            return default
+
     cdef cdatrie.TrieData _getitem(self, unicode key) except -1:
         cdef cdatrie.TrieData data
         cdef cdatrie.AlphaChar* c_key = new_alpha_char_from_unicode(key)
@@ -165,19 +194,29 @@ cdef class BaseTrie:
             free(c_key)
 
     def __delitem__(self, unicode key):
-        if not self._delitem(key):
-            raise KeyError(key)
+        self._delitem(key)
 
-    cpdef bint _delitem(self, unicode key):
+    def pop(self, unicode key, default=None):
+        try:
+            value = self[key]
+            self._delitem(key)
+            return value
+        except KeyError:
+            return default
+
+    cpdef bint _delitem(self, unicode key) except -1:
         """
         Deletes an entry for the given key from the trie. Returns
         boolean value indicating whether the key exists and is removed.
         """
         cdef cdatrie.AlphaChar* c_key = new_alpha_char_from_unicode(key)
         try:
-            return cdatrie.trie_delete(self._c_trie, c_key)
+            found = cdatrie.trie_delete(self._c_trie, c_key)
         finally:
             free(c_key)
+
+        if not found:
+            raise KeyError(key)
 
     @staticmethod
     cdef int len_enumerator(cdatrie.AlphaChar *key, cdatrie.TrieData key_data,
@@ -189,8 +228,27 @@ cdef class BaseTrie:
         cdef int counter = 0
         cdatrie.trie_enumerate(self._c_trie,
                                <cdatrie.TrieEnumFunc>(self.len_enumerator),
-                               &counter);
+                               &counter)
         return counter
+
+    def __richcmp__(self, other, int op):
+        if op == 2:    # ==
+            if other is self:
+                return True
+            elif not isinstance(other, BaseTrie):
+                return False
+
+            for key in self:
+                if self[key] != other[key]:
+                    return False
+
+            # XXX this can be written more efficiently via explicit iterators.
+            return len(self) == len(other)
+        elif op == 3:  # !=
+            return not (self == other)
+
+        raise TypeError("unorderable types: {0} and {1}".format(
+            self.__class__, other.__class__))
 
     def setdefault(self, unicode key, cdatrie.TrieData value):
         return self._setdefault(key, value)
@@ -517,6 +575,11 @@ cdef class BaseTrie:
 
         return res
 
+    def __iter__(self):
+        cdef BaseIterator iter = BaseIterator(BaseState(self))
+        while iter.next():
+            yield iter.key()
+
     cpdef keys(self, unicode prefix=None):
         """
         Returns a list of this trie's keys.
@@ -619,19 +682,17 @@ cdef class Trie(BaseTrie):
     def setdefault(self, unicode key, object value):
         cdef cdatrie.TrieData next_index = len(self._values)
         cdef cdatrie.TrieData index = self._setdefault(key, next_index)
-
         if index == next_index:
-            self._values.append(value) # insert
+            self._values.append(value)   # insert
             return value
         else:
-            return self._values[index] # lookup
+            return self._values[index]   # lookup
 
     def __delitem__(self, unicode key):
         # XXX: this could be faster (key is encoded twice here)
         cdef cdatrie.TrieData index = self._getitem(key)
         self._values[index] = DELETED_OBJECT
-        if not self._delitem(key):
-            raise KeyError(key)
+        self._delitem(key)
 
     def write(self, f):
         """
@@ -639,7 +700,7 @@ cdef class Trie(BaseTrie):
         file descriptors are not supported.
         """
         super(Trie, self).write(f)
-        pickle.dump(self._values, f, protocol=2)
+        pickle.dump(self._values, f)
 
     @classmethod
     def read(cls, f):
@@ -949,20 +1010,29 @@ cdef class AlphaMap:
 
     def __cinit__(self):
         self._c_alpha_map = cdatrie.alpha_map_new()
-        if self._c_alpha_map is NULL:
-            raise MemoryError()
 
     def __dealloc__(self):
         if self._c_alpha_map is not NULL:
             cdatrie.alpha_map_free(self._c_alpha_map)
 
-    def __init__(self, alphabet=None, ranges=None):
+    def __init__(self, alphabet=None, ranges=None, _create=True):
+        if not _create:
+            return
+
         if ranges is not None:
             for range in ranges:
                 self.add_range(*range)
 
         if alphabet is not None:
             self.add_alphabet(alphabet)
+
+    cdef AlphaMap copy(self):
+        cdef AlphaMap clone = AlphaMap(_create=False)
+        clone._c_alpha_map = cdatrie.alpha_map_clone(self._c_alpha_map)
+        if clone._c_alpha_map is NULL:
+            raise MemoryError()
+
+        return clone
 
     def add_alphabet(self, alphabet):
         """
@@ -1057,3 +1127,7 @@ def new(alphabet=None, ranges=None, AlphaMap alpha_map=None):
     warnings.warn('datrie.new is deprecated; please use datrie.Trie.',
                   DeprecationWarning)
     return Trie(alphabet, ranges, alpha_map)
+
+
+MutableMapping.register(Trie)
+MutableMapping.register(BaseTrie)
