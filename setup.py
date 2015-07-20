@@ -64,12 +64,18 @@ setup(
     license=LICENSE,
     url='https://github.com/kmike/datrie',
     classifiers=CLASSIFIERS,
+    libraries=[
+        ('libdatrie', dict(
+            sources=LIBDATRIE_FILES,
+            include_dirs=["libdatrie"],
+        ))
+    ],
     ext_modules=[
         Extension("datrie", [
             'src/datrie.c',
             'src/cdatrie.c',
             'src/stdio_ext.c'
-        ] + LIBDATRIE_FILES, include_dirs=['libdatrie'])
+        ], include_dirs=['libdatrie'])
     ],
     tests_require=["pytest", "hypothesis"],
     cmdclass={"test": PyTest}
