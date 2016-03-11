@@ -1,7 +1,7 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * libdatrie - Double-Array Trie Library
- * Copyright (C) 2006  Theppitak Karoonboonyanan <thep@linux.thai.net>
+ * Copyright (C) 2006  Theppitak Karoonboonyanan <theppitak@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,13 +21,14 @@
 /*
  * trie.c - Trie data type and functions
  * Created: 2006-08-11
- * Author:  Theppitak Karoonboonyanan <thep@linux.thai.net>
+ * Author:  Theppitak Karoonboonyanan <theppitak@gmail.com>
  */
 
 #include <stdlib.h>
 #include <string.h>
 
 #include "trie.h"
+#include "trie-private.h"
 #include "fileutils.h"
 #include "alpha-map.h"
 #include "alpha-map-private.h"
@@ -117,19 +118,19 @@ trie_new (const AlphaMap *alpha_map)
     Trie *trie;
 
     trie = (Trie *) malloc (sizeof (Trie));
-    if (!trie)
+    if (UNLIKELY (!trie))
         return NULL;
 
     trie->alpha_map = alpha_map_clone (alpha_map);
-    if (!trie->alpha_map)
+    if (UNLIKELY (!trie->alpha_map))
         goto exit_trie_created;
 
     trie->da = da_new ();
-    if (!trie->da)
+    if (UNLIKELY (!trie->da))
         goto exit_alpha_map_created;
 
     trie->tail = tail_new ();
-    if (!trie->tail)
+    if (UNLIKELY (!trie->tail))
         goto exit_da_created;
 
     trie->is_dirty = TRUE;
@@ -162,7 +163,7 @@ trie_new_from_file (const char *path)
     Trie       *trie;
     FILE       *trie_file;
 
-    trie_file = fopen (path, "r");
+    trie_file = fopen (path, "rb");
     if (!trie_file)
         return NULL;
 
@@ -192,7 +193,7 @@ trie_fread (FILE *file)
     Trie       *trie;
 
     trie = (Trie *) malloc (sizeof (Trie));
-    if (!trie)
+    if (UNLIKELY (!trie))
         return NULL;
 
     if (NULL == (trie->alpha_map = alpha_map_fread_bin (file)))
@@ -248,7 +249,7 @@ trie_save (Trie *trie, const char *path)
     FILE *file;
     int   res = 0;
 
-    file = fopen (path, "w+");
+    file = fopen (path, "wb+");
     if (!file)
         return -1;
 
@@ -604,11 +605,11 @@ trie_enumerate (const Trie *trie, TrieEnumFunc enum_func, void *user_data)
     Bool            cont = TRUE;
 
     root = trie_root (trie);
-    if (!root)
+    if (UNLIKELY (!root))
         return FALSE;
 
     iter = trie_iterator_new (root);
-    if (!iter)
+    if (UNLIKELY (!iter))
         goto exit_root_created;
 
     while (cont && trie_iterator_next (iter)) {
@@ -663,7 +664,7 @@ trie_state_new (const Trie *trie,
     TrieState *s;
 
     s = (TrieState *) malloc (sizeof (TrieState));
-    if (!s)
+    if (UNLIKELY (!s))
         return NULL;
 
     s->trie       = trie;
@@ -749,7 +750,7 @@ Bool
 trie_state_walk (TrieState *s, AlphaChar c)
 {
     TrieIndex tc = alpha_map_char_to_trie (s->trie->alpha_map, c);
-    if (TRIE_INDEX_MAX == tc)
+    if (UNLIKELY (TRIE_INDEX_MAX == tc))
         return FALSE;
 
     if (!s->is_suffix) {
@@ -784,7 +785,7 @@ Bool
 trie_state_is_walkable (const TrieState *s, AlphaChar c)
 {
     TrieIndex tc = alpha_map_char_to_trie (s->trie->alpha_map, c);
-    if (TRIE_INDEX_MAX == tc)
+    if (UNLIKELY (TRIE_INDEX_MAX == tc))
         return FALSE;
 
     if (!s->is_suffix)
@@ -874,41 +875,6 @@ trie_state_get_data (const TrieState *s)
                                   : TRIE_DATA_ERROR;
 }
 
-/**
- * @brief Get data from terminal state
- *
- * @param s    : a terminal state
- *
- * @return the data associated with the terminal state @a s,
- *         or TRIE_DATA_ERROR if @a s is not a terminal state
- *
- */
-TrieData
-trie_state_get_terminal_data (const TrieState *s)
-{
-    TrieIndex        tail_index;
-    TrieIndex index = s->index;
-
-    if (!s)
-        return TRIE_DATA_ERROR;
-
-    if (!s->is_suffix){
-        if (!trie_da_is_separate(s->trie->da, index)) {
-            /* walk to a terminal char to get the data */
-            Bool ret = da_walk (s->trie->da, &index, TRIE_CHAR_TERM);
-            if (!ret) {
-                return TRIE_DATA_ERROR;
-            }
-        }
-        tail_index = trie_da_get_tail_index (s->trie->da, index);
-    }
-    else {
-        tail_index = s->index;
-    }
-
-    return tail_get_data (s->trie->tail, tail_index);
-}
-
 
 /*---------------------*
  *   ENTRY ITERATION   *
@@ -936,7 +902,7 @@ trie_iterator_new (TrieState *s)
     TrieIterator *iter;
 
     iter = (TrieIterator *) malloc (sizeof (TrieIterator));
-    if (!iter)
+    if (UNLIKELY (!iter))
         return NULL;
 
     iter->root = s;

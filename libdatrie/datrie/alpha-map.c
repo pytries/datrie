@@ -1,7 +1,7 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * libdatrie - Double-Array Trie Library
- * Copyright (C) 2006  Theppitak Karoonboonyanan <thep@linux.thai.net>
+ * Copyright (C) 2006  Theppitak Karoonboonyanan <theppitak@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,7 @@
 /*
  * alpha-map.c - map between character codes and trie alphabet
  * Created: 2006-08-19
- * Author:  Theppitak Karoonboonyanan <thep@linux.thai.net>
+ * Author:  Theppitak Karoonboonyanan <theppitak@gmail.com>
  */
 
 #include <ctype.h>
@@ -32,6 +32,7 @@
 
 #include "alpha-map.h"
 #include "alpha-map-private.h"
+#include "trie-private.h"
 #include "fileutils.h"
 
 /**
@@ -127,7 +128,7 @@ alpha_map_new ()
     AlphaMap   *alpha_map;
 
     alpha_map = (AlphaMap *) malloc (sizeof (AlphaMap));
-    if (!alpha_map)
+    if (UNLIKELY (!alpha_map))
         return NULL;
 
     alpha_map->first_range = NULL;
@@ -151,7 +152,7 @@ alpha_map_clone (const AlphaMap *a_map)
     AlphaRange *range;
 
     alpha_map = alpha_map_new ();
-    if (!alpha_map)
+    if (UNLIKELY (!alpha_map))
         return NULL;
 
     for (range = a_map->first_range; range; range = range->next) {
@@ -199,7 +200,8 @@ alpha_map_fread_bin (FILE *file)
     if (!file_read_int32 (file, (int32 *) &sig) || ALPHAMAP_SIGNATURE != sig)
         goto exit_file_read;
 
-    if (NULL == (alpha_map = alpha_map_new ()))
+    alpha_map = alpha_map_new ();
+    if (UNLIKELY (!alpha_map))
         goto exit_file_read;
 
     /* read number of ranges */
@@ -351,7 +353,7 @@ alpha_map_add_range (AlphaMap *alpha_map, AlphaChar begin, AlphaChar end)
          */
         AlphaRange *range = (AlphaRange *) malloc (sizeof (AlphaRange));
 
-        if (!range)
+        if (UNLIKELY (!range))
             return -1;
 
         range->begin = begin;
@@ -375,7 +377,7 @@ alpha_map_char_to_trie (const AlphaMap *alpha_map, AlphaChar ac)
     TrieIndex   alpha_begin;
     AlphaRange *range;
 
-    if (0 == ac)
+    if (UNLIKELY (0 == ac))
         return 0;
 
     alpha_begin = 1;
@@ -395,7 +397,7 @@ alpha_map_trie_to_char (const AlphaMap *alpha_map, TrieChar tc)
     TrieChar    alpha_begin;
     AlphaRange *range;
 
-    if (0 == tc)
+    if (UNLIKELY (0 == tc))
         return 0;
 
     alpha_begin = 1;
@@ -415,7 +417,7 @@ alpha_map_char_to_trie_str (const AlphaMap *alpha_map, const AlphaChar *str)
     TrieChar   *trie_str, *p;
 
     trie_str = (TrieChar *) malloc (alpha_char_strlen (str) + 1);
-    if (!trie_str)
+    if (UNLIKELY (!trie_str))
         return NULL;
 
     for (p = trie_str; *str; p++, str++) {
@@ -440,7 +442,7 @@ alpha_map_trie_to_char_str (const AlphaMap *alpha_map, const TrieChar *str)
 
     alpha_str = (AlphaChar *) malloc ((strlen ((const char *)str) + 1)
                                       * sizeof (AlphaChar));
-    if (!alpha_str)
+    if (UNLIKELY (!alpha_str))
         return NULL;
 
     for (p = alpha_str; *str; p++, str++) {

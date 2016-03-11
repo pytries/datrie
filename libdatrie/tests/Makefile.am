@@ -59,3 +59,4 @@ test_null_trie_SOURCES = \
 	utils.c \
 	$(NULL)
 test_null_trie_LDADD = $(top_builddir)/datrie/libdatrie.la
+

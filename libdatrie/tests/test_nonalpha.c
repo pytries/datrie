@@ -1,7 +1,7 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * libdatrie - Double-Array Trie Library
- * Copyright (C) 2014  Theppitak Karoonboonyanan <thep@linux.thai.net>
+ * Copyright (C) 2014  Theppitak Karoonboonyanan <theppitak@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,7 @@
 /*
  * test_nonalpha.c - Test for datrie behaviors on non-alphabet inputs
  * Created: 2014-01-06
- * Author:  Theppitak Karoonboonyanan <thep@linux.thai.net>
+ * Author:  Theppitak Karoonboonyanan <theppitak@gmail.com>
  */
 
 #include <datrie/trie.h>

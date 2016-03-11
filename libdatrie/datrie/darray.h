@@ -1,7 +1,7 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * libdatrie - Double-Array Trie Library
- * Copyright (C) 2006  Theppitak Karoonboonyanan <thep@linux.thai.net>
+ * Copyright (C) 2006  Theppitak Karoonboonyanan <theppitak@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,7 @@
 /*
  * darray.h - Double-array trie structure
  * Created: 2006-08-11
- * Author:  Theppitak Karoonboonyanan <thep@linux.thai.net>
+ * Author:  Theppitak Karoonboonyanan <theppitak@gmail.com>
  */
 
 #ifndef __DARRAY_H
@@ -40,9 +40,7 @@
  */
 typedef struct _Symbols Symbols;
 
-Symbols *    symbols_new ();
 void         symbols_free (Symbols *syms);
-void         symbols_add (Symbols *syms, TrieChar c);
 int          symbols_num (const Symbols *syms);
 TrieChar     symbols_get (const Symbols *syms, int index);
 

@@ -5,6 +5,7 @@ CHANGES
 0.7.1
 -----
 
+* updated the bundled C library to version 0.2.9;
 * implemented ``Trie.__len__`` in terms of ``trie_enumerate``;
 * rebuilt Cython wrapper with Cython 0.23.4;
 * changed ``Trie`` to implement ``collections.abc.MutableMapping``;

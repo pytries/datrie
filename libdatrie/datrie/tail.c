@@ -1,7 +1,7 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * libdatrie - Double-Array Trie Library
- * Copyright (C) 2006  Theppitak Karoonboonyanan <thep@linux.thai.net>
+ * Copyright (C) 2006  Theppitak Karoonboonyanan <theppitak@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,7 @@
 /*
  * tail.c - trie tail for keeping suffixes
  * Created: 2006-08-15
- * Author:  Theppitak Karoonboonyanan <thep@linux.thai.net>
+ * Author:  Theppitak Karoonboonyanan <theppitak@gmail.com>
  */
 
 #include <string.h>
@@ -32,6 +32,7 @@
 #include <stdio.h>
 
 #include "tail.h"
+#include "trie-private.h"
 #include "fileutils.h"
 
 /*----------------------------------*
@@ -97,7 +98,7 @@ tail_new ()
     Tail       *t;
 
     t = (Tail *) malloc (sizeof (Tail));
-    if (!t)
+    if (UNLIKELY (!t))
         return NULL;
 
     t->first_free = 0;
@@ -131,7 +132,8 @@ tail_fread (FILE *file)
     if (!file_read_int32 (file, (int32 *) &sig) || TAIL_SIGNATURE != sig)
         goto exit_file_read;
 
-    if (NULL == (t = (Tail *) malloc (sizeof (Tail))))
+    t = (Tail *) malloc (sizeof (Tail));
+    if (UNLIKELY (!t))
         goto exit_file_read;
 
     if (!file_read_int32 (file, &t->first_free) ||
@@ -142,7 +144,7 @@ tail_fread (FILE *file)
     if (t->num_tails > SIZE_MAX / sizeof (TailBlock))
         goto exit_tail_created;
     t->tails = (TailBlock *) malloc (t->num_tails * sizeof (TailBlock));
-    if (!t->tails)
+    if (UNLIKELY (!t->tails))
         goto exit_tail_created;
     for (i = 0; i < t->num_tails; i++) {
         int16   length;
@@ -155,6 +157,8 @@ tail_fread (FILE *file)
         }
 
         t->tails[i].suffix = (TrieChar *) malloc (length + 1);
+        if (UNLIKELY (!t->tails[i].suffix))
+            goto exit_in_loop;
         if (length > 0) {
             if (!file_read_chars (file, (char *)t->tails[i].suffix, length)) {
                 free (t->tails[i].suffix);
@@ -263,7 +267,7 @@ const TrieChar *
 tail_get_suffix (const Tail *t, TrieIndex index)
 {
     index -= TAIL_START_BLOCKNO;
-    return (index < t->num_tails) ? t->tails[index].suffix : NULL;
+    return LIKELY (index < t->num_tails) ? t->tails[index].suffix : NULL;
 }
 
 /**
@@ -279,7 +283,7 @@ Bool
 tail_set_suffix (Tail *t, TrieIndex index, const TrieChar *suffix)
 {
     index -= TAIL_START_BLOCKNO;
-    if (index < t->num_tails) {
+    if (LIKELY (index < t->num_tails)) {
         /* suffix and t->tails[index].suffix may overlap;
          * so, dup it before it's overwritten
          */
@@ -301,7 +305,8 @@ tail_set_suffix (Tail *t, TrieIndex index, const TrieChar *suffix)
  * @param t      : the tail data
  * @param suffix : the new suffix
  *
- * @return the index of the newly added suffix.
+ * @return the index of the newly added suffix,
+ *         or TRIE_INDEX_ERROR on failure.
  *
  * Add a new suffix entry to tail.
  */
@@ -311,6 +316,9 @@ tail_add_suffix (Tail *t, const TrieChar *suffix)
     TrieIndex   new_block;
 
     new_block = tail_alloc_block (t);
+    if (UNLIKELY (TRIE_INDEX_ERROR == new_block))
+        return TRIE_INDEX_ERROR;
+
     tail_set_suffix (t, new_block, suffix);
 
     return new_block;
@@ -325,9 +333,16 @@ tail_alloc_block (Tail *t)
         block = t->first_free;
         t->first_free = t->tails[block].next_free;
     } else {
+        void *new_block;
+
         block = t->num_tails;
-        t->tails = (TailBlock *) realloc (t->tails,
-                                          ++t->num_tails * sizeof (TailBlock));
+
+        new_block = realloc (t->tails, (t->num_tails + 1) * sizeof (TailBlock));
+        if (UNLIKELY (!new_block))
+            return TRIE_INDEX_ERROR;
+
+        t->tails = (TailBlock *) new_block;
+        ++t->num_tails;
     }
     t->tails[block].next_free = -1;
     t->tails[block].data = TRIE_DATA_ERROR;
@@ -379,7 +394,8 @@ TrieData
 tail_get_data (const Tail *t, TrieIndex index)
 {
     index -= TAIL_START_BLOCKNO;
-    return (index < t->num_tails) ? t->tails[index].data : TRIE_DATA_ERROR;
+    return LIKELY (index < t->num_tails)
+             ? t->tails[index].data : TRIE_DATA_ERROR;
 }
 
 /**
@@ -397,7 +413,7 @@ Bool
 tail_set_data (Tail *t, TrieIndex index, TrieData data)
 {
     index -= TAIL_START_BLOCKNO;
-    if (index < t->num_tails) {
+    if (LIKELY (index < t->num_tails)) {
         t->tails[index].data = data;
         return TRUE;
     }
@@ -446,7 +462,7 @@ tail_walk_str  (const Tail      *t,
     short           j;
 
     suffix = tail_get_suffix (t, s);
-    if (!suffix)
+    if (UNLIKELY (!suffix))
         return FALSE;
 
     i = 0; j = *suffix_idx;
@@ -488,7 +504,7 @@ tail_walk_char (const Tail      *t,
     TrieChar        suffix_char;
 
     suffix = tail_get_suffix (t, s);
-    if (!suffix)
+    if (UNLIKELY (!suffix))
         return FALSE;
 
     suffix_char = suffix[*suffix_idx];

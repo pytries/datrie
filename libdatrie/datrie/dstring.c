@@ -1,7 +1,7 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * libdatrie - Double-Array Trie Library
- * Copyright (C) 2006  Theppitak Karoonboonyanan <thep@linux.thai.net>
+ * Copyright (C) 2006  Theppitak Karoonboonyanan <theppitak@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,7 @@
 /*
  * dstring.c - Dynamic string type
  * Created: 2012-08-01
- * Author:  Theppitak Karoonboonyanan <thep@linux.thai.net>
+ * Author:  Theppitak Karoonboonyanan <theppitak@gmail.com>
  */
 
 #include "dstring.h"
@@ -38,7 +38,7 @@ dstring_new (int char_size, int n_elm)
     DString *ds;
 
     ds = (DString *) malloc (sizeof (DString));
-    if (!ds)
+    if (UNLIKELY (!ds))
         return NULL;
 
     ds->alloc_size = char_size * n_elm;
@@ -91,7 +91,7 @@ dstring_ensure_space (DString *ds, int size)
     if (ds->alloc_size < size) {
         int   re_size = MAX_VAL (ds->alloc_size * 2, size);
         void *re_ptr = realloc (ds->val, re_size);
-        if (!re_ptr)
+        if (UNLIKELY (!re_ptr))
             return FALSE;
         ds->val = re_ptr;
         ds->alloc_size = re_size;

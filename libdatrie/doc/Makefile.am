@@ -18,6 +18,7 @@ uninstall-local:
 clean-local:
 	rm -rf html man
 	rm -f doxygen.stamp
+	rm -f doxygen_sqlite3.db
 
 else
 

@@ -1,5 +1,21 @@
 libdatrie
 
+0.2.9 (2015-05-03)
+=====
+- Fix binary file opening on Windows
+  (Thanks phongphan.p for the report and initial patch.)
+- Fix infinite loop on empty trie iteration.
+  (Thanks Sergei Lebedev for the report and analysis.)
+- Micro-optimization with LIKELY/UNLIKELY hints.
+  (contributing to 4.76% faster dictionary loading, 1.95% faster
+  word breaking for LibThai)
+- Improved error handling
+- 'trietool-0.2' utility is renamed to just 'trietool'
+- Improved documentation
+  (Thanks edgehogapp for the suggestion.)
+- No timestamp on Doxygen-generated doc
+  (Thanks Debian Reproducible)
+
 0.2.8 (2014-01-10)
 =====
 - Fix compiler warnings in test suites.

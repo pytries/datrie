@@ -2,7 +2,7 @@
 /*
  * trietool.c - Trie manipulation tool
  * Created: 2006-08-15
- * Author:  Theppitak Karoonboonyanan <thep@linux.thai.net>
+ * Author:  Theppitak Karoonboonyanan <theppitak@gmail.com>
  */
 
 #include <config.h>
