@@ -9,9 +9,7 @@ CHANGES
 * implemented ``Trie.__len__`` in terms of ``trie_enumerate``;
 * rebuilt Cython wrapper with Cython 0.23.4;
 * changed ``Trie`` to implement ``collections.abc.MutableMapping``;
-* fixed ``Trie`` pickling, which segfaulted on Python2.X;
-* disallowed keyword arguments to ``Trie.update`` on Python 2.X to
-  mimic ``dict`` behaviour.
+* fixed ``Trie`` pickling, which segfaulted on Python2.X.
 
 0.7 (2014-02-18)
 ----------------
