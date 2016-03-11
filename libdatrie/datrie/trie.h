@@ -222,6 +222,7 @@ AlphaChar *     trie_iterator_get_key (const TrieIterator *iter);
 
 TrieData        trie_iterator_get_data (const TrieIterator *iter);
 
+TrieData        trie_state_get_terminal_data (const TrieState *s);
 
 #ifdef __cplusplus
 }
