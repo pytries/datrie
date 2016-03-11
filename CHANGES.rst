@@ -2,8 +2,8 @@
 CHANGES
 =======
 
-0.7.1
------
+0.7.1 (2016-03-12)
+------------------
 
 * updated the bundled C library to version 0.2.9;
 * implemented ``Trie.__len__`` in terms of ``trie_enumerate``;
