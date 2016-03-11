@@ -10,13 +10,10 @@ import datrie
 
 # This is ugly, but hypothesis only supports Python2.7+ at the moment.
 if sys.version_info[:2] >= (2, 7):
-    from hypothesis import given, Settings
-    from hypothesis.specifiers import strings
+    import hypothesis.strategies as st
+    from hypothesis import given
 
-    # Reduce hypothesis input size by half.
-    Settings.default.average_list_length = 5.0
-
-    printable_strings = [strings(string.printable)]
+    printable_strings = st.lists(st.text(string.printable), average_size=5.)
 
     @given(printable_strings)
     def test_contains(words):
