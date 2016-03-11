@@ -2,10 +2,8 @@
 """Super-fast, efficiently stored Trie for Python."""
 
 import os
-import sys
 
 from setuptools import setup, Extension
-from setuptools.command.test import test as TestCommand
 
 LIBDATRIE_DIR = 'libdatrie/datrie'
 LIBDATRIE_FILE_NAMES = [
@@ -39,21 +37,6 @@ CLASSIFIERS = [
 ]
 
 
-class PyTest(TestCommand):
-    """Unfortunately :mod:`setuptools` support only :mod:`unittest`
-    based tests, thus, we have to overider build-in ``test`` command
-    to run :mod:`pytest`.
-    """
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-
-    def run_tests(self):
-        import pytest
-        sys.exit(pytest.main(self.test_args + ["./tests"]))
-
-
 setup(
     name="datrie",
     version="0.7",
@@ -77,6 +60,7 @@ setup(
             'src/stdio_ext.c'
         ], include_dirs=['libdatrie'])
     ],
-    tests_require=["pytest", "hypothesis"],
-    cmdclass={"test": PyTest}
+
+    setup_requires=["pytest-runner"],
+    tests_require=["pytest"],
 )
