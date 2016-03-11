@@ -1,17 +1,13 @@
 #! /usr/bin/env python
 """Super-fast, efficiently stored Trie for Python."""
 
+import glob
 import os
 
 from setuptools import setup, Extension
 
-LIBDATRIE_DIR = 'libdatrie/datrie'
-LIBDATRIE_FILE_NAMES = [
-    'alpha-map.c', 'darray.c', 'fileutils.c', 'tail.c', 'trie.c',
-    'dstring.c', 'trie-string.c',
-]
-LIBDATRIE_FILES = [os.path.join(LIBDATRIE_DIR, name)
-                   for name in LIBDATRIE_FILE_NAMES]
+LIBDATRIE_DIR = 'libdatrie'
+LIBDATRIE_FILES = glob.glob(os.path.join(LIBDATRIE_DIR, "datrie", "*.c"))
 
 DESCRIPTION = __doc__
 LONG_DESCRIPTION = open('README.rst').read() + open('CHANGES.rst').read()
@@ -38,30 +34,25 @@ CLASSIFIERS = [
 ]
 
 
-setup(
-    name="datrie",
-    version="0.7",
-    description=DESCRIPTION,
-    long_description=LONG_DESCRIPTION,
-    author='Mikhail Korobov',
-    author_email='kmike84@gmail.com',
-    license=LICENSE,
-    url='https://github.com/kmike/datrie',
-    classifiers=CLASSIFIERS,
-    libraries=[
-        ('libdatrie', dict(
-            sources=LIBDATRIE_FILES,
-            include_dirs=["libdatrie"],
-        ))
-    ],
-    ext_modules=[
-        Extension("datrie", [
-            'src/datrie.c',
-            'src/cdatrie.c',
-            'src/stdio_ext.c'
-        ], include_dirs=['libdatrie'])
-    ],
+setup(name="datrie",
+      version="0.7.1",
+      description=DESCRIPTION,
+      long_description=LONG_DESCRIPTION,
+      author='Mikhail Korobov',
+      author_email='kmike84@gmail.com',
+      license=LICENSE,
+      url='https://github.com/kmike/datrie',
+      classifiers=CLASSIFIERS,
+      libraries=[('libdatrie', {
+          "sources": LIBDATRIE_FILES,
+          "include_dirs": [LIBDATRIE_DIR]})],
+      ext_modules=[
+          Extension("datrie", [
+              'src/datrie.c',
+              'src/cdatrie.c',
+              'src/stdio_ext.c'
+          ], include_dirs=[LIBDATRIE_DIR])
+      ],
 
-    setup_requires=["pytest-runner"],
-    tests_require=["pytest", "hypothesis"],
-)
+      setup_requires=["pytest-runner"],
+      tests_require=["pytest", "hypothesis"])
