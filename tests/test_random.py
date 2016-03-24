@@ -19,11 +19,11 @@ if sys.version_info[:2] >= (2, 7):
     def test_contains(words):
         trie = datrie.Trie(string.printable)
         for i, word in enumerate(set(words)):
-            trie[word] = i
+            trie[word] = i + 1
 
         for i, word in enumerate(set(words)):
             assert word in trie
-            assert trie[word] == trie.get(word) == i
+            assert trie[word] == trie.get(word) == i + 1
 
     @given(printable_strings)
     def test_len(words):
