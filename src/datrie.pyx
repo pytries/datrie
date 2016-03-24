@@ -677,6 +677,14 @@ cdef class Trie(BaseTrie):
         cdef cdatrie.TrieData index = self._getitem(key)
         return self._values[index]
 
+    def get(self, unicode key, default=None):
+        cdef cdatrie.TrieData index
+        try:
+            index = self._getitem(key)
+            return self._values[index]
+        except KeyError:
+            return default
+
     def __setitem__(self, unicode key, object value):
         cdef cdatrie.TrieData next_index = len(self._values)
         cdef cdatrie.TrieData index = self._setdefault(key, next_index)
