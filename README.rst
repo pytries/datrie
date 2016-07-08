@@ -1,8 +1,8 @@
 datrie |travis| |appveyor|
 ======
 
-.. |travis| image:: https://travis-ci.org/kmike/datrie.png
-   :target: https://travis-ci.org/kmike/datrie
+.. |travis| image:: https://travis-ci.org/pytries/datrie.png
+   :target: https://travis-ci.org/pytries/datrie
 
 .. |appveyor| image:: https://ci.appveyor.com/api/projects/status/6bpvhllpjhlau7x0?svg=true
    :target: https://ci.appveyor.com/project/superbobry/datrie
