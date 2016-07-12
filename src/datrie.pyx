@@ -15,7 +15,7 @@ import itertools
 import warnings
 import sys
 import tempfile
-from collections import MutableMapping
+from collections import MutableMapping, Set
 
 try:
     import cPickle as pickle
@@ -588,29 +588,15 @@ cdef class BaseTrie:
 
     cpdef keys(self, unicode prefix=None):
         """
-        Returns a list of this trie's keys.
+        Returns dict view for trie's keys.
 
         If ``prefix`` is not None, returns only the keys prefixed by ``prefix``.
         """
-        cdef bint success
-        cdef list res = []
+        # FIXME: Move state initialization to BaseTrieKeysView?
         cdef BaseState state = BaseState(self)
+        cdef BaseTrieKeysView trie_keys = BaseTrieKeysView(state, prefix)
 
-        if prefix is not None:
-            success = state.walk(prefix)
-            if not success:
-                return res
-
-        cdef BaseIterator iter = BaseIterator(state)
-
-        if prefix is None:
-            while iter.next():
-                res.append(iter.key())
-        else:
-            while iter.next():
-                res.append(prefix+iter.key())
-
-        return res
+        return trie_keys
 
     cpdef values(self, unicode prefix=None):
         """
@@ -980,6 +966,61 @@ cdef class Iterator(_TrieIterator):
         return self._root._trie._index_to_value(data)
 
 
+cdef class BaseTrieKeysView:
+    cdef BaseState _state
+    cdef unicode _prefix
+
+    def __init__(self, BaseState state, unicode prefix):
+        # FIXME: Create _CState and _CTrieIterator cls?
+        self._state = state
+        self._prefix = prefix
+        if self._prefix is not None:
+            self._state.walk(self._prefix)
+
+    def __len__(self):
+        cdef int count = 0
+        cdef BaseIterator iter = BaseIterator(self._state)
+        while iter.next():
+            count += 1
+        # Does python knows here, that it should deallocate iter objects, etc??
+        return count
+
+    def __iter__(self):
+        # BaseIterator additionaly implements .data() method
+        cdef BaseIterator _iter = BaseIterator(self._state)
+        while _iter.next():
+            if self._prefix is None:
+                yield _iter.key()
+            else:
+                yield self._prefix + _iter.key()
+
+    def __contains__(self, item):
+        # FIXME: get max prefix first
+        for key in self:
+            if key == item:
+                return True
+        return False
+
+    def __richcmp__(self, other, int op):
+        if op == 2:    # ==
+            if other is self:
+                return True
+            elif not isinstance(other, Set):
+                return False
+            # FIXME: problems with ordering here
+            for key in self:
+                if self[key] != other[key]:
+                    return False
+
+            # XXX this can be written more efficiently via explicit iterators.
+            return len(self) == len(other)
+        elif op == 3:  # !=
+            return not (self == other)
+
+        raise TypeError("unorderable types: {0} and {1}".format(
+            self.__class__, other.__class__))
+
+
 cdef (cdatrie.Trie* ) _load_from_file(f) except NULL:
     cdef int fd = f.fileno()
     cdef stdio.FILE* f_ptr = stdio_ext.fdopen(fd, "r")
@@ -1145,3 +1186,4 @@ def new(alphabet=None, ranges=None, AlphaMap alpha_map=None):
 
 MutableMapping.register(Trie)
 MutableMapping.register(BaseTrie)
+Set.register(BaseTrieKeysView)

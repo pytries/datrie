@@ -5,3 +5,6 @@ src/*.html
 
 *.so
 build/
+
+.idea/
+.cache/
