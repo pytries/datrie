@@ -12,25 +12,34 @@ def test_keys_empty():
     assert len(keys) == 0
 
 
+# TODO: Can I use py.test fixtures here?
 def test_keys_iter():
     trie = datrie.BaseTrie(string.printable)
     trie["1"] = 1
     trie["2"] = 2
-    keys_list = list(trie.keys())
+    keys = trie.keys()
+    keys_list = list(keys)
     keys_list.sort()
     assert keys_list == ["1", "2"]
+    del trie["2"]
+    assert list(keys) == ["1"]
 
 
 def test_keys_iter_with_prefix():
     trie = datrie.BaseTrie(string.printable)
+    keys = trie.keys(prefix="prefix1")
+    keys_list = list(keys)
+    assert keys_list == []
     trie["prefix1_1"] = 11
     trie["prefix1_2"] = 12
     trie["prefix2_1"] = 21
     trie["prefix2_2"] = 22
-    keys = trie.keys(prefix="prefix1")
     keys_list = list(keys)
     keys_list.sort()
     assert keys_list == ["prefix1_1", "prefix1_2"]
+    del trie["prefix1_1"]
+    del trie["prefix1_2"]
+    assert list(keys) == []
 
 
 def test_keys_contains():
@@ -55,10 +64,15 @@ def test_keys_len():
     assert len(keys) == 1
     trie["1"] = 2
     trie["2"] = 2
-    assert len(keys) == 2
     trie["prefix_3"] = 3
+    assert len(keys) == 3
     keys = trie.keys(prefix="prefix")
     assert len(keys) == 1
+    del trie["1"]
+    del trie["2"]
+    assert len(keys) == 1
+    del trie["prefix_3"]
+    assert len(keys) == 0
 
 
 def test_keys_prefix():
@@ -73,6 +87,9 @@ def test_keys_prefix():
     keys_list = list(keys)
     keys_list.sort()
     assert keys_list == ["prefix1_1", "prefix1_2"]
+    del trie["prefix1_1"]
+    del trie["prefix2_3"]
+    assert list(keys) == ["prefix1_2"]
 
 
 def test_keys_delete():

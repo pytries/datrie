@@ -971,54 +971,64 @@ cdef class BaseTrieKeysView:
     cdef unicode _prefix
 
     def __init__(self, BaseState state, unicode prefix):
-        # FIXME: Create _CState and _CTrieIterator cls?
         self._state = state
         self._prefix = prefix
-        if self._prefix is not None:
-            self._state.walk(self._prefix)
+
+    # FIXME: Not clear understanding when I should use cpdef/def/cdef
+    cpdef _rewind_state(self, unicode new_state):
+        """
+        Reset state to root. Then if `new_state` is not None, try to walk
+        to new state.
+        """
+        self._state.rewind()
+        if new_state is not None:
+            if not self._state.walk(new_state):
+                return False
+        return True
 
     def __len__(self):
         cdef int count = 0
-        cdef BaseIterator iter = BaseIterator(self._state)
-        while iter.next():
-            count += 1
-        # Does python knows here, that it should deallocate iter objects, etc??
+        cdef _TrieIterator it
+        if self._rewind_state(self._prefix):
+            it = _TrieIterator(self._state)
+            while it.next():
+                count += 1
         return count
 
     def __iter__(self):
-        # BaseIterator additionaly implements .data() method
-        cdef BaseIterator _iter = BaseIterator(self._state)
-        while _iter.next():
+        if not self._rewind_state(self._prefix):
+            raise StopIteration
+        cdef _TrieIterator it = _TrieIterator(self._state)
+        while it.next():
             if self._prefix is None:
-                yield _iter.key()
+                yield it.key()
             else:
-                yield self._prefix + _iter.key()
+                yield self._prefix + it.key()
 
     def __contains__(self, item):
-        # FIXME: get max prefix first
-        for key in self:
-            if key == item:
-                return True
+        # Should I use in cython more explicit condition check like `is not None`?
+        if self._prefix is not None and not item.startswith(self._prefix):
+            return False
+        if self._rewind_state(item) and self._state.is_terminal():
+            return True
         return False
 
     def __richcmp__(self, other, int op):
-        if op == 2:    # ==
-            if other is self:
-                return True
-            elif not isinstance(other, Set):
-                return False
-            # FIXME: problems with ordering here
-            for key in self:
-                if self[key] != other[key]:
-                    return False
-
-            # XXX this can be written more efficiently via explicit iterators.
-            return len(self) == len(other)
-        elif op == 3:  # !=
-            return not (self == other)
-
-        raise TypeError("unorderable types: {0} and {1}".format(
-            self.__class__, other.__class__))
+        return NotImplemented
+        # if op == 2:    # ==
+        #     if other is self:
+        #         return True
+        #     elif not isinstance(other, Set):
+        #         return False
+        #     # FIXME: problems with ordering here
+        #     for key in self:
+        #         if self[key] != other[key]:
+        #             return False
+        #
+        #     # XXX this can be written more efficiently via explicit iterators.
+        #     return len(self) == len(other)
+        # elif op == 3:  # !=
+        #     return not (self == other)
 
 
 cdef (cdatrie.Trie* ) _load_from_file(f) except NULL:
