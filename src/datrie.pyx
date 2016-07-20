@@ -1014,21 +1014,50 @@ cdef class BaseTrieKeysView:
         return False
 
     def __richcmp__(self, other, int op):
-        return NotImplemented
-        # if op == 2:    # ==
-        #     if other is self:
-        #         return True
-        #     elif not isinstance(other, Set):
-        #         return False
-        #     # FIXME: problems with ordering here
-        #     for key in self:
-        #         if self[key] != other[key]:
-        #             return False
-        #
-        #     # XXX this can be written more efficiently via explicit iterators.
-        #     return len(self) == len(other)
-        # elif op == 3:  # !=
-        #     return not (self == other)
+        if op == 0:  # <
+            # FIXME: looks like not necessary to implement
+            return NotImplemented
+        elif op == 1:  # <=
+            # s.issubset(t) - test whether every element in s is in t
+            if other is self:
+                return True
+            try:
+                for key in self:
+                    if key not in other:
+                        return False
+                return True
+            except TypeError:
+                return False
+        elif op == 2:  # ==
+            if other is self:
+                return True
+            elif not isinstance(other, Set):
+                return False
+            # Should iterate over self due to `prefix` argument in .keys()
+            # even if Set.__contains__ more efficient (not sure at all why it should be)
+            count = 0
+            for key in self:
+                count += 1
+                if key not in other:
+                    return False
+
+            return count == len(other)
+        elif op == 3:  # !=
+            return not (self == other)
+        elif op == 4:  # >
+            # FIXME: looks like not necessary to implement
+            return NotImplemented
+        elif op == 5:  # >=
+            # s.issuperset(t) - test whether every element in t is in s
+            if other is self:
+                return True
+            try:
+                for key in other:
+                    if key not in self:
+                        return False
+                return True
+            except TypeError:
+                return False
 
 
 cdef (cdatrie.Trie* ) _load_from_file(f) except NULL:

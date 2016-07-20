@@ -100,3 +100,60 @@ def test_keys_delete():
     del trie["1"]
     assert len(trie) == 1
     assert len(keys) == 1
+
+
+def test_keys_eq():
+    trie = datrie.BaseTrie(string.printable)
+    trie["1"] = 1
+    trie["2"] = 2
+    keys = trie.keys()
+    assert keys == {"1", "2"}
+    assert keys == {"2", "1"}
+    trie["3"] = 3
+    assert keys != {"2", "1"}
+    del trie["1"]
+    assert keys == {"2", "3"}
+    trie["prefix_4"] = 4
+    keys = trie.keys(prefix="prefix")
+    assert keys == {"prefix_4"}
+    assert keys != {"1", "2", "3"}
+
+
+def test_keys_issuperset():
+    trie = datrie.BaseTrie(string.printable)
+    trie["1"] = 1
+    trie["2"] = 2
+    keys = trie.keys()
+    assert keys >= {"1"}
+    assert not keys >= {1}
+    assert keys >= {"2"}
+    assert keys >= {"1", "2"}
+    assert not keys >= {"1", "2", "3"}
+    assert not keys >= {"3"}
+    assert not keys >= 4  # not iterable
+    trie["prefix_3"] = 3
+    keys = trie.keys(prefix="prefix")
+    assert keys >= {"prefix_3"}
+    assert not keys >= {"prefix_3", "1"}
+    del trie["prefix_3"]
+    assert keys >= set()
+
+
+def test_keys_issubset():
+    trie = datrie.BaseTrie(string.printable)
+    trie["1"] = 1
+    trie["2"] = 2
+    keys = trie.keys()
+    assert not keys <= {"1"}
+    assert not keys <= 1  # not iterable
+    assert keys <= {"1", "2"}
+    assert keys <= ["1", "2"]
+    assert keys <= {"1", "2", "3"}
+    trie["prefix_3"] = 3
+    keys = trie.keys(prefix="prefix")
+    assert keys <= {"prefix_3"}
+    assert keys <= {"prefix_3", "1"}
+    assert not keys <= {"1", "2"}
+    del trie["prefix_3"]
+    assert keys <= {"prefix_3"}
+    assert keys <= set()
