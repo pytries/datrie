@@ -15,7 +15,7 @@ import itertools
 import warnings
 import sys
 import tempfile
-from collections import MutableMapping, Set
+from collections import MutableMapping, Set, KeysView
 
 try:
     import cPickle as pickle
@@ -592,7 +592,6 @@ cdef class BaseTrie:
 
         If ``prefix`` is not None, returns only the keys prefixed by ``prefix``.
         """
-        # FIXME: Move state initialization to BaseTrieKeysView?
         cdef BaseState state = BaseState(self)
         cdef BaseTrieKeysView trie_keys = BaseTrieKeysView(state, prefix)
 
@@ -974,8 +973,7 @@ cdef class BaseTrieKeysView:
         self._state = state
         self._prefix = prefix
 
-    # FIXME: Not clear understanding when I should use cpdef/def/cdef
-    cpdef _rewind_state(self, unicode new_state):
+    cdef int _rewind_state(self, unicode new_state):
         """
         Reset state to root. Then if `new_state` is not None, try to walk
         to new state.
@@ -1006,35 +1004,32 @@ cdef class BaseTrieKeysView:
                 yield self._prefix + it.key()
 
     def __contains__(self, item):
-        # Should I use in cython more explicit condition check like `is not None`?
-        if self._prefix is not None and not item.startswith(self._prefix):
+        if self._prefix and not item.startswith(self._prefix):
             return False
         if self._rewind_state(item) and self._state.is_terminal():
             return True
         return False
 
     def __richcmp__(self, other, int op):
-        if op == 0:  # <
-            # FIXME: looks like not necessary to implement
-            return NotImplemented
-        elif op == 1:  # <=
+        if op == 0:  # < or __lt__
+            # Test whether the set is a proper subset of other, that is,
+            # `set <= other and set != other`.
+            # FIXME: iterate over `self` and then check len(self) != len(other)
+            # FIXME: remove issubset method, not really needs it
+            return self.issubset(other) and self != other
+        elif op == 1:  # <= or __le__
             # s.issubset(t) - test whether every element in s is in t
-            if other is self:
-                return True
-            try:
-                for key in self:
-                    if key not in other:
-                        return False
-                return True
-            except TypeError:
-                return False
+            # FIXME: duplicate this exception? really?
+            if not isinstance(other, Set):
+                raise TypeError("unorderable types: dict_keys() <= {}()".format(
+                    type(other)))
+            return self.issubset(other)
         elif op == 2:  # ==
             if other is self:
                 return True
             elif not isinstance(other, Set):
                 return False
             # Should iterate over self due to `prefix` argument in .keys()
-            # even if Set.__contains__ more efficient (not sure at all why it should be)
             count = 0
             for key in self:
                 count += 1
@@ -1044,20 +1039,58 @@ cdef class BaseTrieKeysView:
             return count == len(other)
         elif op == 3:  # !=
             return not (self == other)
-        elif op == 4:  # >
-            # FIXME: looks like not necessary to implement
-            return NotImplemented
-        elif op == 5:  # >=
+        elif op == 4:  # > or __gt__
+            # set > other - test whether the `set` is a proper superset
+            # of `other`, that is, set >= other and set != other.
+            return self.issuperset(other) and other != self
+        elif op == 5:  # >= or __ge__ in cython
             # s.issuperset(t) - test whether every element in t is in s
-            if other is self:
-                return True
-            try:
-                for key in other:
-                    if key not in self:
-                        return False
-                return True
-            except TypeError:
-                return False
+            if not isinstance(other, Set):
+                raise TypeError("unorderable types: dict_keys() >= {}()".format(
+                    type(other)))
+            return self.issuperset(other)
+
+    cdef int issubset(self, other):
+        if other is self:
+            return True
+        try:
+            for key in self:
+                if key not in other:
+                    return False
+            return True
+        except TypeError:
+            return False
+
+    cdef int issuperset(self, other):
+        if other is self:
+            return True
+        try:
+            for key in other:
+                if key not in self:
+                    return False
+            return True
+        except TypeError:
+            return False
+
+    def __and__(self, other):
+        # intersection
+        return NotImplemented
+
+    def __or__(self, other):
+        # union
+        return NotImplemented
+
+    def __sub__(self, other):
+        # difference
+        return NotImplemented
+
+    def __xor__(self, other):
+        # symmetric_difference, set ^ other
+        # Return a new set with elements in either the set or other but not both.
+        return NotImplemented
+
+    def isdisjoint(self, other):
+        return NotImplemented
 
 
 cdef (cdatrie.Trie* ) _load_from_file(f) except NULL:
@@ -1225,4 +1258,4 @@ def new(alphabet=None, ranges=None, AlphaMap alpha_map=None):
 
 MutableMapping.register(Trie)
 MutableMapping.register(BaseTrie)
-Set.register(BaseTrieKeysView)
+KeysView.register(BaseTrieKeysView)
