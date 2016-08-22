@@ -2,7 +2,9 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import pytest
 import string
+
 import datrie
 
 
@@ -125,12 +127,14 @@ def test_keys_issuperset():
     trie["2"] = 2
     keys = trie.keys()
     assert keys >= {"1"}
-    assert not keys >= {1}
+    with pytest.raises(TypeError):
+        _ = keys >= 1  # not iterable
     assert keys >= {"2"}
     assert keys >= {"1", "2"}
     assert not keys >= {"1", "2", "3"}
     assert not keys >= {"3"}
-    assert not keys >= 4  # not iterable
+    # Wrong type inside set
+    assert not keys >= {1, 2}
     trie["prefix_3"] = 3
     keys = trie.keys(prefix="prefix")
     assert keys >= {"prefix_3"}
@@ -145,9 +149,10 @@ def test_keys_issubset():
     trie["2"] = 2
     keys = trie.keys()
     assert not keys <= {"1"}
-    assert not keys <= 1  # not iterable
+    with pytest.raises(TypeError):
+        assert not keys <= 1  # not iterable
+        assert keys <= ["1", "2"]  # wrong type
     assert keys <= {"1", "2"}
-    assert keys <= ["1", "2"]
     assert keys <= {"1", "2", "3"}
     trie["prefix_3"] = 3
     keys = trie.keys(prefix="prefix")
@@ -157,3 +162,18 @@ def test_keys_issubset():
     del trie["prefix_3"]
     assert keys <= {"prefix_3"}
     assert keys <= set()
+
+
+def test_keys_intersection():
+    trie = datrie.BaseTrie(string.printable)
+    trie["1"] = 1
+    trie["2"] = 2
+    keys = trie.keys()
+    assert (keys & keys) == set("12")
+    assert (keys & keys) != set()
+    assert (keys & keys) != set("1")
+    assert (keys & keys) != set("2")
+    assert (keys & '1') == set("1")
+    with pytest.raises(TypeError):
+        assert (keys & 1) == set("1")  # not iterable
+    assert (keys & 'ab') == set()

@@ -964,7 +964,7 @@ cdef class Iterator(_TrieIterator):
         cdef cdatrie.TrieData data = cdatrie.trie_iterator_get_data(self._iter)
         return self._root._trie._index_to_value(data)
 
-
+# TODO: Register or inherit from KeysView?!
 cdef class BaseTrieKeysView:
     cdef BaseState _state
     cdef unicode _prefix
@@ -1014,70 +1014,85 @@ cdef class BaseTrieKeysView:
         if op == 0:  # < or __lt__
             # Test whether the set is a proper subset of other, that is,
             # `set <= other and set != other`.
-            # FIXME: iterate over `self` and then check len(self) != len(other)
-            # FIXME: remove issubset method, not really needs it
-            return self.issubset(other) and self != other
-        elif op == 1:  # <= or __le__
-            # s.issubset(t) - test whether every element in s is in t
-            # FIXME: duplicate this exception? really?
             if not isinstance(other, Set):
-                raise TypeError("unorderable types: dict_keys() <= {}()".format(
-                    type(other)))
-            return self.issubset(other)
-        elif op == 2:  # ==
+                raise TypeError("unorderable types: dict_keys() < %s()" % type(other))
             if other is self:
-                return True
-            elif not isinstance(other, Set):
                 return False
-            # Should iterate over self due to `prefix` argument in .keys()
+            # FIXME: cdef int count at the beginning of func or override `op` maybe?
             count = 0
             for key in self:
                 count += 1
                 if key not in other:
                     return False
-
+            return count != len(other)
+        elif op == 1:  # <= or __le__
+            # s.issubset(t) - test whether every element in s is in t
+            if not isinstance(other, Set):
+                raise TypeError("unorderable types: dict_keys() <= %s()" % type(other))
+            if other is self:
+                return True
+            for key in self:
+                if key not in other:
+                    return False
+            return True
+        elif op == 2:  # ==
+            if other is self:
+                return True
+            elif not isinstance(other, Set):
+                # No TypeError for equality
+                return False
+            count = 0
+            for key in self:
+                count += 1
+                if key not in other:
+                    return False
             return count == len(other)
         elif op == 3:  # !=
             return not (self == other)
         elif op == 4:  # > or __gt__
             # set > other - test whether the `set` is a proper superset
             # of `other`, that is, set >= other and set != other.
-            return self.issuperset(other) and other != self
-        elif op == 5:  # >= or __ge__ in cython
+            if not isinstance(other, Set):
+                raise TypeError("unorderable types: dict_keys() > %s()" % type(other))
+            if other is self:
+                return False
+            try:
+                for key in other:
+                    if key not in self:
+                        return False
+            except TypeError:
+                return False
+            # FIXME: len(self) is O(n)
+            return len(other) != len(self)
+        elif op == 5:  # >= or __ge__
             # s.issuperset(t) - test whether every element in t is in s
             if not isinstance(other, Set):
-                raise TypeError("unorderable types: dict_keys() >= {}()".format(
-                    type(other)))
-            return self.issuperset(other)
+                raise TypeError("unorderable types: dict_keys() >= %s()" % type(other))
+            if other is self:
+                return True
+            try:
+                for key in other:
+                    if key not in self:
+                        return False
+            except TypeError:
+                return False
+            return True
 
-    cdef int issubset(self, other):
+    def __and__(self, other):  # intersection
+        """Return a new set with elements common to dict_view and `other`."""
         if other is self:
-            return True
+            return set(self)
+        # Looks like operator's version of intersection accepts any iterable
+        # for dict_view
         try:
-            for key in self:
-                if key not in other:
-                    return False
-            return True
+            return {key for key in self if key in other}
         except TypeError:
-            return False
+            raise TypeError("'%s' object is not iterable" % type(other))
 
-    cdef int issuperset(self, other):
+    def __or__(self, other):  # union
         if other is self:
-            return True
-        try:
-            for key in other:
-                if key not in self:
-                    return False
-            return True
-        except TypeError:
-            return False
-
-    def __and__(self, other):
-        # intersection
-        return NotImplemented
-
-    def __or__(self, other):
-        # union
+            return set(self)
+        # TODO: maybe convert self to set and use native method?
         return NotImplemented
 
     def __sub__(self, other):
@@ -1090,7 +1105,15 @@ cdef class BaseTrieKeysView:
         return NotImplemented
 
     def isdisjoint(self, other):
-        return NotImplemented
+        """
+        Return True if the set has no elements in common with `other`.
+        Sets are disjoint if and only if their intersection is the empty set.
+        """
+        if other is self:
+            return False
+        if any(True for key in self if key in other):
+            return False
+        return True
 
 
 cdef (cdatrie.Trie* ) _load_from_file(f) except NULL:
