@@ -105,6 +105,7 @@ def test_keys_delete():
 
 
 def test_keys_eq():
+    """Test trie.keys() == and != operations"""
     trie = datrie.BaseTrie(string.printable)
     trie["1"] = 1
     trie["2"] = 2
@@ -118,10 +119,12 @@ def test_keys_eq():
     trie["prefix_4"] = 4
     keys = trie.keys(prefix="prefix")
     assert keys == {"prefix_4"}
+    assert not keys != {"prefix_4"}
     assert keys != {"1", "2", "3"}
 
 
 def test_keys_issuperset():
+    """Test trie.keys() >= and > operations"""
     trie = datrie.BaseTrie(string.printable)
     trie["1"] = 1
     trie["2"] = 2
@@ -133,6 +136,10 @@ def test_keys_issuperset():
     assert keys >= {"1", "2"}
     assert not keys >= {"1", "2", "3"}
     assert not keys >= {"3"}
+    # Proper superset
+    assert keys > {"2"}
+    assert not keys > {"1", "2"}
+    assert not keys > {"3"}
     # Wrong type inside set
     assert not keys >= {1, 2}
     trie["prefix_3"] = 3
@@ -144,6 +151,7 @@ def test_keys_issuperset():
 
 
 def test_keys_issubset():
+    """Test trie.keys() <= and < operations"""
     trie = datrie.BaseTrie(string.printable)
     trie["1"] = 1
     trie["2"] = 2
@@ -155,6 +163,10 @@ def test_keys_issubset():
     assert keys <= {"1", "2"}
     assert keys <= {"1", "2", "3"}
     trie["prefix_3"] = 3
+    # Proper subset
+    assert not keys < {"1", "2"}
+    assert not keys < {"1", "2", "prefix_3"}
+    assert keys < {"1", "2", "prefix_3", "3"}
     keys = trie.keys(prefix="prefix")
     assert keys <= {"prefix_3"}
     assert keys <= {"prefix_3", "1"}
@@ -162,6 +174,7 @@ def test_keys_issubset():
     del trie["prefix_3"]
     assert keys <= {"prefix_3"}
     assert keys <= set()
+    assert keys < {"1", "2", "3"}
 
 
 def test_keys_intersection():
@@ -169,11 +182,99 @@ def test_keys_intersection():
     trie["1"] = 1
     trie["2"] = 2
     keys = trie.keys()
-    assert (keys & keys) == set("12")
+    assert (keys & keys) == {"1", "2"}
     assert (keys & keys) != set()
-    assert (keys & keys) != set("1")
-    assert (keys & keys) != set("2")
-    assert (keys & '1') == set("1")
+    assert (keys & keys) != {"1"}
+    assert (keys & keys) != {"2"}
+    assert (keys & '1') == {"1"}
     with pytest.raises(TypeError):
-        assert (keys & 1) == set("1")  # not iterable
+        assert (keys & 1) == {"1"}  # not iterable
     assert (keys & 'ab') == set()
+    assert (keys & "12") == {"1", "2"}
+    assert (keys & "1") == {"1"}
+    trie["prefix_3"] = 3
+    keys = trie.keys(prefix="prefix_")
+    assert (keys & keys) == {"prefix_3"}
+    assert (keys & keys) == keys
+    assert (keys & "12") == set()
+    assert (keys & "") == set()
+
+
+def test_keys_union():
+    trie = datrie.BaseTrie(string.printable)
+    trie["1"] = 1
+    trie["2"] = 2
+    trie["333"] = 2
+    keys = trie.keys()
+    assert (keys | keys) == keys
+    assert (keys | set()) == set(keys)
+    del trie["333"]
+    assert (keys | {"1"}) == {"1", "2"}
+    del trie["1"]
+    assert (keys | {"1"}) == {"1", "2"}
+    assert (keys | {"2"}) == {"2"}
+    assert (keys | {"3"}) == {"2", "3"}
+    keys = trie.keys(prefix="")
+    assert (keys | {"3"}) == {"2", "3"}
+    keys = trie.keys(prefix="prefix")
+    assert (keys | {"3"}) == {"3"}
+    trie["prefix_3"] = 3
+    assert (keys | {"3"}) == {"3", "prefix_3"}
+
+
+def test_keys_difference():
+    trie = datrie.BaseTrie(string.printable)
+    trie["1"] = 1
+    trie["2"] = 2
+    trie["3"] = 2
+    keys = trie.keys()
+    assert (keys - set()) == set(keys)
+    assert (keys - {"3"}) == {"1", "2"}
+    assert (keys - {"2", "3"}) == {"1"}
+    assert (keys - {"1", "2", "3"}) == set()
+    assert (keys - {"1", "2", "3", "4"}) == set()
+    assert (keys - {"4"}) == {"1", "2", "3"}
+    keys = trie.keys(prefix="prefix")
+    assert (keys - set()) == set()
+    assert (keys - {"1"}) == set()
+    trie["prefix_1"] = 3
+    assert (keys - set()) == {"prefix_1"}
+    assert (keys - {"prefix_1"}) == set()
+    assert (keys - {"prefix_2"}) == {"prefix_1"}
+
+
+def test_keys_symmetric_difference():
+    trie = datrie.BaseTrie(string.printable)
+    trie["1"] = 1
+    trie["2"] = 2
+    keys = trie.keys()
+    assert (keys ^ set()) == {"1", "2"}
+    assert (keys ^ {"1"}) == {"2"}
+    assert (keys ^ {"1", "2"}) == set()
+    assert (keys ^ {"1", "2", "3"}) == {"3"}
+    del trie["1"]
+    assert (keys ^ {"1"}) == {"1", "2"}
+    keys = trie.keys(prefix="prefix")
+    assert (keys ^ {"1"}) == {"1"}
+    trie["prefix_1"] = 3
+    assert (keys ^ {"1"}) == {"prefix_1", "1"}
+
+
+def test_keys_isdisjoint():
+    # Return True if null intersection
+    trie = datrie.BaseTrie(string.printable)
+    trie["1"] = 1
+    trie["2"] = 2
+    keys = trie.keys()
+    assert keys.isdisjoint(set())
+    assert not keys.isdisjoint({"1"})
+    assert keys.isdisjoint({"3"})
+    del trie["1"]
+    assert keys.isdisjoint({"1"})
+    keys = trie.keys(prefix="prefix")
+    assert keys.isdisjoint({"1"})
+    assert keys.isdisjoint({"2"})
+    trie["prefix_1"] = 3
+    assert keys.isdisjoint({"2"})
+    assert not keys.isdisjoint({"prefix_1"})
+    assert keys.isdisjoint({"prefix_2"})

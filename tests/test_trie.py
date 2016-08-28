@@ -141,9 +141,9 @@ def test_trie_items():
     trie['foo'] = 10
     trie['bar'] = 'foo'
     trie['foobar'] = 30
-    assert trie.values() == ['foo', 10, 30]
-    assert trie.items() == [('bar', 'foo'), ('foo', 10), ('foobar', 30)]
-    assert trie.keys() == ['bar', 'foo', 'foobar']
+    assert list(trie.values()) == ['foo', 10, 30]
+    assert list(trie.items()) == [('bar', 'foo'), ('foo', 10), ('foobar', 30)]
+    assert list(trie.keys()) == ['bar', 'foo', 'foobar']
 
 
 def test_trie_iter():
@@ -241,14 +241,14 @@ class TestPrefixLookups(object):
 
     def test_trie_keys_prefix(self):
         trie = self._trie()
-        assert trie.keys('foobarz') == ['foobarzartic']
-        assert trie.keys('foobarzart') == ['foobarzartic']
-        assert trie.keys('foo') == ['foo', 'foobar', 'foobarzartic', 'foovar']
-        assert trie.keys('foobar') == ['foobar', 'foobarzartic']
-        assert trie.keys('') == [
+        assert list(trie.keys('foobarz')) == ['foobarzartic']
+        assert list(trie.keys('foobarzart')) == ['foobarzartic']
+        assert list(trie.keys('foo')) == ['foo', 'foobar', 'foobarzartic', 'foovar']
+        assert list(trie.keys('foobar')) == ['foobar', 'foobarzartic']
+        assert list(trie.keys('')) == [
             'bar', 'foo', 'foobar', 'foobarzartic', 'foovar'
         ]
-        assert trie.keys('x') == []
+        assert list(trie.keys('x')) == []
 
     def test_trie_items_prefix(self):
         trie = self._trie()
