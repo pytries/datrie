@@ -16,13 +16,17 @@ import itertools
 import warnings
 import sys
 import tempfile
-from collections import MutableMapping, Set, Iterable, KeysView, \
-    ValuesView, ItemsView
+from collections import MutableMapping, Set, Sized
 
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
+
+try:
+    base_str = basestring
+except NameError:
+    base_str = str
 
 class DatrieError(Exception):
     pass
@@ -682,67 +686,24 @@ cdef class Trie(BaseTrie):
 
     cpdef items(self, unicode prefix=None):
         """
-        Returns a list of this trie's items (``(key,value)`` tuples).
+        D.items() -> a set-like object providing a view on D's items.
 
         If ``prefix`` is not None, returns only the items
         associated with keys prefixed by ``prefix``.
         """
 
-        # the following code is
-        #
-        #    [(k, self._values[v]) for (k,v) in BaseTrie.items(self, prefix)]
-        #
-        # but inlined for speed.
-
-        cdef bint success
-        cdef list res = []
-        cdef BaseState state = BaseState(self)
-
-        if prefix is not None:
-            success = state.walk(prefix)
-            if not success:
-                return res
-
-        cdef BaseIterator iter = BaseIterator(state)
-
-        if prefix is None:
-            while iter.next():
-                res.append((iter.key(), self._values[iter.data()]))
-        else:
-            while iter.next():
-                res.append((prefix+iter.key(), self._values[iter.data()]))
-
-        return res
+        return TrieItemsView(self, prefix)
 
     cpdef values(self, unicode prefix=None):
         """
-        Returns a list of this trie's values.
+        D.values() -> an object providing a view on D's values
 
         If ``prefix`` is not None, returns only the values
         associated with keys prefixed by ``prefix``.
         """
 
-        # the following code is
-        #
-        #     [self._values[v] for v in BaseTrie.values(self, prefix)]
-        #
-        # but inlined for speed.
+        return TrieValuesView(self, prefix)
 
-        cdef list res = []
-        cdef BaseState state = BaseState(self)
-        cdef bint success
-
-        if prefix is not None:
-            success = state.walk(prefix)
-            if not success:
-                return res
-
-        cdef BaseIterator iter = BaseIterator(state)
-
-        while iter.next():
-            res.append(self._values[iter.data()])
-
-        return res
 
     def longest_prefix_item(self, unicode key, default=RAISE_KEY_ERROR):
         """
@@ -934,22 +895,22 @@ cdef class Iterator(_TrieIterator):
         return self._root._trie._index_to_value(data)
 
 
-cdef class BaseTrieKeysView:
-    cdef BaseState _state
-    cdef unicode _prefix
+class BaseTrieMappingView(Sized):
 
-    def __init__(self, BaseTrie base_trie, unicode prefix):
+    __slots__ = ('_state', '_prefix')
+
+    def __init__(self, base_trie, prefix=None):
         cdef BaseState state = BaseState(base_trie)
         self._state = state
         self._prefix = prefix
 
-    cdef int _rewind_state(self, unicode new_state):
+    def _rewind_state(self, new_state):
         """
-        Reset state to root. Then if `new_state` is not None, try to walk
-        to new state.
+        Reset state to root. Next try to walk to new state, if `new_state`
+        is not None.
         """
         self._state.rewind()
-        if new_state is not None:
+        if new_state is not None and isinstance(new_state, base_str):
             if not self._state.walk(new_state):
                 return False
         return True
@@ -963,6 +924,22 @@ cdef class BaseTrieKeysView:
             while it.next():
                 count += 1
         return count
+
+
+class BaseTrieKeysView(BaseTrieMappingView, Set):
+
+    __slots__ = ()
+
+    @classmethod
+    def _from_iterable(cls, it):
+        return set(it)
+
+    def __contains__(self, item):
+        if self._prefix and not item.startswith(self._prefix):
+            return False
+        if self._rewind_state(item) and self._state.is_terminal():
+            return True
+        return False
 
     def __iter__(self):
         if not self._rewind_state(self._prefix):
@@ -974,118 +951,37 @@ cdef class BaseTrieKeysView:
             else:
                 yield self._prefix + it.key()
 
-    def __contains__(self, item):
-        if self._prefix and not item.startswith(self._prefix):
-            return False
-        if self._rewind_state(item) and self._state.is_terminal():
+    def __eq__(self, other):
+        # Works faster than Set implementation due to one linear passing
+        if other is self:
             return True
-        return False
-
-    def __richcmp__(self, other, int op):
-        if op == 0:  # < or __lt__
-            # Test whether the set is a proper subset of other, that is,
-            # `set <= other and set != other`.
-            if not isinstance(other, Set):
-                return NotImplemented
-            return len(self) < len(other) and self._issubset(other)
-        elif op == 1:  # <= or __le__
-            # s.issubset(t) - test whether every element in s is in t
-            if not isinstance(other, Set):
-                return NotImplemented
-            return self._issubset(other)
-        elif op == 2:  # ==
-            if other is self:
-                return True
-            elif not isinstance(other, Set):
-                # No TypeError for equality
-                return False
-            count = 0
-            for elem in self:
-                count += 1
-                if elem not in other:
-                    return False
-            return count == len(other)
-            # return len(self) == len(other) and self._issubset(other)
-        elif op == 3:  # !=
-            return not (self == other)
-        elif op == 4:  # > or __gt__
-            # set > other - test whether the `set` is a proper superset
-            # of `other`, that is, set >= other and set != other.
-            if not isinstance(other, Set):
-                return NotImplemented
-            return len(self) > len(other) and self._issuperset(other)
-        elif op == 5:  # >= or __ge__
-            # s.issuperset(t) - test whether every element in t is in s
-            if not isinstance(other, Set):
-                return NotImplemented
-            return self._issuperset(other)
-
-    cpdef bool _issubset(self, other):
-        """s._issubset(t) - test whether every element in s is in t"""
-        if len(self) > len(other):
+        elif not isinstance(other, Set):
+            # No TypeError for equality
             return False
+        count = 0
         for elem in self:
+            count += 1
             if elem not in other:
                 return False
-        return True
-
-    cpdef bool _issuperset(self, other):
-        """s._issuperset(t) - test whether every element in t is in s"""
-        if len(self) < len(other):
-            return False
-        try:
-            for elem in other:
-                if elem not in self:
-                    return False
-        except TypeError:
-            return False
-        return True
-
-    # Note: For KeysView explicitly used set in `_from_iterable` method
-    def __and__(self, other):  # intersection, &
-        """Return a new set with elements common to dict_view and `other`."""
-        if other is self:
-            return set(self)
-        elif not isinstance(other, Iterable):
-            return NotImplemented
-        return {key for key in self if key in other}
-
-    def __or__(self, other):  # union, |
-        if other is self:
-            return set(self)
-        elif not isinstance(other, Iterable):
-            return NotImplemented
-        return {e for e in itertools.chain(self, other)}
-
-    def __sub__(self, other):  # difference, -
-        if not isinstance(other, Set):
-            if not isinstance(other, Iterable):
-                return NotImplemented
-            other = set(other)
-        return set(value for value in self if value not in other)
-
-    def __xor__(self, other):
-        # symmetric_difference, set ^ other
-        # Return a new set with elements in either the set or other but not both.
-        if not isinstance(other, Set):
-            if not isinstance(other, Iterable):
-                return NotImplemented
-            other = set(other)
-        return (self - other) | (other - self)
-
-    def isdisjoint(self, other):
-        """Return True if keys view and `other` have a null intersection."""
-        if other is self:
-            return False
-        for value in other:
-            if value in self:
-                return False
-        return True
+        return count == len(other)
 
 
-class BaseTrieItemsView(BaseTrieKeysView):
+class BaseTrieItemsView(BaseTrieMappingView, Set):
 
     __slots__ = ()
+
+    @classmethod
+    def _from_iterable(cls, it):
+        return set(it)
+
+    def __contains__(self, item):
+        key, value = item
+        if self._prefix and not key.startswith(self._prefix):
+            return False
+        if self._rewind_state(key) and self._state.is_terminal():
+            v = self._state.data()
+            return v is value or v == value
+        return False
 
     def __iter__(self):
         if not self._rewind_state(self._prefix):
@@ -1097,53 +993,10 @@ class BaseTrieItemsView(BaseTrieKeysView):
             else:
                 yield (self._prefix + it.key(), it.data())
 
-    def __contains__(self, item):
-        key, value = item
-        if self._prefix and not key.startswith(self._prefix):
-            return False
-        if self._rewind_state(key) and self._state.is_terminal():
-            v = self._state.data()
-            return v is value or v == value
-        return False
 
+class BaseTrieValuesView(BaseTrieMappingView):
 
-# FIXME: copy paste from BaseTrieKeysView in most?!
-cdef class BaseTrieValuesView:
-    cdef BaseState _state
-    cdef unicode _prefix
-
-    def __init__(self, BaseTrie base_trie, unicode prefix):
-        cdef BaseState state = BaseState(base_trie)
-        self._state = state
-        self._prefix = prefix
-
-    cdef int _rewind_state(self, unicode new_state):
-        """
-        Reset state to root. Then if `new_state` is not None, try to walk
-        to new state.
-        """
-        self._state.rewind()
-        if new_state is not None:
-            if not self._state.walk(new_state):
-                return False
-        return True
-
-    def __len__(self):
-        """O(n) in current implementation"""
-        cdef int count = 0
-        cdef _TrieIterator it
-        if self._rewind_state(self._prefix):
-            it = _TrieIterator(self._state)
-            while it.next():
-                count += 1
-        return count
-
-    def __iter__(self):
-        if not self._rewind_state(self._prefix):
-            raise StopIteration
-        cdef BaseIterator it = BaseIterator(self._state)
-        while it.next():
-            yield it.data()
+    __slots__ = ()
 
     def __contains__(self, value):
         if self._prefix and not value.startswith(self._prefix):
@@ -1153,11 +1006,78 @@ cdef class BaseTrieValuesView:
                 return True
         return False
 
-# FIXME: or add self.trie to BaseTrieKeysView?
+    def __iter__(self):
+        if not self._rewind_state(self._prefix):
+            raise StopIteration
+        cdef BaseIterator it = BaseIterator(self._state)
+        while it.next():
+            yield it.data()
+
+
+class TrieMappingView(BaseTrieMappingView):
+
+    __slots__ = ()
+
+    def __init__(self, base_trie, prefix=None):
+        cdef State state = State(base_trie)
+        self._state = state
+        self._prefix = prefix
+
+
 class TrieKeysView(BaseTrieKeysView):
-    def __init__(self, BaseTrie base_trie, unicode prefix):
-        self.trie = base_trie
-        super(TrieKeysView, self).__init__(base_trie, prefix)
+    pass
+
+
+class TrieItemsView(TrieMappingView, Set):
+
+    __slots__ = ()
+
+    @classmethod
+    def _from_iterable(cls, it):
+        return set(it)
+
+    def __contains__(self, item):
+        key, value = item
+        if self._prefix and not key.startswith(self._prefix):
+            return False
+        if self._rewind_state(key) and self._state.is_terminal():
+            v = self._state.data()
+            return v is value or v == value
+        return False
+
+    def __iter__(self):
+        if not self._rewind_state(self._prefix):
+            raise StopIteration
+        cdef Iterator it = Iterator(self._state)
+        while it.next():
+            if self._prefix is None:
+                yield (it.key(), it.data())
+            else:
+                yield (self._prefix + it.key(), it.data())
+
+
+class TrieValuesView(TrieMappingView):
+
+    __slots__ = ()
+
+    @classmethod
+    def _from_iterable(cls, it):
+        return set(it)
+
+    def __contains__(self, value):
+        if self._prefix and not value.startswith(self._prefix):
+            return False
+        for v in self:
+            if v is value or v == value:
+                return True
+        return False
+
+    def __iter__(self):
+        if not self._rewind_state(self._prefix):
+            raise StopIteration
+        cdef Iterator it = Iterator(self._state)
+        while it.next():
+            yield it.data()
 
 
 cdef (cdatrie.Trie* ) _load_from_file(f) except NULL:
@@ -1325,6 +1245,3 @@ def new(alphabet=None, ranges=None, AlphaMap alpha_map=None):
 
 MutableMapping.register(Trie)
 MutableMapping.register(BaseTrie)
-KeysView.register(BaseTrieKeysView)
-ItemsView.register(BaseTrieItemsView)
-ValuesView.register(BaseTrieValuesView)
