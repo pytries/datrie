@@ -904,14 +904,16 @@ class BaseTrieMappingView(Sized):
         self._state = state
         self._prefix = prefix
 
+    # TODO: Add test to check cases where `new_state` is not str
     def _rewind_state(self, new_state):
         """
         Reset state to root. Next try to walk to new state, if `new_state`
         is not None.
         """
         self._state.rewind()
-        if new_state is not None and isinstance(new_state, base_str):
-            if not self._state.walk(new_state):
+        if new_state is not None:
+            if (not isinstance(new_state, base_str) or
+                    not self._state.walk(new_state)):
                 return False
         return True
 
