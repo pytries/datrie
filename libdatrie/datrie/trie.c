@@ -44,6 +44,7 @@ struct _Trie {
     DArray     *da;
     Tail       *tail;
 
+    uint32      size;
     Bool        is_dirty;
 };
 
@@ -133,6 +134,7 @@ trie_new (const AlphaMap *alpha_map)
     if (UNLIKELY (!trie->tail))
         goto exit_da_created;
 
+    trie->size = 0;
     trie->is_dirty = TRUE;
     return trie;
 
@@ -203,6 +205,11 @@ trie_fread (FILE *file)
     if (NULL == (trie->tail = tail_fread (file)))
         goto exit_da_created;
 
+    uint32 counter = 0;
+    if (!trie_enumerate (trie, len_enumerator, &counter)) {
+        goto exit_trie_created;
+    }
+    trie->size = counter;
     trie->is_dirty = FALSE;
     return trie;
 
@@ -288,6 +295,19 @@ trie_fwrite (Trie *trie, FILE *file)
     trie->is_dirty = FALSE;
 
     return 0;
+}
+
+/**
+ * @brief Check pending changes
+ *
+ * @param trie  : the trie object
+ *
+ * @return total count of trie keys
+ */
+uint32
+trie_size (const Trie *trie)
+{
+    return trie->size;
 }
 
 /**
@@ -431,6 +451,9 @@ trie_store_conditionally (Trie            *trie,
             res = trie_branch_in_branch (trie, s, key_str, data);
             free (key_str);
 
+            if (res) {
+                trie->size++;
+            }
             return res;
         }
         if (0 == *p)
@@ -455,6 +478,9 @@ trie_store_conditionally (Trie            *trie,
             res = trie_branch_in_tail (trie, s, tail_str, data);
             free (tail_str);
 
+            if (res) {
+                trie->size++;
+            }
             return res;
         }
         if (0 == *p)
@@ -580,6 +606,7 @@ trie_delete (Trie *trie, const AlphaChar *key)
     da_set_base (trie->da, s, TRIE_INDEX_ERROR);
     da_prune (trie->da, s);
 
+    trie->size--;
     trie->is_dirty = TRUE;
     return TRUE;
 }
@@ -627,6 +654,14 @@ trie_enumerate (const Trie *trie, TrieEnumFunc enum_func, void *user_data)
 exit_root_created:
     trie_state_free (root);
     return FALSE;
+}
+
+
+Bool
+len_enumerator (const AlphaChar *key, TrieData key_data, uint32 *counter_ptr)
+{
+    (*counter_ptr)++;
+    return TRUE;
 }
 
 

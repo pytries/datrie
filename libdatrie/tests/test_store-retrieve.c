@@ -48,6 +48,19 @@ main ()
         goto err_trie_not_created;
     }
 
+    msg_step ("Check initial trie size");
+    if (trie_size(test_trie) != 0) {
+        printf ("Wrong trie size; expected 0, got %d.\n", trie_size(test_trie));
+        goto err_trie_size;
+    }
+
+    msg_step ("Delete non-existent key from trie and check size");
+    trie_delete (test_trie, (AlphaChar *)L"a");
+    if (trie_size(test_trie) != 0) {
+        printf ("Wrong trie size; expected 0, got %d.\n", trie_size(test_trie));
+        goto err_trie_size;
+    }
+
     /* store */
     msg_step ("Adding data to trie");
     for (dict_p = dict_src; dict_p->key; dict_p++) {
@@ -57,6 +70,27 @@ main ()
             goto err_trie_created;
         }
     }
+
+    msg_step ("Check trie size");
+    if (trie_size(test_trie) != dict_src_n_entries()) {
+        printf ("Wrong trie size; expected %d, got %d.\n",
+                dict_src_n_entries(), trie_size(test_trie));
+        goto err_trie_size;
+    }
+
+    msg_step ("Update existing trie element and check trie size");
+    if (!trie_store (test_trie, dict_src[1].key, dict_src[1].data)) {
+            printf ("Failed to add key '%ls', data %d.\n",
+                    dict_src[1].key, dict_src[1].data);
+            goto err_trie_created;
+        }
+    if (trie_size(test_trie) != dict_src_n_entries()) {
+        printf ("Wrong trie size; expected %d, got %d.\n",
+                dict_src_n_entries(), trie_size(test_trie));
+        goto err_trie_size;
+    }
+
+    // TODO: add key with wrong alphabet and check size?
 
     /* retrieve */
     msg_step ("Retrieving data from trie");
@@ -98,6 +132,14 @@ main ()
         printf ("Trie deletion test failed.\n");
         goto err_trie_created;
     }
+
+    msg_step ("Check trie size after deleting some entries.");
+    if (trie_size(test_trie) != (n_entries - (n_entries/3 + 1))) {
+        printf ("Wrong trie size; expected %d, got %d.\n",
+                (n_entries - (n_entries/3 + 1)), trie_size(test_trie));
+        goto err_trie_size;
+    }
+
 
     /* retrieve */
     msg_step ("Retrieving data from trie again after deletions");
@@ -191,6 +233,8 @@ err_trie_it_created:
 err_trie_root_created:
     trie_state_free (trie_root_state);
 err_trie_created:
+    trie_free (test_trie);
+err_trie_size:
     trie_free (test_trie);
 err_trie_not_created:
     return 1;

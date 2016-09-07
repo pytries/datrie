@@ -230,18 +230,8 @@ cdef class BaseTrie:
         if not found:
             raise KeyError(key)
 
-    @staticmethod
-    cdef int len_enumerator(cdatrie.AlphaChar *key, cdatrie.TrieData key_data,
-                            void *counter_ptr):
-        (<int *>counter_ptr)[0] += 1
-        return True
-
     def __len__(self):
-        cdef int counter = 0
-        cdatrie.trie_enumerate(self._c_trie,
-                               <cdatrie.TrieEnumFunc>(self.len_enumerator),
-                               &counter)
-        return counter
+        return cdatrie.trie_size(self._c_trie)
 
     def __richcmp__(self, other, int op):
         if op == 2:    # ==
@@ -954,7 +944,7 @@ class BaseTrieKeysView(BaseTrieMappingView, Set):
                 yield self._prefix + it.key()
 
     def __eq__(self, other):
-        # Works faster than Set implementation due to one linear passing
+        # Fail-fast version
         if other is self:
             return True
         elif not isinstance(other, Set):
