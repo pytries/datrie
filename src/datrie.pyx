@@ -894,7 +894,7 @@ class BaseTrieMappingView(Sized):
         self._state = state
         self._prefix = prefix
 
-    # TODO: Add test to check cases where `new_state` is not str
+    # TODO: Add test to check cases where `new_state` is not str?
     def _rewind_state(self, new_state):
         """
         Reset state to root. Next try to walk to new state, if `new_state`
@@ -908,7 +908,9 @@ class BaseTrieMappingView(Sized):
         return True
 
     def __len__(self):
-        """O(n) in current implementation"""
+        """O(n) if prefix is defined"""
+        if self._prefix is None:
+            return len(self._state._trie)
         cdef int count = 0
         cdef _TrieIterator it
         if self._rewind_state(self._prefix):

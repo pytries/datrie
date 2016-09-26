@@ -60,6 +60,21 @@ main ()
         printf ("Wrong trie size; expected 0, got %d.\n", trie_size(test_trie));
         goto err_trie_size;
     }
+    msg_step ("Add non-existent key with trie_store_if_absent and check size");
+    if (!trie_store_if_absent (test_trie, (AlphaChar *)L"a", TRIE_DATA_UNREAD)) {
+        printf ("Failed to add non-existing key '%ls'.\n", (AlphaChar *)L"a");
+        goto err_trie_created;
+    }
+    if (trie_size(test_trie) != 1) {
+        printf ("Wrong trie size; expected 1, got %d.\n", trie_size(test_trie));
+        goto err_trie_size;
+    }
+    msg_step ("Delete existing key from trie and check size");
+    trie_delete (test_trie, (AlphaChar *)L"a");
+    if (trie_size(test_trie) != 0) {
+        printf ("Wrong trie size; expected 0, got %d.\n", trie_size(test_trie));
+        goto err_trie_size;
+    }
 
     /* store */
     msg_step ("Adding data to trie");
@@ -82,6 +97,30 @@ main ()
     if (!trie_store (test_trie, dict_src[1].key, dict_src[1].data)) {
             printf ("Failed to add key '%ls', data %d.\n",
                     dict_src[1].key, dict_src[1].data);
+            goto err_trie_created;
+        }
+    if (trie_size(test_trie) != dict_src_n_entries()) {
+        printf ("Wrong trie size; expected %d, got %d.\n",
+                dict_src_n_entries(), trie_size(test_trie));
+        goto err_trie_size;
+    }
+
+    msg_step ("Update existing trie element with trie_store_if_absent and check trie size");
+    if (trie_store_if_absent (test_trie, dict_src[1].key, dict_src[1].data)) {
+            printf ("Value for existing key '%ls' was updated with trie_store_if_absent.\n",
+                    dict_src[1].key);
+            goto err_trie_created;
+        }
+    if (trie_size(test_trie) != dict_src_n_entries()) {
+        printf ("Wrong trie size; expected %d, got %d.\n",
+                dict_src_n_entries(), trie_size(test_trie));
+        goto err_trie_size;
+    }
+
+    msg_step ("Add trie element with wrong alphabet and check trie size");
+    if (trie_store (test_trie, (AlphaChar *)L"я", TRIE_DATA_UNREAD)) {
+            printf ("Key '%ls' with wrong alphabet was added.\n",
+                    (AlphaChar *)L"я");
             goto err_trie_created;
         }
     if (trie_size(test_trie) != dict_src_n_entries()) {
