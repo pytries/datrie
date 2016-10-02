@@ -770,6 +770,9 @@ cdef class _TrieState:
         if self._state is not NULL:
             cdatrie.trie_state_free(self._state)
 
+    cpdef get_tree(self):
+        return self._trie
+
     cpdef walk(self, unicode to):
         cdef bint res
         for ch in to:
@@ -910,7 +913,7 @@ class BaseTrieMappingView(Sized):
     def __len__(self):
         """O(n) if prefix is defined"""
         if self._prefix is None:
-            return len(self._state._trie)
+            return len(self._state.get_tree())
         cdef int count = 0
         cdef _TrieIterator it
         if self._rewind_state(self._prefix):
