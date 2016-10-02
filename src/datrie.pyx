@@ -897,7 +897,6 @@ class BaseTrieMappingView(Sized):
         self._state = state
         self._prefix = prefix
 
-    # TODO: Add test to check cases where `new_state` is not str?
     def _rewind_state(self, new_state):
         """
         Reset state to root. Next try to walk to new state, if `new_state`
