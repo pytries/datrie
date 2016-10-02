@@ -14,7 +14,6 @@ def test_keys_empty():
     assert len(keys) == 0
 
 
-# TODO: Can I use py.test fixtures here?
 def test_keys_iter():
     trie = datrie.BaseTrie(string.printable)
     trie["1"] = 1
@@ -56,6 +55,14 @@ def test_keys_contains():
     keys = trie.keys(prefix="prefix1")
     assert "prefix1_1" in keys
     assert "prefix2_1" not in keys
+    trie["1"] = 1
+    keys = trie.keys()
+    assert "1" in keys
+    assert 1 not in keys
+    assert [1] not in keys
+    items = trie.items()
+    assert ("1", 1) in items
+    assert (1, 1) not in items
 
 
 def test_keys_len():
