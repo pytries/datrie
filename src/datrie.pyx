@@ -374,6 +374,30 @@ cdef class BaseTrie:
 
         return res
 
+    def suffix_items(self, unicode prefix=u''):
+        '''
+        Returns a list of the item (``(prefix,value)`` tuples)
+        of this trie that are associated with keys that are
+        prefixes of ``prefix``.
+        '''
+        return self._suffix_items(prefix)
+
+    cdef list _suffix_items(self, unicode prefix):
+        cdef bint success
+        cdef list res = []
+        cdef BaseState state = BaseState(self)
+
+        if prefix is not None:
+            success = state.walk(prefix)
+            if not success:
+                return res
+
+        cdef BaseIterator iter = BaseIterator(state)
+        while iter.next():
+            # Check if is a final word
+            res.append((iter.key(), self._getitem(prefix + iter.key())))
+        return res
+
     def prefix_items(self, unicode key):
         '''
         Returns a list of the items (``(key,value)`` tuples)
