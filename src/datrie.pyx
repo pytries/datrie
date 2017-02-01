@@ -395,7 +395,7 @@ cdef class BaseTrie:
         cdef BaseIterator iter = BaseIterator(state)
         while iter.next():
             # Check if is a final word
-            res.append((iter.key(), self._getitem(prefix + iter.key())))
+            res.append((iter.key(), self.get(prefix + iter.key())))
         return res
 
     def prefix_items(self, unicode key):

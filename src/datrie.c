@@ -1856,6 +1856,7 @@ static const char __pyx_k_wb[] = "wb";
 static const char __pyx_k__14[] = "";
 static const char __pyx_k_doc[] = "__doc__";
 static const char __pyx_k_end[] = "end";
+static const char __pyx_k_get[] = "get";
 static const char __pyx_k_key[] = "key";
 static const char __pyx_k_lst[] = "lst";
 static const char __pyx_k_map[] = "map";
@@ -2025,6 +2026,7 @@ static PyObject *__pyx_n_s_exit;
 static PyObject *__pyx_n_s_fileno;
 static PyObject *__pyx_n_s_flush;
 static PyObject *__pyx_n_s_format;
+static PyObject *__pyx_n_s_get;
 static PyObject *__pyx_n_s_groupby;
 static PyObject *__pyx_n_s_import;
 static PyObject *__pyx_n_s_init;
@@ -8526,8 +8528,10 @@ static PyObject *__pyx_f_6datrie_8BaseTrie__suffix_items(struct __pyx_obj_6datri
   int __pyx_t_3;
   int __pyx_t_4;
   PyObject *__pyx_t_5 = NULL;
-  TrieData __pyx_t_6;
-  int __pyx_t_7;
+  PyObject *__pyx_t_6 = NULL;
+  PyObject *__pyx_t_7 = NULL;
+  PyObject *__pyx_t_8 = NULL;
+  int __pyx_t_9;
   __Pyx_RefNannySetupContext("_suffix_items", 0);
 
   /* "datrie.pyx":387
@@ -8647,7 +8651,7 @@ static PyObject *__pyx_f_6datrie_8BaseTrie__suffix_items(struct __pyx_obj_6datri
  *         cdef BaseIterator iter = BaseIterator(state)
  *         while iter.next():             # <<<<<<<<<<<<<<
  *             # Check if is a final word
- *             res.append((iter.key(), self._getitem(prefix + iter.key())))
+ *             res.append((iter.key(), self.get(prefix + iter.key())))
  */
   while (1) {
     __pyx_t_4 = (((struct __pyx_vtabstruct_6datrie_BaseIterator *)__pyx_v_iter->__pyx_base.__pyx_vtab)->__pyx_base.next(((struct __pyx_obj_6datrie__TrieIterator *)__pyx_v_iter), 0) != 0);
@@ -8656,36 +8660,80 @@ static PyObject *__pyx_f_6datrie_8BaseTrie__suffix_items(struct __pyx_obj_6datri
     /* "datrie.pyx":398
  *         while iter.next():
  *             # Check if is a final word
- *             res.append((iter.key(), self._getitem(prefix + iter.key())))             # <<<<<<<<<<<<<<
+ *             res.append((iter.key(), self.get(prefix + iter.key())))             # <<<<<<<<<<<<<<
  *         return res
  * 
  */
     __pyx_t_1 = ((struct __pyx_vtabstruct_6datrie_BaseIterator *)__pyx_v_iter->__pyx_base.__pyx_vtab)->__pyx_base.key(((struct __pyx_obj_6datrie__TrieIterator *)__pyx_v_iter), 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 398, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = ((struct __pyx_vtabstruct_6datrie_BaseIterator *)__pyx_v_iter->__pyx_base.__pyx_vtab)->__pyx_base.key(((struct __pyx_obj_6datrie__TrieIterator *)__pyx_v_iter), 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 398, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_5 = __Pyx_PyUnicode_ConcatSafe(__pyx_v_prefix, __pyx_t_2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_get); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 398, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_6 = ((struct __pyx_vtabstruct_6datrie_BaseTrie *)__pyx_v_self->__pyx_vtab)->_getitem(__pyx_v_self, ((PyObject*)__pyx_t_5)); if (unlikely(__pyx_t_6 == -1)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __pyx_t_6 = ((struct __pyx_vtabstruct_6datrie_BaseIterator *)__pyx_v_iter->__pyx_base.__pyx_vtab)->__pyx_base.key(((struct __pyx_obj_6datrie__TrieIterator *)__pyx_v_iter), 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
+    __pyx_t_7 = __Pyx_PyUnicode_ConcatSafe(__pyx_v_prefix, __pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    __pyx_t_6 = NULL;
+    if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_5))) {
+      __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_5);
+      if (likely(__pyx_t_6)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_5);
+        __Pyx_INCREF(__pyx_t_6);
+        __Pyx_INCREF(function);
+        __Pyx_DECREF_SET(__pyx_t_5, function);
+      }
+    }
+    if (!__pyx_t_6) {
+      __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 398, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+      __Pyx_GOTREF(__pyx_t_2);
+    } else {
+      #if CYTHON_FAST_PYCALL
+      if (PyFunction_Check(__pyx_t_5)) {
+        PyObject *__pyx_temp[2] = {__pyx_t_6, __pyx_t_7};
+        __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_5, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 398, __pyx_L1_error)
+        __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
+        __Pyx_GOTREF(__pyx_t_2);
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+      } else
+      #endif
+      #if CYTHON_FAST_PYCCALL
+      if (__Pyx_PyFastCFunction_Check(__pyx_t_5)) {
+        PyObject *__pyx_temp[2] = {__pyx_t_6, __pyx_t_7};
+        __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_5, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 398, __pyx_L1_error)
+        __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
+        __Pyx_GOTREF(__pyx_t_2);
+        __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+      } else
+      #endif
+      {
+        __pyx_t_8 = PyTuple_New(1+1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 398, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_8);
+        __Pyx_GIVEREF(__pyx_t_6); PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_6); __pyx_t_6 = NULL;
+        __Pyx_GIVEREF(__pyx_t_7);
+        PyTuple_SET_ITEM(__pyx_t_8, 0+1, __pyx_t_7);
+        __pyx_t_7 = 0;
+        __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_8, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 398, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_2);
+        __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+      }
+    }
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_t_5 = __Pyx_PyInt_From_TrieData(__pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __pyx_t_5 = PyTuple_New(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 398, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 398, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_2);
     __Pyx_GIVEREF(__pyx_t_1);
-    PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_1);
-    __Pyx_GIVEREF(__pyx_t_5);
-    PyTuple_SET_ITEM(__pyx_t_2, 1, __pyx_t_5);
+    PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_1);
+    __Pyx_GIVEREF(__pyx_t_2);
+    PyTuple_SET_ITEM(__pyx_t_5, 1, __pyx_t_2);
     __pyx_t_1 = 0;
-    __pyx_t_5 = 0;
-    __pyx_t_7 = __Pyx_PyList_Append(__pyx_v_res, __pyx_t_2); if (unlikely(__pyx_t_7 == -1)) __PYX_ERR(0, 398, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_2 = 0;
+    __pyx_t_9 = __Pyx_PyList_Append(__pyx_v_res, __pyx_t_5); if (unlikely(__pyx_t_9 == -1)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   }
 
   /* "datrie.pyx":399
  *             # Check if is a final word
- *             res.append((iter.key(), self._getitem(prefix + iter.key())))
+ *             res.append((iter.key(), self.get(prefix + iter.key())))
  *         return res             # <<<<<<<<<<<<<<
  * 
  *     def prefix_items(self, unicode key):
@@ -8708,6 +8756,9 @@ static PyObject *__pyx_f_6datrie_8BaseTrie__suffix_items(struct __pyx_obj_6datri
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_5);
+  __Pyx_XDECREF(__pyx_t_6);
+  __Pyx_XDECREF(__pyx_t_7);
+  __Pyx_XDECREF(__pyx_t_8);
   __Pyx_AddTraceback("datrie.BaseTrie._suffix_items", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
@@ -23980,6 +24031,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_fileno, __pyx_k_fileno, sizeof(__pyx_k_fileno), 0, 0, 1, 1},
   {&__pyx_n_s_flush, __pyx_k_flush, sizeof(__pyx_k_flush), 0, 0, 1, 1},
   {&__pyx_n_s_format, __pyx_k_format, sizeof(__pyx_k_format), 0, 0, 1, 1},
+  {&__pyx_n_s_get, __pyx_k_get, sizeof(__pyx_k_get), 0, 0, 1, 1},
   {&__pyx_n_s_groupby, __pyx_k_groupby, sizeof(__pyx_k_groupby), 0, 0, 1, 1},
   {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
   {&__pyx_n_s_init, __pyx_k_init, sizeof(__pyx_k_init), 0, 0, 1, 1},
