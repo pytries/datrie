@@ -34,14 +34,14 @@ CLASSIFIERS = [
 ]
 
 
-setup(name="datrie",
-      version="0.7.1",
+setup(name="datrie_extended",
+      version="0.7.2",
       description=DESCRIPTION,
       long_description=LONG_DESCRIPTION,
       author='Mikhail Korobov',
       author_email='kmike84@gmail.com',
       license=LICENSE,
-      url='https://github.com/kmike/datrie',
+      url='https://github.com/brunoalano/datrie',
       classifiers=CLASSIFIERS,
       libraries=[('libdatrie', {
           "sources": LIBDATRIE_FILES,
