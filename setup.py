@@ -7,7 +7,7 @@ import os
 from setuptools import setup, Extension
 
 LIBDATRIE_DIR = 'libdatrie'
-LIBDATRIE_FILES = glob.glob(os.path.join(LIBDATRIE_DIR, "datrie", "*.c"))
+LIBDATRIE_FILES = sorted(glob.glob(os.path.join(LIBDATRIE_DIR, "datrie", "*.c")))
 
 DESCRIPTION = __doc__
 LONG_DESCRIPTION = open('README.rst').read() + open('CHANGES.rst').read()
