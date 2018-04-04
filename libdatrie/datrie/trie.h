@@ -129,6 +129,8 @@ int     trie_save (Trie *trie, const char *path);
 
 int     trie_fwrite (Trie *trie, FILE *file);
 
+uint32    trie_size (const Trie *trie);
+
 Bool    trie_is_dirty (const Trie *trie);
 
 
@@ -149,6 +151,10 @@ Bool    trie_delete (Trie *trie, const AlphaChar *key);
 Bool    trie_enumerate (const Trie     *trie,
                         TrieEnumFunc    enum_func,
                         void           *user_data);
+
+Bool    len_enumerator (const AlphaChar *key,
+                        TrieData key_data,
+                        uint32 *counter_ptr);
 
 
 /*-------------------------------*

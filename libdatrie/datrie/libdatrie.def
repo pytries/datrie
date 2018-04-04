@@ -10,6 +10,7 @@ trie_fread
 trie_free
 trie_save
 trie_fwrite
+trie_size
 trie_is_dirty
 trie_retrieve
 trie_store

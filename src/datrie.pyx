@@ -3,6 +3,7 @@
 Cython wrapper for libdatrie.
 """
 
+from cpython cimport bool
 from cpython.version cimport PY_MAJOR_VERSION
 from cython.operator import dereference as deref
 from libc.stdlib cimport malloc, free
@@ -15,12 +16,17 @@ import itertools
 import warnings
 import sys
 import tempfile
-from collections import MutableMapping
+from collections import MutableMapping, Set, Sized
 
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
+
+try:
+    base_str = basestring
+except NameError:
+    base_str = str
 
 class DatrieError(Exception):
     pass
@@ -224,18 +230,8 @@ cdef class BaseTrie:
         if not found:
             raise KeyError(key)
 
-    @staticmethod
-    cdef int len_enumerator(cdatrie.AlphaChar *key, cdatrie.TrieData key_data,
-                            void *counter_ptr):
-        (<int *>counter_ptr)[0] += 1
-        return True
-
     def __len__(self):
-        cdef int counter = 0
-        cdatrie.trie_enumerate(self._c_trie,
-                               <cdatrie.TrieEnumFunc>(self.len_enumerator),
-                               &counter)
-        return counter
+        return cdatrie.trie_size(self._c_trie)
 
     def __richcmp__(self, other, int op):
         if op == 2:    # ==
@@ -554,84 +550,36 @@ cdef class BaseTrie:
         finally:
             cdatrie.trie_state_free(state)
 
-    cpdef items(self, unicode prefix=None):
-        """
-        Returns a list of this trie's items (``(key,value)`` tuples).
-
-        If ``prefix`` is not None, returns only the items
-        associated with keys prefixed by ``prefix``.
-        """
-        cdef bint success
-        cdef list res = []
-        cdef BaseState state = BaseState(self)
-
-        if prefix is not None:
-            success = state.walk(prefix)
-            if not success:
-                return res
-
-        cdef BaseIterator iter = BaseIterator(state)
-
-        if prefix is None:
-            while iter.next():
-                res.append((iter.key(), iter.data()))
-        else:
-            while iter.next():
-                res.append((prefix+iter.key(), iter.data()))
-
-        return res
-
     def __iter__(self):
         cdef BaseIterator iter = BaseIterator(BaseState(self))
         while iter.next():
             yield iter.key()
 
+    cpdef items(self, unicode prefix=None):
+        """
+        D.items() -> a set-like object providing a view on D's items.
+
+        If ``prefix`` is not None, returns only the items
+        associated with keys prefixed by ``prefix``.
+        """
+        return BaseTrieItemsView(self, prefix)
+
     cpdef keys(self, unicode prefix=None):
         """
-        Returns a list of this trie's keys.
+        D.keys() -> a set-like object providing a view on D's keys.
 
         If ``prefix`` is not None, returns only the keys prefixed by ``prefix``.
         """
-        cdef bint success
-        cdef list res = []
-        cdef BaseState state = BaseState(self)
-
-        if prefix is not None:
-            success = state.walk(prefix)
-            if not success:
-                return res
-
-        cdef BaseIterator iter = BaseIterator(state)
-
-        if prefix is None:
-            while iter.next():
-                res.append(iter.key())
-        else:
-            while iter.next():
-                res.append(prefix+iter.key())
-
-        return res
+        return BaseTrieKeysView(self, prefix)
 
     cpdef values(self, unicode prefix=None):
         """
-        Returns a list of this trie's values.
+        D.values() -> an object providing a view on D's values
 
         If ``prefix`` is not None, returns only the values
         associated with keys prefixed by ``prefix``.
         """
-        cdef bint success
-        cdef list res = []
-        cdef BaseState state = BaseState(self)
-
-        if prefix is not None:
-            success = state.walk(prefix)
-            if not success:
-                return res
-
-        cdef BaseIterator iter = BaseIterator(state)
-        while iter.next():
-            res.append(iter.data())
-        return res
+        return BaseTrieValuesView(self, prefix)
 
     cdef _index_to_value(self, cdatrie.TrieData index):
         return index
@@ -728,67 +676,24 @@ cdef class Trie(BaseTrie):
 
     cpdef items(self, unicode prefix=None):
         """
-        Returns a list of this trie's items (``(key,value)`` tuples).
+        D.items() -> a set-like object providing a view on D's items.
 
         If ``prefix`` is not None, returns only the items
         associated with keys prefixed by ``prefix``.
         """
 
-        # the following code is
-        #
-        #    [(k, self._values[v]) for (k,v) in BaseTrie.items(self, prefix)]
-        #
-        # but inlined for speed.
-
-        cdef bint success
-        cdef list res = []
-        cdef BaseState state = BaseState(self)
-
-        if prefix is not None:
-            success = state.walk(prefix)
-            if not success:
-                return res
-
-        cdef BaseIterator iter = BaseIterator(state)
-
-        if prefix is None:
-            while iter.next():
-                res.append((iter.key(), self._values[iter.data()]))
-        else:
-            while iter.next():
-                res.append((prefix+iter.key(), self._values[iter.data()]))
-
-        return res
+        return TrieItemsView(self, prefix)
 
     cpdef values(self, unicode prefix=None):
         """
-        Returns a list of this trie's values.
+        D.values() -> an object providing a view on D's values
 
         If ``prefix`` is not None, returns only the values
         associated with keys prefixed by ``prefix``.
         """
 
-        # the following code is
-        #
-        #     [self._values[v] for v in BaseTrie.values(self, prefix)]
-        #
-        # but inlined for speed.
+        return TrieValuesView(self, prefix)
 
-        cdef list res = []
-        cdef BaseState state = BaseState(self)
-        cdef bint success
-
-        if prefix is not None:
-            success = state.walk(prefix)
-            if not success:
-                return res
-
-        cdef BaseIterator iter = BaseIterator(state)
-
-        while iter.next():
-            res.append(self._values[iter.data()])
-
-        return res
 
     def longest_prefix_item(self, unicode key, default=RAISE_KEY_ERROR):
         """
@@ -864,6 +769,9 @@ cdef class _TrieState:
     def __dealloc__(self):
         if self._state is not NULL:
             cdatrie.trie_state_free(self._state)
+
+    cpdef get_tree(self):
+        return self._trie
 
     cpdef walk(self, unicode to):
         cdef bint res
@@ -978,6 +886,194 @@ cdef class Iterator(_TrieIterator):
     cpdef data(self):
         cdef cdatrie.TrieData data = cdatrie.trie_iterator_get_data(self._iter)
         return self._root._trie._index_to_value(data)
+
+
+class BaseTrieMappingView(Sized):
+
+    __slots__ = ('_state', '_prefix')
+
+    def __init__(self, base_trie, prefix=None):
+        cdef BaseState state = BaseState(base_trie)
+        self._state = state
+        self._prefix = prefix
+
+    def _rewind_state(self, new_state):
+        """
+        Reset state to root. Next try to walk to new state, if `new_state`
+        is not None.
+        """
+        self._state.rewind()
+        if new_state is not None:
+            if (not isinstance(new_state, base_str) or
+                    not self._state.walk(new_state)):
+                return False
+        return True
+
+    def __len__(self):
+        """O(n) if prefix is defined"""
+        if self._prefix is None:
+            return len(self._state.get_tree())
+        cdef int count = 0
+        cdef _TrieIterator it
+        if self._rewind_state(self._prefix):
+            it = _TrieIterator(self._state)
+            while it.next():
+                count += 1
+        return count
+
+
+class BaseTrieKeysView(BaseTrieMappingView, Set):
+
+    __slots__ = ()
+
+    @classmethod
+    def _from_iterable(cls, it):
+        return set(it)
+
+    def __contains__(self, item):
+        if self._prefix and not item.startswith(self._prefix):
+            return False
+        if self._rewind_state(item) and self._state.is_terminal():
+            return True
+        return False
+
+    def __iter__(self):
+        if not self._rewind_state(self._prefix):
+            raise StopIteration
+        cdef _TrieIterator it = _TrieIterator(self._state)
+        while it.next():
+            if self._prefix is None:
+                yield it.key()
+            else:
+                yield self._prefix + it.key()
+
+    def __eq__(self, other):
+        # Fail-fast version
+        if other is self:
+            return True
+        elif not isinstance(other, Set):
+            # No TypeError for equality
+            return False
+        count = 0
+        for elem in self:
+            count += 1
+            if elem not in other:
+                return False
+        return count == len(other)
+
+
+class BaseTrieItemsView(BaseTrieMappingView, Set):
+
+    __slots__ = ()
+
+    @classmethod
+    def _from_iterable(cls, it):
+        return set(it)
+
+    def __contains__(self, item):
+        key, value = item
+        if self._prefix and not key.startswith(self._prefix):
+            return False
+        if self._rewind_state(key) and self._state.is_terminal():
+            v = self._state.data()
+            return v is value or v == value
+        return False
+
+    def __iter__(self):
+        if not self._rewind_state(self._prefix):
+            raise StopIteration
+        cdef BaseIterator it = BaseIterator(self._state)
+        while it.next():
+            if self._prefix is None:
+                yield (it.key(), it.data())
+            else:
+                yield (self._prefix + it.key(), it.data())
+
+
+class BaseTrieValuesView(BaseTrieMappingView):
+
+    __slots__ = ()
+
+    def __contains__(self, value):
+        if self._prefix and not value.startswith(self._prefix):
+            return False
+        for v in self:
+            if v is value or v == value:
+                return True
+        return False
+
+    def __iter__(self):
+        if not self._rewind_state(self._prefix):
+            raise StopIteration
+        cdef BaseIterator it = BaseIterator(self._state)
+        while it.next():
+            yield it.data()
+
+
+class TrieMappingView(BaseTrieMappingView):
+
+    __slots__ = ()
+
+    def __init__(self, base_trie, prefix=None):
+        cdef State state = State(base_trie)
+        self._state = state
+        self._prefix = prefix
+
+
+class TrieKeysView(BaseTrieKeysView):
+    pass
+
+
+class TrieItemsView(TrieMappingView, Set):
+
+    __slots__ = ()
+
+    @classmethod
+    def _from_iterable(cls, it):
+        return set(it)
+
+    def __contains__(self, item):
+        key, value = item
+        if self._prefix and not key.startswith(self._prefix):
+            return False
+        if self._rewind_state(key) and self._state.is_terminal():
+            v = self._state.data()
+            return v is value or v == value
+        return False
+
+    def __iter__(self):
+        if not self._rewind_state(self._prefix):
+            raise StopIteration
+        cdef Iterator it = Iterator(self._state)
+        while it.next():
+            if self._prefix is None:
+                yield (it.key(), it.data())
+            else:
+                yield (self._prefix + it.key(), it.data())
+
+
+class TrieValuesView(TrieMappingView):
+
+    __slots__ = ()
+
+    @classmethod
+    def _from_iterable(cls, it):
+        return set(it)
+
+    def __contains__(self, value):
+        if self._prefix and not value.startswith(self._prefix):
+            return False
+        for v in self:
+            if v is value or v == value:
+                return True
+        return False
+
+    def __iter__(self):
+        if not self._rewind_state(self._prefix):
+            raise StopIteration
+        cdef Iterator it = Iterator(self._state)
+        while it.next():
+            yield it.data()
 
 
 cdef (cdatrie.Trie* ) _load_from_file(f) except NULL:
