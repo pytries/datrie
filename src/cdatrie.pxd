@@ -96,7 +96,7 @@ cdef extern from "../libdatrie/datrie/trie.h":
 
     TrieData trie_state_get_data (TrieState *s)
 
-    TrieData trie_state_get_terminal_data (TrieState *s)
+    TrieData trie_state_get_data (TrieState *s)
 
 
     # ============== ITERATION ===================

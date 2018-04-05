@@ -309,7 +309,7 @@ cdef class BaseTrie:
                 if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
                     return
                 if cdatrie.trie_state_is_terminal(state): # word is found
-                    yield key[:index], cdatrie.trie_state_get_terminal_data(state)
+                    yield key[:index], cdatrie.trie_state_get_data(state)
                 index += 1
         finally:
             cdatrie.trie_state_free(state)
@@ -329,7 +329,7 @@ cdef class BaseTrie:
                 if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
                     return
                 if cdatrie.trie_state_is_terminal(state):
-                    yield cdatrie.trie_state_get_terminal_data(state)
+                    yield cdatrie.trie_state_get_data(state)
         finally:
             cdatrie.trie_state_free(state)
 
@@ -397,7 +397,7 @@ cdef class BaseTrie:
                 if cdatrie.trie_state_is_terminal(state): # word is found
                     result.append(
                         (key[:index],
-                         cdatrie.trie_state_get_terminal_data(state))
+                         cdatrie.trie_state_get_data(state))
                     )
                 index += 1
             return result
@@ -423,7 +423,7 @@ cdef class BaseTrie:
                 if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
                     break
                 if cdatrie.trie_state_is_terminal(state): # word is found
-                    result.append(cdatrie.trie_state_get_terminal_data(state))
+                    result.append(cdatrie.trie_state_get_data(state))
             return result
         finally:
             cdatrie.trie_state_free(state)
@@ -488,7 +488,7 @@ cdef class BaseTrie:
                 index += 1
                 if cdatrie.trie_state_is_terminal(state):
                     last_terminal_index = index
-                    data = cdatrie.trie_state_get_terminal_data(state)
+                    data = cdatrie.trie_state_get_data(state)
 
             if not last_terminal_index:
                 if default is RAISE_KEY_ERROR:
@@ -527,7 +527,7 @@ cdef class BaseTrie:
 
                 if cdatrie.trie_state_is_terminal(state):
                     found = 1
-                    data = cdatrie.trie_state_get_terminal_data(state)
+                    data = cdatrie.trie_state_get_data(state)
 
             if not found:
                 if default is RAISE_KEY_ERROR:
@@ -914,7 +914,7 @@ cdef class BaseState(_TrieState):
     cdatrie.TrieState wrapper. It can be used for custom trie traversal.
     """
     cpdef int data(self):
-        return cdatrie.trie_state_get_terminal_data(self._state)
+        return cdatrie.trie_state_get_data(self._state)
 
 
 cdef class State(_TrieState):
@@ -926,7 +926,7 @@ cdef class State(_TrieState):
         self._trie = trie
 
     cpdef data(self):
-        cdef cdatrie.TrieData data = cdatrie.trie_state_get_terminal_data(self._state)
+        cdef cdatrie.TrieData data = cdatrie.trie_state_get_data(self._state)
         return self._trie._index_to_value(data)
 
 
