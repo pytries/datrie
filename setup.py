@@ -5,6 +5,11 @@ import glob
 import os
 
 from setuptools import setup, Extension
+try:
+    from Cython.Build import cythonize
+    has_cython = True
+except ImportError:
+    has_cython = False
 
 LIBDATRIE_DIR = 'libdatrie'
 LIBDATRIE_FILES = sorted(glob.glob(os.path.join(LIBDATRIE_DIR, "datrie", "*.c")))
@@ -26,12 +31,30 @@ CLASSIFIERS = [
     'Programming Language :: Python :: 3.4',
     'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: Implementation :: CPython',
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Topic :: Scientific/Engineering :: Information Analysis',
     'Topic :: Text Processing :: Linguistic'
 ]
 
+extensions = [
+        Extension("datrie", [
+            'src/datrie.c',
+            'src/cdatrie.c',
+            'src/stdio_ext.c'
+            ])
+        ]
+
+
+ext_modules = cythonize(
+    'src/datrie.pyx', 'src/cdatrie.pxd', 'src/stdio_ext.pxd',
+    annotate=True,
+    include_path=[os.path.join(os.path.dirname(os.path.abspath(__file__)), "src")]
+    ) if has_cython else extensions
+
+for m in ext_modules:
+    m.include_dirs=[LIBDATRIE_DIR]
 
 setup(name="datrie",
       version="0.7.1",
@@ -45,13 +68,6 @@ setup(name="datrie",
       libraries=[('libdatrie', {
           "sources": LIBDATRIE_FILES,
           "include_dirs": [LIBDATRIE_DIR]})],
-      ext_modules=[
-          Extension("datrie", [
-              'src/datrie.c',
-              'src/cdatrie.c',
-              'src/stdio_ext.c'
-          ], include_dirs=[LIBDATRIE_DIR])
-      ],
-
-      setup_requires=["pytest-runner"],
+      ext_modules=ext_modules,
+      setup_requires=["pytest-runner", 'Cython>=0.28;python_version<="3.7"'],
       tests_require=["pytest", "hypothesis"])
