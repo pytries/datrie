@@ -7,6 +7,16 @@ python:
   - "3.5"
   - "3.6"
 
+# See https://github.com/travis-ci/travis-ci/issues/9815
+matrix:
+  include:
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      install:
+        - pip install cython
+        - python setup.py install
+
 install:
   - python setup.py install
 
