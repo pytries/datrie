@@ -12,4 +12,3 @@ recursive-include tests *.py
 include src/datrie.pyx
 include src/cdatrie.pxd
 include src/stdio_ext.pxd
-
