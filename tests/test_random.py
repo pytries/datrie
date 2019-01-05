@@ -13,7 +13,7 @@ if sys.version_info[:2] >= (2, 7):
     import hypothesis.strategies as st
     from hypothesis import given
 
-    printable_strings = st.lists(st.text(string.printable), average_size=5.)
+    printable_strings = st.lists(st.text(string.printable))
 
     @given(printable_strings)
     def test_contains(words):
