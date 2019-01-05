@@ -302,7 +302,7 @@ Make sure `tox`_ is installed and run
 
     $ tox
 
-from the source checkout. Tests should pass under python 2.6, 2.7 and 3.2.
+from the source checkout. Tests should pass under Python 2.7, 3.4, 3.5, and 3.6.
 
 ::
 
