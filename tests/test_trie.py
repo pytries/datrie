@@ -405,10 +405,10 @@ class TestPrefixSearch(object):
 def test_trie_fuzzy():
     russian = 'абвгдеёжзиклмнопрстуфхцчъыьэюя'
     alphabet = russian.upper() + string.ascii_lowercase
-    words = list(set([
+    words = list({
         "".join(random.choice(alphabet) for x in range(random.randint(8, 16)))
         for y in range(1000)
-    ]))
+    })
 
     trie = datrie.Trie(alphabet)
 
