@@ -1346,11 +1346,7 @@ static int __Pyx_IternextUnpackEndCheck(PyObject *retval, Py_ssize_t expected);
 #if CYTHON_FAST_PYCALL
 #define __Pyx_PyFunction_FastCall(func, args, nargs)\
     __Pyx_PyFunction_FastCallDict((func), (args), (nargs), NULL)
-#if 1 || PY_VERSION_HEX < 0x030600B1
 static PyObject *__Pyx_PyFunction_FastCallDict(PyObject *func, PyObject **args, int nargs, PyObject *kwargs);
-#else
-#define __Pyx_PyFunction_FastCallDict(func, args, nargs, kwargs) _PyFunction_FastCallDict(func, args, nargs, kwargs)
-#endif
 #endif
 
 /* PyObjectCallMethO.proto */
@@ -1735,11 +1731,7 @@ static __pyx_CoroutineObject *__Pyx__Coroutine_New(
     PyTypeObject *type, __pyx_coroutine_body_t body, PyObject *closure,
     PyObject *name, PyObject *qualname, PyObject *module_name);
 static int __Pyx_Coroutine_clear(PyObject *self);
-#if 1 || PY_VERSION_HEX < 0x030300B0
 static int __Pyx_PyGen_FetchStopIterationValue(PyObject **pvalue);
-#else
-#define __Pyx_PyGen_FetchStopIterationValue(pvalue) PyGen_FetchStopIterationValue(pvalue)
-#endif
 
 /* PatchModuleWithCoroutine.proto */
 static PyObject* __Pyx_Coroutine_patch_module(PyObject* module, const char* py_code);
@@ -25313,7 +25305,6 @@ static PyObject* __Pyx_PyFunction_FastCallNoKw(PyCodeObject *co, PyObject **args
     --tstate->recursion_depth;
     return result;
 }
-#if 1 || PY_VERSION_HEX < 0x030600B1
 static PyObject *__Pyx_PyFunction_FastCallDict(PyObject *func, PyObject **args, int nargs, PyObject *kwargs) {
     PyCodeObject *co = (PyCodeObject *)PyFunction_GET_CODE(func);
     PyObject *globals = PyFunction_GET_GLOBALS(func);
@@ -25399,7 +25390,6 @@ done:
     Py_LeaveRecursiveCall();
     return result;
 }
-#endif  // CPython < 3.6
 #endif  // CYTHON_FAST_PYCALL
 
 /* PyObjectCallMethO */
@@ -28187,7 +28177,6 @@ static PyObject *__Pyx_Coroutine_Send(PyObject *self, PyObject *value);
 static PyObject *__Pyx_Coroutine_Close(PyObject *self);
 static PyObject *__Pyx_Coroutine_Throw(PyObject *gen, PyObject *args);
 #define __Pyx_Coroutine_Undelegate(gen) Py_CLEAR((gen)->yieldfrom)
-#if 1 || PY_VERSION_HEX < 0x030300B0
 static int __Pyx_PyGen_FetchStopIterationValue(PyObject **pvalue) {
     PyObject *et, *ev, *tb;
     PyObject *value = NULL;
@@ -28269,7 +28258,6 @@ static int __Pyx_PyGen_FetchStopIterationValue(PyObject **pvalue) {
     *pvalue = value;
     return 0;
 }
-#endif
 static CYTHON_INLINE
 void __Pyx_Coroutine_ExceptionClear(__pyx_CoroutineObject *self) {
     PyObject *exc_type = self->exc_type;
