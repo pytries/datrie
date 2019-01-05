@@ -10,7 +10,7 @@ datrie |travis| |appveyor|
 Super-fast, efficiently stored Trie for Python (2.x and 3.x).
 Uses `libdatrie`_.
 
-.. _libdatrie: http://linux.thai.net/~thep/datrie/datrie.html
+.. _libdatrie: https://linux.thai.net/~thep/datrie/datrie.html
 
 Installation
 ============
@@ -324,8 +324,8 @@ tar.gz's because benchmark data is large and this
 saves a lot of bandwidth; use source checkouts from
 github or bitbucket for the benchmarks.
 
-.. _cython: http://cython.org
-.. _tox: http://tox.testrun.org
+.. _cython: https://cython.org/
+.. _tox: https://tox.readthedocs.io/
 
 Authors & Contributors
 ----------------------
@@ -341,8 +341,8 @@ Python implementation and `Tree::Trie`_ Perl implementation;
 some docs and API ideas are borrowed from these projects.
 
 .. _fast_trie: https://github.com/tyler/trie
-.. _PyTrie: https://bitbucket.org/gsakkis/pytrie
-.. _Tree::Trie: http://search.cpan.org/~avif/Tree-Trie-1.9/Trie.pm
+.. _PyTrie: https://github.com/gsakkis/pytrie
+.. _Tree::Trie: https://metacpan.org/pod/release/AVIF/Tree-Trie-1.9/Trie.pm
 
 License
 =======
