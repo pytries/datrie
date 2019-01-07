@@ -4,7 +4,7 @@ environment:
   global:
     # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
     # /E:ON and /V:ON options are not enabled in the batch script intepreter
-    # See: http://stackoverflow.com/a/13751649/163740
+    # See: https://stackoverflow.com/questions/11267463/compiling-python-modules-on-windows-x64/13751649#13751649
     CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\continuous_integration\\appveyor\\run_with_env.cmd"
 
   matrix:
@@ -41,7 +41,7 @@ environment:
       PYTHON_ARCH: "64"
 
 install:
-  # Install Python (from the official .msi of http://python.org) and pip when
+  # Install Python (from the official .msi of https://www.python.org/) and pip when
   # not already installed.
   - "powershell ./continuous_integration/appveyor/install.ps1"
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
