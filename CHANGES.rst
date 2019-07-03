@@ -1,6 +1,14 @@
 CHANGES
 =======
 
+0.8 (2019-07-03)
+----------------
+* Python 3.7 compatibility; extension is rebuilt with Cython 0.29.11.
+* Trie.get function;
+* Python 2.6 and 3.3 support is dropped;
+* removed patch to libdatrie which is no longer required;
+* testing and CI fixes.
+
 0.7.1 (2016-03-12)
 ------------------
 

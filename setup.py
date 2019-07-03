@@ -35,7 +35,7 @@ CLASSIFIERS = [
 
 
 setup(name="datrie",
-      version="0.7.1",
+      version="0.8",
       description=DESCRIPTION,
       long_description=LONG_DESCRIPTION,
       author='Mikhail Korobov',
