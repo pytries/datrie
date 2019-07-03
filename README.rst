@@ -324,10 +324,7 @@ github or bitbucket for the benchmarks.
 Authors & Contributors
 ----------------------
 
-* Mikhail Korobov <kmike84@gmail.com>
-* Jared Suttles
-* Gabi Davar
-* Ahmed T. Youssef
+See https://github.com/pytries/datrie/graphs/contributors.
 
 This module is based on `libdatrie`_ C library by Theppitak Karoonboonyanan
 and is inspired by `fast_trie`_ Ruby bindings, `PyTrie`_ pure
