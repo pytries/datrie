@@ -2,6 +2,10 @@
 src/*.html
 .hypothesis/
 .eggs/
+.tox
+.cache
+*.egg-info/*
+dist/
 
 *.so
 build/
