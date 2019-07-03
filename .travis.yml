@@ -10,7 +10,6 @@ python:
   - "3.7"
 
 install:
-  - python setup.py install
+  - pip install tox-travis
 
-script:
-  - python setup.py test
+script: tox
