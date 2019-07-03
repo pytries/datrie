@@ -283,15 +283,9 @@ Current Limitations
 Contributing
 ============
 
-Development happens at github and bitbucket:
+Development happens at github: https://github.com/pytries/datrie.
 
-* https://github.com/kmike/datrie
-* https://bitbucket.org/kmike/datrie
-
-The main issue tracker is at github.
-
-Feel free to submit ideas, bugs, pull requests (git or hg) or
-regular patches.
+Feel free to submit ideas, bugs, pull requests.
 
 Running tests and benchmarks
 ----------------------------
