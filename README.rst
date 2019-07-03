@@ -1,5 +1,5 @@
 datrie |travis| |appveyor|
-======
+==========================
 
 .. |travis| image:: https://travis-ci.org/pytries/datrie.svg
    :target: https://travis-ci.org/pytries/datrie
