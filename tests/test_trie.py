@@ -433,7 +433,7 @@ def test_trie_handles_long_alphabets():
 
     if sys.version_info > (2, ):
 
-        alphabet = [chr(i) for i in range(1500)]
+        alphabet = [chr(i) for i in range(1, 1500)]
         @given(st.lists(st.text(alphabet)))
         def _(xs):
             trie = datrie.Trie(alphabet)
