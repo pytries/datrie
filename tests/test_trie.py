@@ -427,17 +427,20 @@ def test_trie_fuzzy():
 def test_trie_handles_long_alphabets():
     # https://github.com/pytries/datrie/issues/74
 
+    import sys
     import hypothesis.strategies as st
     from hypothesis import given
 
-    alphabet = [chr(i) for i in range(1500)]
-    @given(st.lists(st.text(alphabet)))
-    def _(xs):
-        trie = datrie.Trie(alphabet)
-        for x in xs:
-            trie[x] = True
+    if sys.version_info > (2, ):
 
-        for x in xs:
-            assert x in trie
+        alphabet = [chr(i) for i in range(1500)]
+        @given(st.lists(st.text(alphabet)))
+        def _(xs):
+            trie = datrie.Trie(alphabet)
+            for x in xs:
+                trie[x] = True
 
-    _()
+            for x in xs:
+                assert x in trie
+
+        _()
