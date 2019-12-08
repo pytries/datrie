@@ -423,3 +423,21 @@ def test_trie_fuzzy():
     for index, word in enumerated_words:
         assert word in trie, word
         assert trie[word] == index, (word, index)
+
+def test_trie_handles_long_alphabets():
+    # https://github.com/pytries/datrie/issues/74
+
+    import hypothesis.strategies as st
+    from hypothesis import given
+
+    alphabet = [chr(i) for i in range(1500)]
+    @given(st.lists(st.text(alphabet)))
+    def _(xs):
+        trie = datrie.Trie(alphabet)
+        for x in xs:
+            trie[x] = True
+
+        for x in xs:
+            assert x in trie
+
+    _()
