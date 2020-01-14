@@ -43,7 +43,7 @@ setup(name="datrie",
       license=LICENSE,
       url='https://github.com/kmike/datrie',
       classifiers=CLASSIFIERS,
-      libraries=[('libdatrie', {
+      libraries=[('datrie', {
           "sources": LIBDATRIE_FILES,
           "include_dirs": [LIBDATRIE_DIR]})],
       ext_modules=[
