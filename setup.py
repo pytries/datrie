@@ -38,20 +38,22 @@ CLASSIFIERS = [
     'Topic :: Text Processing :: Linguistic'
 ]
 
-extensions = [
+if has_cython:
+    ext_modules = cythonize(
+        'src/datrie.pyx', 'src/cdatrie.pxd', 'src/stdio_ext.pxd',
+        annotate=True,
+        include_path=[
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "src")
+        ]
+    )
+else:
+    ext_modules = [
         Extension("datrie", [
             'src/datrie.c',
             'src/cdatrie.c',
             'src/stdio_ext.c'
             ])
         ]
-
-
-ext_modules = cythonize(
-    'src/datrie.pyx', 'src/cdatrie.pxd', 'src/stdio_ext.pxd',
-    annotate=True,
-    include_path=[os.path.join(os.path.dirname(os.path.abspath(__file__)), "src")]
-    ) if has_cython else extensions
 
 for m in ext_modules:
     m.include_dirs=[LIBDATRIE_DIR]
