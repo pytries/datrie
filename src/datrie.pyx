@@ -15,7 +15,7 @@ import itertools
 import warnings
 import sys
 import tempfile
-from collections import MutableMapping
+from collections.abc import MutableMapping
 
 try:
     import cPickle as pickle

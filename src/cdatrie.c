@@ -598,9 +598,9 @@ static CYTHON_INLINE float __PYX_NAN() {
 /* Early includes */
 #include <string.h>
 #include <stdio.h>
-#include "../libdatrie/datrie/triedefs.h"
-#include "../libdatrie/datrie/alpha-map.h"
-#include "../libdatrie/datrie/trie.h"
+#include <datrie/triedefs.h>
+#include <datrie/alpha-map.h>
+#include <datrie/trie.h>
 #ifdef _OPENMP
 #include <omp.h>
 #endif /* _OPENMP */

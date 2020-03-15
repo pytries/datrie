@@ -1,13 +1,13 @@
 # cython: profile=False
 from libc cimport stdio
 
-cdef extern from "../libdatrie/datrie/triedefs.h":
+cdef extern from "/usr/include/datrie/triedefs.h":
     ctypedef int AlphaChar # it should be utf32 letter
     ctypedef unsigned char TrieChar  # 1 byte
     ctypedef int TrieIndex
     ctypedef int TrieData  # int
 
-cdef extern from "../libdatrie/datrie/alpha-map.h":
+cdef extern from "/usr/include/datrie/alpha-map.h":
 
     struct AlphaMap:
         pass
@@ -20,7 +20,7 @@ cdef extern from "../libdatrie/datrie/alpha-map.h":
     int alpha_char_strlen (AlphaChar *str)
 
 
-cdef extern from "../libdatrie/datrie/trie.h":
+cdef extern from "/usr/include/datrie/trie.h":
 
     ctypedef struct Trie:
         pass

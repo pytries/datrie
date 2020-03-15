@@ -600,9 +600,9 @@ static CYTHON_INLINE float __PYX_NAN() {
 #include <stdlib.h>
 #include <stdio.h>
 #include "stdio.h"
-#include "../libdatrie/datrie/triedefs.h"
-#include "../libdatrie/datrie/alpha-map.h"
-#include "../libdatrie/datrie/trie.h"
+#include <datrie/triedefs.h>
+#include <datrie/alpha-map.h>
+#include <datrie/trie.h>
 #ifdef _OPENMP
 #include <omp.h>
 #endif /* _OPENMP */
@@ -25228,7 +25228,7 @@ if (!__Pyx_RefNanny) {
  * import warnings
  * import sys             # <<<<<<<<<<<<<<
  * import tempfile
- * from collections import MutableMapping
+ * from collections.abc import MutableMapping
  */
   __pyx_t_1 = __Pyx_Import(__pyx_n_s_sys, 0, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 16, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
@@ -25239,7 +25239,7 @@ if (!__Pyx_RefNanny) {
  * import warnings
  * import sys
  * import tempfile             # <<<<<<<<<<<<<<
- * from collections import MutableMapping
+ * from collections.abc import MutableMapping
  * 
  */
   __pyx_t_1 = __Pyx_Import(__pyx_n_s_tempfile, 0, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 17, __pyx_L1_error)
@@ -25250,7 +25250,7 @@ if (!__Pyx_RefNanny) {
   /* "datrie.pyx":18
  * import sys
  * import tempfile
- * from collections import MutableMapping             # <<<<<<<<<<<<<<
+ * from collections.abc import MutableMapping             # <<<<<<<<<<<<<<
  * 
  * try:
  */
@@ -25269,7 +25269,7 @@ if (!__Pyx_RefNanny) {
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "datrie.pyx":20
- * from collections import MutableMapping
+ * from collections.abc import MutableMapping
  * 
  * try:             # <<<<<<<<<<<<<<
  *     import cPickle as pickle
@@ -25297,7 +25297,7 @@ if (!__Pyx_RefNanny) {
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
       /* "datrie.pyx":20
- * from collections import MutableMapping
+ * from collections.abc import MutableMapping
  * 
  * try:             # <<<<<<<<<<<<<<
  *     import cPickle as pickle
@@ -25347,7 +25347,7 @@ if (!__Pyx_RefNanny) {
     __pyx_L4_except_error:;
 
     /* "datrie.pyx":20
- * from collections import MutableMapping
+ * from collections.abc import MutableMapping
  * 
  * try:             # <<<<<<<<<<<<<<
  *     import cPickle as pickle

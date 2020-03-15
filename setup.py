@@ -6,8 +6,11 @@ import os
 
 from setuptools import setup, Extension
 
-LIBDATRIE_DIR = 'libdatrie'
-LIBDATRIE_FILES = sorted(glob.glob(os.path.join(LIBDATRIE_DIR, "datrie", "*.c")))
+__version__ = '0.8.1'
+
+# make setuptools happy with PEP 440-compliant post version
+# (enable this for patch releases)
+# REL_TAG = __version__.replace('-', 'p')
 
 DESCRIPTION = __doc__
 LONG_DESCRIPTION = open('README.rst').read() + open('CHANGES.rst').read()
@@ -23,7 +26,6 @@ CLASSIFIERS = [
     'Programming Language :: Python :: 2',
     'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.4',
     'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
     'Programming Language :: Python :: 3.7',
@@ -35,7 +37,7 @@ CLASSIFIERS = [
 
 
 setup(name="datrie",
-      version="0.8",
+      version=__version__,
       description=DESCRIPTION,
       long_description=LONG_DESCRIPTION,
       author='Mikhail Korobov',
@@ -43,15 +45,13 @@ setup(name="datrie",
       license=LICENSE,
       url='https://github.com/kmike/datrie',
       classifiers=CLASSIFIERS,
-      libraries=[('libdatrie', {
-          "sources": LIBDATRIE_FILES,
-          "include_dirs": [LIBDATRIE_DIR]})],
       ext_modules=[
           Extension("datrie", [
               'src/datrie.c',
               'src/cdatrie.c',
               'src/stdio_ext.c'
-          ], include_dirs=[LIBDATRIE_DIR])
+          ], libraries=['datrie'],
+          include_dirs=['/usr/include/datrie'])
       ],
 
       python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
