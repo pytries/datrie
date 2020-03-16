@@ -3,7 +3,9 @@
 from __future__ import absolute_import, unicode_literals
 
 import string
+
 import datrie
+
 
 WORDS = ['producers', 'pool', 'prepare', 'preview', 'prize', 'produce',
          'producer', 'progress']

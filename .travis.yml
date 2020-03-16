@@ -1,14 +1,28 @@
-dist: xenial
-cache: pip
+sudo: required
 
 language: python
+
 python:
-  - "2.7"
   - "3.5"
   - "3.6"
   - "3.7"
+  - "3.8-dev"
+  - "nightly"
+
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y software-properties-common
+  - sudo add-apt-repository -y -s ppa:nerdboy/embedded
+  - sudo apt-get -qq update
+  - sudo apt-get install -y libdatrie-dev
 
 install:
+  - pip install pytest
   - pip install tox-travis
 
 script: tox
+
+matrix:
+  fast_finish: true
+  allow_failures:
+    - python: "nightly"
