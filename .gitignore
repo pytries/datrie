@@ -9,3 +9,7 @@ dist/
 
 *.so
 build/
+
+src/datrie.c
+src/cdatrie.c
+src/stdio_ext.c
