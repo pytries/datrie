@@ -11,6 +11,6 @@ python:
   - "3.8"
 
 install:
-  - pip install tox-travis
+  - pip install tox-travis cython
 
 script: tox
