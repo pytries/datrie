@@ -39,7 +39,8 @@ CLASSIFIERS = [
 ext_modules = cythonize(
     'src/datrie.pyx', 'src/cdatrie.pxd', 'src/stdio_ext.pxd',
     annotate=True,
-    include_path=[os.path.join(os.path.dirname(os.path.abspath(__file__)), "src")]
+    include_path=[os.path.join(os.path.dirname(os.path.abspath(__file__)), "src")],
+    language_level=2
     )
 
 for m in ext_modules:
