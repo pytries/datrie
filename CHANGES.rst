@@ -9,6 +9,10 @@ CHANGES
 * CI and test updates
 * Adjust library name to unbreak some linkers
 
+0.8.1 (skipped)
+---------------
+This version intentionally skipped
+
 0.8 (2019-07-03)
 ----------------
 * Python 3.7 compatibility; extension is rebuilt with Cython 0.29.11.
