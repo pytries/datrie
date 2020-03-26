@@ -1,6 +1,18 @@
 CHANGES
 =======
 
+0.8.2 (2020-03-25)
+------------------
+* Future-proof Python support by making cython a build time dependency and
+  removing cython generated c files from the repo (and sdist).
+* Fix collections.abc.MutableMapping import
+* CI and test updates
+* Adjust library name to unbreak some linkers
+
+0.8.1 (skipped)
+---------------
+This version intentionally skipped
+
 0.8 (2019-07-03)
 ----------------
 * Python 3.7 compatibility; extension is rebuilt with Cython 0.29.11.
