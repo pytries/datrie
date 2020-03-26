@@ -47,7 +47,7 @@ for m in ext_modules:
     m.include_dirs=[LIBDATRIE_DIR]
 
 setup(name="datrie",
-      version="0.8",
+      version="0.8.2",
       description=DESCRIPTION,
       long_description=LONG_DESCRIPTION,
       author='Mikhail Korobov',
