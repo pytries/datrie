@@ -1120,7 +1120,10 @@ cdef unicode unicode_from_alpha_char(cdatrie.AlphaChar* key, int len=0):
     if length == 0:
         length = cdatrie.alpha_char_strlen(key)*sizeof(cdatrie.AlphaChar)
     cdef char* c_str = <char*> key
-    return c_str[:length].decode('utf_32_le')
+    if sys.byteorder == "little":
+        return c_str[:length].decode('utf_32_le')
+    else:
+        return c_str[:length].decode('utf_32_be')
 
 
 def to_ranges(lst):
