@@ -54,6 +54,10 @@ cdef extern from "../libdatrie/datrie/trie.h":
 
     int trie_fwrite (Trie *trie, stdio.FILE *file)
 
+    size_t  trie_get_serialized_size (Trie *trie);
+
+    void     trie_serialize (Trie *trie, unsigned char *ptr);
+
     bint trie_is_dirty (Trie *trie)
 
 

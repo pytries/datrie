@@ -6,6 +6,7 @@ Cython wrapper for libdatrie.
 from cpython.version cimport PY_MAJOR_VERSION
 from cython.operator import dereference as deref
 from libc.stdlib cimport malloc, free
+from cpython.mem cimport PyMem_Malloc, PyMem_Realloc, PyMem_Free
 from libc cimport stdio
 from libc cimport string
 cimport stdio_ext
@@ -128,6 +129,16 @@ cdef class BaseTrie:
             raise IOError("Can't write to file")
 
         stdio.fflush(f_ptr)
+
+    def __bytes__(self):
+        cdef Py_ssize_t size = cdatrie.trie_get_serialized_size(self._c_trie)
+        cdef unsigned char* data = <unsigned char*> PyMem_Malloc(size)
+        try:
+            cdatrie.trie_serialize (self._c_trie, data)
+            return <bytes> data[:size]
+        finally:
+            PyMem_Free(data)
+        return res
 
     @classmethod
     def load(cls, path):
