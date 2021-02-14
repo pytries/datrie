@@ -1,15 +1,13 @@
-include README.rst
-include CHANGES.rst
-include COPYING
+global-include CMakeLists.txt *.cmake
+include README.rst CHANGES.rst COPYING
 include tox.ini
 include tox-bench.ini
 include update_c.sh
-recursive-include libdatrie *.h
-recursive-include libdatrie *.c
-include tests/words100k.txt.zip
+include bench/words100k.txt.zip
 recursive-include tests *.py
 
 include src/datrie.pyx
 include src/cdatrie.pxd
 include src/stdio_ext.pxd
 exclude src/datrie.c
+global-exclude *.py[cod] __pycache__

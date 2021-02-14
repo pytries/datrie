@@ -1,6 +1,11 @@
 [build-system]
 requires = [
-    "setuptools>=40.8.0",
+    "setuptools>=42",
     "wheel",
-    "Cython"
+    "Cython>=0.20",
+    "pybind11>=2.6.0",
+    "ninja; sys_platform != 'Windows'",
+    "cmake>=3.15",
 ]
+
+build-backend = "setuptools.build_meta"

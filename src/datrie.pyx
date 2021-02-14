@@ -26,13 +26,14 @@ try:
 except ImportError:
     import pickle
 
+
 class DatrieError(Exception):
     pass
+
 
 RAISE_KEY_ERROR = object()
 RERAISE_KEY_ERROR = object()
 DELETED_OBJECT = object()
-
 
 cdef class BaseTrie:
     """
@@ -312,7 +313,7 @@ cdef class BaseTrie:
             for char in key:
                 if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
                     return
-                if cdatrie.trie_state_is_terminal(state): # word is found
+                if cdatrie.trie_state_is_terminal(state):  # word is found
                     yield key[:index], cdatrie.trie_state_get_data(state)
                 index += 1
         finally:
@@ -398,7 +399,7 @@ cdef class BaseTrie:
             for char in key:
                 if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
                     break
-                if cdatrie.trie_state_is_terminal(state): # word is found
+                if cdatrie.trie_state_is_terminal(state):  # word is found
                     result.append(
                         (key[:index],
                          cdatrie.trie_state_get_data(state))
@@ -426,7 +427,7 @@ cdef class BaseTrie:
             for char in key:
                 if not cdatrie.trie_state_walk(state, <cdatrie.AlphaChar> char):
                     break
-                if cdatrie.trie_state_is_terminal(state): # word is found
+                if cdatrie.trie_state_is_terminal(state):  # word is found
                     result.append(cdatrie.trie_state_get_data(state))
             return result
         finally:
@@ -804,7 +805,7 @@ cdef class Trie(BaseTrie):
           - otherwise raises ``KeyError``.
         """
         cdef res = self._longest_prefix_item(key, RERAISE_KEY_ERROR)
-        if res is RERAISE_KEY_ERROR: # error
+        if res is RERAISE_KEY_ERROR:  # error
             if default is RAISE_KEY_ERROR:
                 raise KeyError(key)
             return default
@@ -821,7 +822,7 @@ cdef class Trie(BaseTrie):
           - otherwise raise ``KeyError``
         """
         cdef res = self._longest_prefix_value(key, RERAISE_KEY_ERROR)
-        if res is RERAISE_KEY_ERROR: # error
+        if res is RERAISE_KEY_ERROR:  # error
             if default is RAISE_KEY_ERROR:
                 raise KeyError(key)
             return default
@@ -923,7 +924,7 @@ cdef class BaseState(_TrieState):
 
 cdef class State(_TrieState):
 
-    def __cinit__(self, Trie trie): # this is overriden for extra type check
+    def __cinit__(self, Trie trie):  # this is overriden for extra type check
         self._state = cdatrie.trie_root(trie._c_trie)
         if self._state is NULL:
             raise MemoryError()
@@ -939,7 +940,7 @@ cdef class _TrieIterator:
     cdef _TrieState _root
 
     def __cinit__(self, _TrieState state):
-        self._root = state # prevent garbage collection of state
+        self._root = state  # prevent garbage collection of state
         self._iter = cdatrie.trie_iterator_new(state._state)
         if self._iter is NULL:
             raise MemoryError()
@@ -973,8 +974,8 @@ cdef class Iterator(_TrieIterator):
     cdatrie.TrieIterator wrapper. It can be used for custom datrie.Trie
     traversal.
     """
-    def __cinit__(self, State state): # this is overriden for extra type check
-        self._root = state # prevent garbage collection of state
+    def __cinit__(self, State state):  # this is overriden for extra type check
+        self._root = state  # prevent garbage collection of state
         self._iter = cdatrie.trie_iterator_new(state._state)
         if self._iter is NULL:
             raise MemoryError()
@@ -998,14 +999,14 @@ cdef (cdatrie.Trie* ) _load_from_file(f) except NULL:
 
     return trie
 
-#cdef (cdatrie.Trie*) _load_from_file(path) except NULL:
-#    str_path = path.encode(sys.getfilesystemencoding())
-#    cdef char* c_path = str_path
-#    cdef cdatrie.Trie* trie = cdatrie.trie_new_from_file(c_path)
-#    if trie is NULL:
-#        raise DatrieError("Can't load trie from file")
+# cdef (cdatrie.Trie*) _load_from_file(path) except NULL:
+#     str_path = path.encode(sys.getfilesystemencoding())
+#     cdef char* c_path = str_path
+#     cdef cdatrie.Trie* trie = cdatrie.trie_new_from_file(c_path)
+#     if trie is NULL:
+#         raise DatrieError("Can't load trie from file")
 #
-#    return trie
+#     return trie
 
 
 # ============================ AlphaMap & utils ================================
@@ -1120,7 +1121,10 @@ cdef unicode unicode_from_alpha_char(cdatrie.AlphaChar* key, int len=0):
     if length == 0:
         length = cdatrie.alpha_char_strlen(key)*sizeof(cdatrie.AlphaChar)
     cdef char* c_str = <char*> key
-    return c_str[:length].decode('utf_32_le')
+    if sys.byteorder == 'little':
+        return c_str[:length].decode('utf_32_le')
+    else:
+        return c_str[:length].decode('utf_32_be')
 
 
 def to_ranges(lst):
