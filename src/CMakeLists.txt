@@ -1,8 +1,7 @@
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(cython_module datrie)
 
 find_package(Cython REQUIRED)
-
-set(cython_module datrie)
 
 set(datrie_include_dir "${PROJECT_SOURCE_DIR}/src")
 set(cython_output "${CMAKE_CURRENT_SOURCE_DIR}/${cython_module}.c")
@@ -10,7 +9,7 @@ set(cython_src ${cython_module}.pyx)
 # Track cython sources
 file(GLOB cy_srcs *.pyx *.pxd)
 
-# .pyx -> .cpp
+# .pyx -> .c
 add_custom_command(OUTPUT ${cython_output}
                    COMMAND ${CYTHON_EXECUTABLE}
                            -a -2
@@ -20,6 +19,16 @@ add_custom_command(OUTPUT ${cython_output}
                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                    DEPENDS ${cy_srcs}
                    COMMENT "Cythonizing extension ${cython_src}")
+
+if(NOT USE_LIBDATRIE_PKG)
+  # use the locally cloned source from FetchContent
+  set(DATRIE_INCLUDE_DIR "${libdatrie_SOURCE_DIR}")
+  file(GLOB_RECURSE DATRIE_SOURCES
+       LIST_DIRECTORIES true
+       "${libdatrie_SOURCE_DIR}/datrie/*.c")
+  list(APPEND cython_output ${DATRIE_SOURCES})
+  include_directories(${DATRIE_INCLUDE_DIR})
+endif()
 
 add_library(${cython_module} MODULE ${cython_output})
 
@@ -32,33 +41,12 @@ target_include_directories(${cython_module} PUBLIC
 
 target_compile_definitions(${cython_module} PRIVATE VERSION_INFO=${SCM_VERSION_INFO})
 
-# here we get to jump through some hoops to find libdatrie on the manylinux
-# docker CI images, etc
-find_package(datrie CONFIG NAMES datrie)
-
-if(datrie_FOUND)
-  message(STATUS "System datrie found")
-  target_link_libraries(${cython_module} PRIVATE datrie)
-elseif(NOT MSVC)
-  message(STATUS "Trying PkgConfig")
-  find_package(PkgConfig REQUIRED)
-  pkg_check_modules(DATRIE datrie-0.2 REQUIRED IMPORTED_TARGET)
-
-  if(DATRIE_FOUND)
-    include_directories(${DATRIE_INCLUDE_DIRS})
-    target_link_libraries(${cython_module} PRIVATE PkgConfig::DATRIE)
-  else()
-    # last resort for manylinux: just try it
-    message(STATUS "Blindly groping instead")
-    link_directories("/usr/lib64" "/usr/lib")
-    target_link_libraries(${cython_module} PRIVATE "libdatrie.so")
-  endif()
-else()
-  # even though we used vcpkg, we get to do the manual dance with windows
-  find_path(DATRIE_INCLUDE_DIRS datrie/triedefs.h)
-  find_library(DATRIE_LIBS NAMES datrie libdatrie)
-  target_include_directories(${cython_module} PUBLIC ${DATRIE_INCLUDE_DIRS})
-  target_link_libraries(${cython_module} PRIVATE ${DATRIE_LIBS})
+if(Datrie_FOUND)
+  include_directories(${DATRIE_INCLUDE_DIRS})
+  target_link_libraries(${cython_module} PRIVATE Datrie::Datrie)
+elseif(DATRIE_FOUND)
+  include_directories(${DATRIE_INCLUDE_DIRS})
+  target_link_libraries(${cython_module} PRIVATE PkgConfig::DATRIE)
 endif()
 
 if(APPLE)
