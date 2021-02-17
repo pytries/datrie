@@ -1,9 +1,9 @@
 datrie |github|
 ===============
 
-.. |github| image:: https://img.shields.io/github/workflow/status/freepn/datrie/ci
-   :target: https://github.com/freepn/datrie/actions?query=workflow:ci
-   :alt: GitHub CI Build Status
+.. |github| image:: https://img.shields.io/github/workflow/status/pytries/datrie/CI
+   :target: https://github.com/pytries/datrie/actions?query=workflow:CI
+   :alt: CI Status
 
 
 Super-fast, efficiently stored Trie for Python (2.x and 3.x).
