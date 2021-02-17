@@ -21,11 +21,11 @@ add_custom_command(OUTPUT ${cython_output}
                    COMMENT "Cythonizing extension ${cython_src}")
 
 if(NOT USE_LIBDATRIE_PKG)
-  # use the locally cloned source from FetchContent
-  set(DATRIE_INCLUDE_DIR "${libdatrie_SOURCE_DIR}")
+  # use the local git submodule
+  set(DATRIE_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/libdatrie")
   file(GLOB_RECURSE DATRIE_SOURCES
        LIST_DIRECTORIES true
-       "${libdatrie_SOURCE_DIR}/datrie/*.c")
+       "${DATRIE_INCLUDE_DIR}/datrie/*.c")
   list(APPEND cython_output ${DATRIE_SOURCES})
   include_directories(${DATRIE_INCLUDE_DIR})
 endif()

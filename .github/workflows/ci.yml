@@ -32,6 +32,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
+        submodules: true
 
     - uses: actions/setup-python@v2
       with:
@@ -47,13 +48,13 @@ jobs:
       run: |
         brew install ninja
 
-    - name: Prepare compiler environment for ${{ matrix.os }}
+    - name: Prepare build environment for ${{ matrix.os }}
       if: runner.os == 'Windows'
       uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: x64
 
-    - name: Set have package true for ${{ matrix.os }}
+    - name: Set GITHUB_ENV vars for ${{ matrix.os }}
       if: runner.os == 'Linux'
       run: |
         echo "HAVE_LIBDATRIE_PKG=TRUE" >> $GITHUB_ENV
@@ -67,8 +68,6 @@ jobs:
         packages: libdatrie-dev pybind11-dev ninja-build
 
     - name: Test in place
-      # windows does not like build_ext -i or removing previous build
-      if: runner.os != 'Windows'
       run: |
         tox -e py
 
