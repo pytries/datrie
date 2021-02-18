@@ -55,7 +55,7 @@ class CMakeBuild(build_ext):
             "-DSCM_VERSION_INFO={}".format(__version__),
             "-DCMAKE_BUILD_TYPE={}".format(cfg),  # not used on MSVC, but no harm
         ]
-        build_args = ["--verbose"]
+        build_args = []
 
         # CMake also lets you provide a toolchain file.
         # Can be set in CI build environments for example.
