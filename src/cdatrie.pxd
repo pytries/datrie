@@ -1,13 +1,13 @@
 # cython: profile=False
 from libc cimport stdio
 
-cdef extern from "../libdatrie/datrie/triedefs.h":
-    ctypedef int AlphaChar # it should be utf32 letter
+cdef extern from "datrie/triedefs.h":
+    ctypedef int AlphaChar  # it should be utf32 letter
     ctypedef unsigned char TrieChar  # 1 byte
     ctypedef int TrieIndex
     ctypedef int TrieData  # int
 
-cdef extern from "../libdatrie/datrie/alpha-map.h":
+cdef extern from "datrie/alpha-map.h":
 
     struct AlphaMap:
         pass
@@ -19,8 +19,7 @@ cdef extern from "../libdatrie/datrie/alpha-map.h":
     int alpha_map_add_range (AlphaMap *alpha_map, AlphaChar begin, AlphaChar end)
     int alpha_char_strlen (AlphaChar *str)
 
-
-cdef extern from "../libdatrie/datrie/trie.h":
+cdef extern from "datrie/trie.h":
 
     ctypedef struct Trie:
         pass
@@ -30,8 +29,6 @@ cdef extern from "../libdatrie/datrie/trie.h":
 
     ctypedef struct TrieIterator:
         pass
-
-    ctypedef int TrieData
 
     ctypedef bint (*TrieEnumFunc) (AlphaChar *key,
                                    TrieData key_data,
@@ -56,7 +53,6 @@ cdef extern from "../libdatrie/datrie/trie.h":
 
     bint trie_is_dirty (Trie *trie)
 
-
     # =========== GENERAL QUERY OPERATIONS =========
 
     bint trie_retrieve (Trie *trie, AlphaChar *key, TrieData *o_data)
@@ -72,7 +68,6 @@ cdef extern from "../libdatrie/datrie/trie.h":
     # ======== STEPWISE QUERY OPERATIONS ========
 
     TrieState * trie_root (Trie *trie)
-
 
     # ========= TRIE STATE ===============
 
@@ -98,15 +93,14 @@ cdef extern from "../libdatrie/datrie/trie.h":
 
     TrieData trie_state_get_data (TrieState *s)
 
-
     # ============== ITERATION ===================
 
-    TrieIterator*   trie_iterator_new (TrieState *s)
+    TrieIterator * trie_iterator_new (TrieState *s)
 
-    void            trie_iterator_free (TrieIterator *iter)
+    void trie_iterator_free (TrieIterator *iter)
 
-    bint            trie_iterator_next (TrieIterator *iter)
+    bint trie_iterator_next (TrieIterator *iter)
 
-    AlphaChar *     trie_iterator_get_key (TrieIterator *iter)
+    AlphaChar* trie_iterator_get_key (TrieIterator *iter)
 
-    TrieData        trie_iterator_get_data (TrieIterator *iter)
+    TrieData trie_iterator_get_data (TrieIterator *iter)

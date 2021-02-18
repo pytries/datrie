@@ -1,11 +1,15 @@
-datrie |travis| |appveyor|
-==========================
+datrie |travis| |appveyor| |github|
+===================================
 
 .. |travis| image:: https://travis-ci.org/pytries/datrie.svg
    :target: https://travis-ci.org/pytries/datrie
 
 .. |appveyor| image:: https://ci.appveyor.com/api/projects/status/6bpvhllpjhlau7x0?svg=true
    :target: https://ci.appveyor.com/project/superbobry/datrie
+
+.. |github| image:: https://img.shields.io/github/workflow/status/pytries/datrie/CI
+   :target: https://github.com/pytries/datrie/actions?query=workflow:CI
+   :alt: CI Status
 
 Super-fast, efficiently stored Trie for Python (2.x and 3.x).
 Uses `libdatrie`_.
