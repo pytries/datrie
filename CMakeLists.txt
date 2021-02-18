@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15...3.18)
+cmake_minimum_required(VERSION 3.12...3.18)
 
 option(PY_DEBUG "Set if python being linked is a Py_DEBUG build" OFF)
 option(GIT_SUBMODULE "Check submodules during build" ON)
