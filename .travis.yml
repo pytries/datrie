@@ -9,7 +9,7 @@ python:
   - "3.9"
 
 install:
-  - sudo apt-get install -y ninja-build
+  - sudo apt-get install -y ninja-build pybind11-dev libdatrie-dev
   - pip install tox-travis
 
 script: tox
