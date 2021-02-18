@@ -9,6 +9,6 @@ python:
   - "3.9"
 
 install:
-  - pip install tox-travis cython
+  - pip install tox-travis ninja-build
 
 script: tox
