@@ -38,26 +38,14 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Add pip requirements
-      run: |
-        python -m pip install --upgrade pip
-        pip install tox tox-gh-actions
-
-    - name: Install macos deps with brew
-      if: runner.os == 'macOS'
-      run: |
-        brew install ninja
-
-    - name: Prepare build environment for ${{ matrix.os }}
-      if: runner.os == 'Windows'
-      uses: ilammy/msvc-dev-cmd@v1
-      with:
-        arch: x64
-
-    - name: Set GITHUB_ENV vars for ${{ matrix.os }}
+    - name: Set HAVE_LIBDATRIE_PKG var
       if: runner.os == 'Linux'
+      shell: bash
+      env:
+        HAVE_LIBDATRIE_PKG: true
       run: |
-        echo "HAVE_LIBDATRIE_PKG=TRUE" >> $GITHUB_ENV
+        echo "HAVE_LIBDATRIE_PKG is ${HAVE_LIBDATRIE_PKG}"
+        echo "HAVE_LIBDATRIE_PKG=${HAVE_LIBDATRIE_PKG}" >> $GITHUB_ENV
 
     - name: Install deps with apt helper action
       if: runner.os == 'Linux'
@@ -65,16 +53,39 @@ jobs:
       with:
         # architectures to pass to dpkg --add-architecture
         #architectures: # optional
-        packages: libdatrie-dev pybind11-dev ninja-build
+        packages: pybind11-dev libdatrie-dev
 
-    - name: Test in place
+    - name: Install macos deps with brew
+      if: runner.os == 'macOS'
       run: |
-        tox -e py
+        brew install pybind11
+
+    - name: Prepare build environment for windows
+      if: runner.os == 'Windows'
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+
+    #- name: Install deps with vcpkg
+      #if: runner.os == 'Windows'
+      #run: |
+        #echo $VCPKG_ROOT
+        #vcpkg install pybind11:x64-windows
+        #vcpkg integrate install
+
+    - name: Add pip requirements
+      run: |
+        python -m pip install --upgrade pip
+        pip install tox tox-gh-actions
+
+    - name: Test via pip develop
+      run: |
+        tox -e dev
 
     - name: Build dist pkgs
       run: |
         tox -e deploy
 
-    - name: Check wheel
+    - name: Test with built wheel
       run: |
         tox -e check

@@ -1,5 +1,19 @@
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(cython_module datrie)
+
+option(WITH_COVERAGE "Enable coverage" OFF)
+
+# Cython flags must be set before we run find_package for Cython since the
+# compiler command is created immediately.
+set(CYTHON_FLAGS
+    "-X binding=True,boundscheck=False,embedsignature=True"
+    CACHE STRING "The directives for Cython compilation.")
+
+if(WITH_COVERAGE)
+  message(STATUS "Coverage enabled")
+  set(CYTHON_FLAGS
+      "${CYTHON_FLAGS},linetrace=True"
+      CACHE STRING "The directives for Cython compilation." FORCE)
+endif()
 
 find_package(Cython REQUIRED)
 
@@ -15,12 +29,13 @@ add_custom_command(OUTPUT ${cython_output}
                            -a -2
                            --fast-fail
                            -I ${datrie_include_dir}
+                           ${CYTHON_FLAGS}
                            --output-file ${cython_output} ${cython_src}
                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                    DEPENDS ${cy_srcs}
                    COMMENT "Cythonizing extension ${cython_src}")
 
-if(NOT USE_LIBDATRIE_PKG)
+if(USE_GIT_SUBMODULE)
   # use the local git submodule
   set(DATRIE_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/libdatrie")
   file(GLOB_RECURSE DATRIE_SOURCES
@@ -39,13 +54,26 @@ set_target_properties(${cython_module}
 target_include_directories(${cython_module} PUBLIC
                            ${PYTHON_INCLUDE_DIRS})
 
-target_compile_definitions(${cython_module} PRIVATE VERSION_INFO=${SCM_VERSION_INFO})
+target_compile_definitions(${cython_module} PRIVATE
+                           VERSION_INFO=${SCM_VERSION_INFO})
+
+if(WITH_COVERAGE)
+  target_compile_definitions(
+    ${cython_module}  # Enable line tracing for coverage if requested.
+    PRIVATE CYTHON_TRACE=1 CYTHON_TRACE_NOGIL=1)
+
+  # Copy build target for coverage
+  add_custom_command(
+    DEPENDS ${cython_module}
+    COMMAND "${CMAKE_COMMAND}" -E copy "${PROJECT_BINARY_DIR}/${cython_module}" "${CMAKE_CURRENT_SOURCE_DIR}"
+    OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/${cython_module}")
+endif()
 
 if(Datrie_FOUND)
-  include_directories(${DATRIE_INCLUDE_DIRS})
+  target_include_directories(${cython_module} PUBLIC ${Datrie_INCLUDE_DIRS})
   target_link_libraries(${cython_module} PRIVATE Datrie::Datrie)
 elseif(DATRIE_FOUND)
-  include_directories(${DATRIE_INCLUDE_DIRS})
+  target_include_directories(${cython_module} PUBLIC ${DATRIE_INCLUDE_DIRS})
   target_link_libraries(${cython_module} PRIVATE PkgConfig::DATRIE)
 endif()
 

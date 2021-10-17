@@ -2,6 +2,7 @@
 #
 
 import os
+import re
 import sys
 import subprocess
 
@@ -10,7 +11,8 @@ from setuptools.command.build_ext import build_ext
 
 
 # update the version both here and in conda.recipe/meta.yaml
-__version__ = '0.8.3.dev0'
+# use semver versioning (not python extended versioning)
+__version__ = '0.8.3'
 
 # Convert distutils Windows platform specifiers to CMake -A arguments
 PLAT_TO_CMAKE = {
@@ -42,6 +44,12 @@ class CMakeBuild(build_ext):
         else:
             cfg = os.environ.get("CMAKE_BUILD_OVERRIDE", "")
 
+        # Set a coverage flag if provided
+        if "WITH_COVERAGE" not in os.environ:
+            coverage = "OFF"
+        else:
+            coverage = os.environ.get("WITH_COVERAGE", "")
+
         # CMake lets you override the generator - we need to check this.
         # Can be set with Conda-Build, for example.
         cmake_generator = os.environ.get("CMAKE_GENERATOR", "")
@@ -53,9 +61,14 @@ class CMakeBuild(build_ext):
             "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={}".format(extdir),
             "-DPYTHON_EXECUTABLE={}".format(sys.executable),
             "-DSCM_VERSION_INFO={}".format(__version__),
+            "-DWITH_COVERAGE={}".format(coverage),
             "-DCMAKE_BUILD_TYPE={}".format(cfg),  # not used on MSVC, but no harm
         ]
         build_args = []
+
+        # Add CMake arguments set as environment variable
+        if "CMAKE_ARGS" in os.environ:
+            cmake_args += [item for item in os.environ["CMAKE_ARGS"].split(" ") if item]
 
         # CMake also lets you provide a toolchain file.
         # Can be set in CI build environments for example.
@@ -70,7 +83,12 @@ class CMakeBuild(build_ext):
             # Users can override the generator with CMAKE_GENERATOR in CMake
             # 3.15+.
             if not cmake_generator:
-                cmake_args += ["-GNinja"]
+                try:
+                    import ninja  # noqa: F401
+
+                    cmake_args += ["-GNinja"]
+                except ImportError:
+                    pass
 
         else:
 
@@ -92,6 +110,12 @@ class CMakeBuild(build_ext):
                     "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}".format(cfg.upper(), extdir)
                 ]
                 build_args += ["--config", cfg]
+
+        if sys.platform.startswith("darwin"):
+            # Cross-compile support for macOS - respect ARCHFLAGS if set
+            archs = re.findall(r"-arch (\S+)", os.environ.get("ARCHFLAGS", ""))
+            if archs:
+                cmake_args += ["-DCMAKE_OSX_ARCHITECTURES={}".format(";".join(archs))]
 
         # Set CMAKE_BUILD_PARALLEL_LEVEL to control the parallel build level
         # across all generators.

@@ -8,6 +8,7 @@ find_path(Datrie_INCLUDE_DIR
   NAMES datrie/triedefs.h
   HINTS
     ENV VCPKG_ROOT
+    ENV CONDA_PREFIX
   PATH_SUFFIXES include include/datrie
   PATHS
   ~/Library/Frameworks
@@ -22,6 +23,7 @@ find_library(Datrie_LIBRARY
   NAMES datrie libdatrie
   HINTS
     ENV VCPKG_ROOT
+    ENV CONDA_PREFIX
   PATH_SUFFIXES lib lib64 lib32
   PATHS
   ~/Library/Frameworks
@@ -47,7 +49,7 @@ if(Datrie_FOUND)
     add_library(Datrie::Datrie INTERFACE IMPORTED)
     set_target_properties(Datrie::Datrie PROPERTIES
                           INTERFACE_LINK_LIBRARIES "${Datrie_LIBRARIES}"
-                          INTERFACE_INCLUDE_DIRECTORIES "${Datrie_INCLUDE_DIR}"
+                          INTERFACE_INCLUDE_DIRECTORIES "${Datrie_INCLUDE_DIRS}"
                         )
   endif()
 endif(Datrie_FOUND)

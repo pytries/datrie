@@ -1,10 +1,14 @@
-cmake_minimum_required(VERSION 3.12...3.18)
+cmake_minimum_required(VERSION 3.18)
 
 option(PY_DEBUG "Set if python being linked is a Py_DEBUG build" OFF)
-option(GIT_SUBMODULE "Check submodules during build" ON)
-option(USE_LIBDATRIE_PKG "Use OS-provided libdatrie package")
+option(USE_GIT_SUBMODULE "Use submodules during build" ON)
+option(USE_LIBDATRIE_PKG "Use OS-provided libdatrie package" OFF)
+
 if(DEFINED ENV{HAVE_LIBDATRIE_PKG})
   set(USE_LIBDATRIE_PKG "$ENV{HAVE_LIBDATRIE_PKG}")
+  if(USE_LIBDATRIE_PKG)
+    set(USE_GIT_SUBMODULE OFF)
+  endif()
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -12,7 +16,21 @@ if(NOT CMAKE_BUILD_TYPE)
             "Default build type: RelWithDebInfo" FORCE)
 endif()
 
-project(datrie LANGUAGES C CXX)
+if(NOT SCM_VERSION_INFO)
+	# use git describe for scm_version
+	EXECUTE_PROCESS(COMMAND git describe
+			WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+			OUTPUT_VARIABLE SCM_VERSION_INFO
+			OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif()
+
+project(datrie LANGUAGES C CXX VERSION ${SCM_VERSION_INFO})
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_VERBOSE_MAKEFILE ON)  # this does nothing with ninja :/
+#set(CMAKE_VERBOSE_BUILD ON)  # this also does nothing with ninja :/
+
+message(STATUS "Trying ${CMAKE_BUILD_TYPE} build type for datrie ${SCM_VERSION_INFO}")
 
 include(GNUInstallDirs)
 include(CheckIncludeFile)
@@ -30,7 +48,7 @@ if(USE_LIBDATRIE_PKG AND NOT Datrie_FOUND)
   pkg_check_modules(DATRIE datrie-0.2 IMPORTED_TARGET)
 endif()
 
-if(NOT USE_LIBDATRIE_PKG)
+if(USE_GIT_SUBMODULE)
   message(STATUS "Trying libdatrie submodule")
   find_package(Git QUIET)
   if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
@@ -47,12 +65,9 @@ if(NOT USE_LIBDATRIE_PKG)
       endif()
     endif()
   endif()
-
-  if(NOT EXISTS "${PROJECT_SOURCE_DIR}/libdatrie/datrie-0.2.pc.in")
-    message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
-  endif()
 endif()
 
+# needs pybind11 in build host without some help (not found in python venv)
 find_package(pybind11 CONFIG)
 
 if(pybind11_FOUND)
@@ -65,7 +80,7 @@ else()
   FetchContent_Declare(
     pybind11
     GIT_REPOSITORY https://github.com/pybind/pybind11
-    GIT_TAG v2.6.1
+    GIT_TAG v2.7.1
   )
   FetchContent_MakeAvailable(pybind11)
 endif()

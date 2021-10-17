@@ -1,5 +1,5 @@
 {% set name = "datrie" %}
-{% set version = "0.8.3.dev0" %}
+{% set version = "0.8.3" %}
 
 package:
   name: {{ name|lower }}
@@ -49,4 +49,4 @@ about:
 
 extra:
   recipe-maintainers:
-    - KOLANICH
+    - sarnold

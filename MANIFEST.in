@@ -2,8 +2,11 @@ global-include CMakeLists.txt *.cmake
 include README.rst CHANGES.rst COPYING
 graft src
 graft tests
+graft bench
+recursive-include libdatrie *.h
+recursive-include libdatrie *.c
 include tox.ini tox-bench.ini update_c.sh
-include bench/words100k.txt.zip
 exclude src/datrie.c
 exclude src/*.html
-global-exclude *.py[cod] __pycache__
+global-exclude tests/*.c tests/*.h tools/*.c
+global-exclude *.py[cod] *.tox __pycache__
