@@ -1,15 +1,12 @@
-include README.rst
-include CHANGES.rst
-include COPYING
-include tox.ini
-include tox-bench.ini
-include update_c.sh
+global-include CMakeLists.txt *.cmake
+include README.rst CHANGES.rst COPYING
+graft src
+graft tests
+graft bench
 recursive-include libdatrie *.h
 recursive-include libdatrie *.c
-include tests/words100k.txt.zip
-recursive-include tests *.py
-
-include src/datrie.pyx
-include src/cdatrie.pxd
-include src/stdio_ext.pxd
+include tox.ini tox-bench.ini update_c.sh
 exclude src/datrie.c
+exclude src/*.html
+global-exclude tests/*.c tests/*.h tools/*.c
+global-exclude *.py[cod] *.tox __pycache__

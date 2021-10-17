@@ -1,0 +1,126 @@
+name: Release
+
+on:
+  push:
+    # release on tag push
+    tags:
+      - '*'
+
+env:
+  CIBW_TEST_COMMAND: pytest {project}/tests
+  CIBW_TEST_EXTRAS: test
+
+jobs:
+  sdist:
+    name: Build sdist
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Build SDist
+      run: pipx run build --sdist
+
+    - name: Check metadata
+      run: pipx run twine check dist/*
+
+    - uses: actions/upload-artifact@v2
+      with:
+        path: dist/*.tar.gz
+
+  cibw_wheels:
+    name: Wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - uses: pypa/cibuildwheel@v1.12.0
+      env:
+        CMAKE_BUILD_OVERRIDE: Release
+        CIBW_SKIP: cp27-*
+        CIBW_ARCHS_MACOS: auto universal2
+        CIBW_TEST_SKIP: "*universal2:arm64"
+        CIBW_TEST_EXTRAS: test
+        CIBW_TEST_COMMAND: pytest {project}/tests
+        CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.09
+        CIBW_ENVIRONMENT_WINDOWS: 'CMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake'
+
+    - name: Verify clean directory
+      run: git diff --exit-code
+      shell: bash
+
+    - name: Upload wheels
+      uses: actions/upload-artifact@v2
+      with:
+        path: wheelhouse/*.whl
+
+  create_release:
+    needs: [cibw_wheels, sdist]
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Get version
+        id: get_version
+        run: |
+          echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+          echo ${{ env.VERSION }}
+
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      # download all artifacts to project dir
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact
+          path: dist
+
+      - name: Display artifacts
+        run: |
+          ls -l dist/
+
+      - name: Generate changes file
+        uses: sarnold/gitchangelog-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN}}
+
+      - name: Create draft release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.VERSION }}
+          name: Release v${{ env.VERSION }}
+          body_path: CHANGES.md
+          draft: true
+          prerelease: true
+          # uncomment below to upload wheels to github releases
+          files: dist/*.whl
+
+  #upload_pypi:
+    #needs: [cibw_wheels, sdist]
+    #runs-on: ubuntu-latest
+    ## upload to PyPI on every tag starting with 'v'
+    #if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
+    ## alternatively, to publish when a GitHub Release is created, use the following rule:
+    ## if: github.event_name == 'release' && github.event.action == 'published'
+    #steps:
+      #- uses: actions/download-artifact@v2
+        #with:
+          #name: artifact
+          #path: dist
+
+      #- uses: pypa/gh-action-pypi-publish@master
+        #with:
+          #user: __token__
+          #password: ${{ secrets.pypi_password }}
+

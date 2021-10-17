@@ -6,11 +6,16 @@ src/*.html
 .cache
 *.egg-info/*
 dist/
+environment.yml
+.coverage
+coverage.xml
 
 *.so
+src/*.so
 build/
 
 src/datrie.c
 src/cdatrie.c
 src/stdio_ext.c
 wheelhouse
+*.patch

@@ -1,0 +1,6 @@
+cython>=0.20
+hypothesis
+pytest
+pytest-cov
+coverage
+coverage_python_version

@@ -9,6 +9,7 @@ import datrie
 
 import hypothesis.strategies as st
 from hypothesis import given
+from hypothesis import settings
 
 printable_strings = st.lists(st.text(string.printable))
 
@@ -30,6 +31,8 @@ def test_len(words):
 
     assert len(trie) == len(set(words))
 
+# error on macos only (more than default 200 ms)
+@settings(deadline=2500)
 @given(printable_strings)
 def test_pickle_unpickle(words):
     trie = datrie.Trie(string.printable)

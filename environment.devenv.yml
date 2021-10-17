@@ -1,0 +1,12 @@
+name: datrie
+
+dependencies:
+  - cython>=0.20
+  - cmake>=3.18
+  - ninja
+  - c-compiler
+  - cxx-compiler
+  - make  # [linux]
+  - hypothesis
+  - pytest
+  - regex
