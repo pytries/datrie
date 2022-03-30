@@ -14,3 +14,13 @@ src/datrie.c
 src/cdatrie.c
 src/stdio_ext.c
 wheelhouse
+
+
+.idea/*
+
+
+# CMake
+cmake-build-debug/
+
+# Mongo Explorer plugin:
+.idea/**/mongoSettings.xml

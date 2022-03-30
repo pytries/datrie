@@ -6,6 +6,7 @@ Cython wrapper for libdatrie.
 from cpython.version cimport PY_MAJOR_VERSION
 from cython.operator import dereference as deref
 from libc.stdlib cimport malloc, free
+from cpython.mem cimport PyMem_Malloc, PyMem_Realloc, PyMem_Free
 from libc cimport stdio
 from libc cimport string
 cimport stdio_ext
@@ -55,9 +56,6 @@ cdef class BaseTrie:
         if self._c_trie is not NULL:
             return
 
-        if not _create:
-            return
-
         if alphabet is None and ranges is None and alpha_map is None:
             raise ValueError(
                 "Please provide alphabet, ranges or alpha_map argument.")
@@ -66,6 +64,10 @@ cdef class BaseTrie:
             alpha_map = AlphaMap(alphabet, ranges)
 
         self.alpha_map = alpha_map
+
+        if not _create:
+            return
+
         self._c_trie = cdatrie.trie_new(alpha_map._c_alpha_map)
         if self._c_trie is NULL:
             raise MemoryError()
@@ -129,23 +131,33 @@ cdef class BaseTrie:
 
         stdio.fflush(f_ptr)
 
+    def __bytes__(self):
+        cdef Py_ssize_t size = cdatrie.trie_get_serialized_size(self._c_trie)
+        cdef unsigned char* data = <unsigned char*> PyMem_Malloc(size)
+        try:
+            cdatrie.trie_serialize (self._c_trie, data)
+            return <bytes> data[:size]
+        finally:
+            PyMem_Free(data)
+        return res
+
     @classmethod
-    def load(cls, path):
+    def load(cls, path, alphabet=None, ranges=None, AlphaMap alpha_map=None):
         """
         Loads a trie from file.
         """
         with open(path, "rb", 0) as f:
-            return cls.read(f)
+            return cls.read(f, alphabet=alphabet, ranges=ranges, alpha_map=alpha_map)
 
     @classmethod
-    def read(cls, f):
+    def read(cls, f, alphabet=None, ranges=None, AlphaMap alpha_map=None):
         """
         Creates a new Trie by reading it from file.
         File-like objects without real file descriptors are not supported.
 
         # XXX: does it work properly in subclasses?
         """
-        cdef BaseTrie trie = cls(_create=False)
+        cdef BaseTrie trie = cls(_create=False, alphabet=alphabet, ranges=ranges, alpha_map=alpha_map)
         trie._c_trie = _load_from_file(f)
         return trie
 
@@ -721,12 +733,12 @@ cdef class Trie(BaseTrie):
         pickle.dump(self._values, f)
 
     @classmethod
-    def read(cls, f):
+    def read(cls, f, alphabet=None, ranges=None, AlphaMap alpha_map=None):
         """
         Creates a new Trie by reading it from file.
         File-like objects without real file descriptors are not supported.
         """
-        cdef Trie trie = super(Trie, cls).read(f)
+        cdef Trie trie = super(Trie, cls).read(f, alphabet=alphabet, ranges=ranges, alpha_map=alpha_map)
         trie._values = pickle.load(f)
         return trie
 
@@ -1120,8 +1132,10 @@ cdef unicode unicode_from_alpha_char(cdatrie.AlphaChar* key, int len=0):
     if length == 0:
         length = cdatrie.alpha_char_strlen(key)*sizeof(cdatrie.AlphaChar)
     cdef char* c_str = <char*> key
-    return c_str[:length].decode('utf_32_le')
-
+    if sys.byteorder == "little":
+        return c_str[:length].decode('utf_32_le')
+    else:
+        return c_str[:length].decode('utf_32_be')
 
 def to_ranges(lst):
     """
