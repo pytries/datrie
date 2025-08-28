@@ -9,7 +9,7 @@ cdef extern from "../libdatrie/datrie/triedefs.h":
 
 cdef extern from "../libdatrie/datrie/alpha-map.h":
 
-    struct AlphaMap:
+    ctypedef struct AlphaMap:
         pass
 
     AlphaMap * alpha_map_new()
