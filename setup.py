@@ -4,7 +4,7 @@
 import glob
 import os
 
-from setuptools import setup, Extension
+from setuptools import setup
 
 from Cython.Build import cythonize
 
@@ -22,14 +22,6 @@ CLASSIFIERS = [
     'License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',
     'Programming Language :: Cython',
     'Programming Language :: Python',
-    'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 2.7',
-    'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.4',
-    'Programming Language :: Python :: 3.5',
-    'Programming Language :: Python :: 3.6',
-    'Programming Language :: Python :: 3.7',
-    'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
@@ -64,6 +56,6 @@ setup(name="datrie",
           "sources": LIBDATRIE_FILES,
           "include_dirs": [LIBDATRIE_DIR]})],
       ext_modules=ext_modules,
-      python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
+      python_requires=">=3.9",
       setup_requires=['Cython>=0.28'],
       tests_require=["pytest", "hypothesis"])
