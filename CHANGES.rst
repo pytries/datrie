@@ -1,6 +1,10 @@
 CHANGES
 =======
 
+0.9.0 (20YY-MM-DD)
+------------------
+*  Move support range to Python 3.9+, dropping support for all EOL Pythons.
+
 0.8.2 (2020-03-25)
 ------------------
 * Future-proof Python support by making cython a build time dependency and
