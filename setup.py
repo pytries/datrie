@@ -13,13 +13,11 @@ LIBDATRIE_FILES = sorted(glob.glob(os.path.join(LIBDATRIE_DIR, "datrie", "*.c"))
 
 DESCRIPTION = __doc__
 LONG_DESCRIPTION = open('README.rst').read() + open('CHANGES.rst').read()
-LICENSE = 'LGPLv2+'
 
 CLASSIFIERS = [
     'Development Status :: 4 - Beta',
     'Intended Audience :: Developers',
     'Intended Audience :: Science/Research',
-    'License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',
     'Programming Language :: Cython',
     'Programming Language :: Python',
     'Programming Language :: Python :: 3.9',
@@ -47,9 +45,10 @@ setup(name="datrie",
       version="0.8.3",
       description=DESCRIPTION,
       long_description=LONG_DESCRIPTION,
+      long_description_content_type="text/x-rst",
       author='Mikhail Korobov',
       author_email='kmike84@gmail.com',
-      license=LICENSE,
+      license="LGPL-2.0-or-later",
       url='https://github.com/kmike/datrie',
       classifiers=CLASSIFIERS,
       libraries=[('datrie', {
