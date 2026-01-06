@@ -1,0 +1,145 @@
+name: Wheels
+
+on:
+  workflow_dispatch:
+    inputs:
+      overrideVersion:
+        description: Manually force a version
+  release:
+    types:
+      - published
+  pull_request:
+    paths:
+      - .github/workflows/wheels.yaml
+  schedule:
+    # Run weekly on Mondays at 01:23 UTC
+    - cron: "23 1 * * 1"
+
+permissions:
+  actions: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SETUPTOOLS_SCM_PRETEND_VERSION: ${{ github.event.inputs.overrideVersion }}
+
+jobs:
+  build_sdist:
+    name: Build SDist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Build SDist
+        run: pipx run build --sdist
+
+      - name: Check metadata
+        run: pipx run twine check --strict dist/*.tar.gz
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: dist/*
+          name: wheels-sdist
+
+  build_wheels:
+    name: ${{ matrix.build }} ${{ matrix.arch }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15-intel
+            arch: auto64
+            build: "*"
+
+          - os: macos-latest
+            arch: auto64
+            build: "*"
+
+          - os: windows-latest
+            arch: auto64
+            build: "cp*"
+
+          - os: windows-latest
+            arch: auto32
+            build: "*"
+
+          - os: windows-11-arm
+            arch: auto
+            build: "*"
+
+          - os: ubuntu-latest
+            arch: auto64
+            build: "*manylinux*"
+
+          - os: ubuntu-latest
+            arch: auto64
+            build: "*musllinux*"
+
+          - os: ubuntu-24.04-arm
+            arch: auto64
+            build: "*manylinux*"
+
+          - os: ubuntu-24.04-arm
+            arch: auto64
+            build: "*musllinux*"
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - uses: astral-sh/setup-uv@v7
+
+      - uses: pypa/cibuildwheel@v3.2
+        env:
+          CIBW_BUILD: ${{ matrix.build }}
+          CIBW_ARCHS: ${{ matrix.arch }}
+
+      - name: Verify clean directory
+        shell: bash
+        run: git diff --exit-code
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v5
+        with:
+          path: wheelhouse/*.whl
+          name: wheels-${{ strategy.job-index }}
+
+  upload_all:
+    name: Upload if release
+    needs: [build_sdist, build_wheels]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'published'
+    environment:
+      name: pypi
+      url: https://pypi.org/p/datrie
+    permissions:
+      id-token: write
+      attestations: write
+      contents: read
+
+    steps:
+      - uses: actions/download-artifact@v6
+        with:
+          pattern: wheels-*
+          merge-multiple: true
+          path: dist
+
+      - name: List all files
+        run: ls -lh dist
+
+      - name: Generate artifact attestation for sdist and wheels
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: "dist/datrie-*"
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+            print-hash: true
