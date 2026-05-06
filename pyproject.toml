@@ -7,5 +7,4 @@ requires = [
 
 [tool.cibuildwheel]
 build-frontend = "build[uv]"
-enable = ["cpython-freethreading"]
 environment-pass = ["SETUPTOOLS_SCM_PRETEND_VERSION"]
