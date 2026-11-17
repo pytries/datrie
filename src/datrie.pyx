@@ -12,6 +12,7 @@ cimport stdio_ext
 cimport cdatrie
 
 import itertools
+import os
 import warnings
 import sys
 import tempfile
@@ -119,15 +120,25 @@ cdef class BaseTrie:
         """
         f.flush()
 
-        cdef stdio.FILE* f_ptr = stdio_ext.fdopen(f.fileno(), "w")
+        # fdopen owns its descriptor; duplicate the caller's descriptor so
+        # closing the C stream does not close the Python file.
+        cdef int fd = os.dup(f.fileno())
+        cdef stdio.FILE* f_ptr = stdio_ext.fdopen(fd, "wb")
         if f_ptr == NULL:
+            os.close(fd)
             raise IOError("Can't open file descriptor")
 
-        cdef int res = cdatrie.trie_fwrite(self._c_trie, f_ptr)
-        if res == -1:
-            raise IOError("Can't write to file")
+        cdef int res
+        cdef int close_result
+        try:
+            res = cdatrie.trie_fwrite(self._c_trie, f_ptr)
+            if res == -1:
+                raise IOError("Can't write to file")
+        finally:
+            close_result = stdio.fclose(f_ptr)
 
-        stdio.fflush(f_ptr)
+        if close_result != 0:
+            raise IOError("Can't write to file")
 
     @classmethod
     def load(cls, path):
@@ -985,16 +996,26 @@ cdef class Iterator(_TrieIterator):
 
 
 cdef (cdatrie.Trie* ) _load_from_file(f) except NULL:
-    cdef int fd = f.fileno()
-    cdef stdio.FILE* f_ptr = stdio_ext.fdopen(fd, "r")
+    cdef int fd = os.dup(f.fileno())
+    cdef stdio.FILE* f_ptr = stdio_ext.fdopen(fd, "rb")
     if f_ptr == NULL:
+        os.close(fd)
         raise IOError()
-    cdef cdatrie.Trie* trie = cdatrie.trie_fread(f_ptr)
-    if trie == NULL:
-        raise DatrieError("Can't load trie from stream")
+    cdef cdatrie.Trie* trie
+    cdef int f_pos
+    try:
+        trie = cdatrie.trie_fread(f_ptr)
+        if trie == NULL:
+            raise DatrieError("Can't load trie from stream")
+        f_pos = stdio.ftell(f_ptr)
+    finally:
+        stdio.fclose(f_ptr)
 
-    cdef int f_pos = stdio.ftell(f_ptr)
-    f.seek(f_pos)
+    try:
+        f.seek(f_pos)
+    except:
+        cdatrie.trie_free(trie)
+        raise
 
     return trie
 
