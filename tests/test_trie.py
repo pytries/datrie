@@ -423,3 +423,61 @@ def test_trie_fuzzy():
     for index, word in enumerated_words:
         assert word in trie, word
         assert trie[word] == index, (word, index)
+
+
+@pytest.mark.parametrize('trie_type', [datrie.BaseTrie, datrie.Trie])
+def test_file_io_retains_caller_file_and_position(trie_type):
+    trie = trie_type(string.ascii_lowercase)
+    trie['foo'] = 42
+    trie['bar'] = 99
+    with tempfile.TemporaryFile(mode='w+b', buffering=0) as f:
+        pickle.dump('before', f)
+        trie.write(f)
+        pickle.dump('after', f)
+        end = f.tell()
+        assert not f.closed
+        f.seek(0)
+        assert pickle.load(f) == 'before'
+        loaded = trie_type.read(f)
+        assert loaded.items() == trie.items()
+        assert pickle.load(f) == 'after'
+        assert f.tell() == end
+        assert not f.closed
+        # The caller can keep using the same descriptor after both operations.
+        f.write(b'tail')
+        f.seek(end)
+        assert f.read() == b'tail'
+
+
+@pytest.mark.parametrize('trie_type', [datrie.BaseTrie, datrie.Trie])
+def test_failed_read_retains_caller_file(trie_type):
+    with tempfile.TemporaryFile(mode='w+b', buffering=0) as f:
+        f.write(b'not a trie')
+        f.seek(0)
+        with pytest.raises(datrie.DatrieError):
+            trie_type.read(f)
+        assert not f.closed
+        f.seek(0)
+        f.truncate()
+        trie = trie_type('abc')
+        trie['ab'] = 7
+        trie.write(f)
+        f.seek(0)
+        assert trie_type.read(f)['ab'] == 7
+
+
+@pytest.mark.parametrize('trie_type', [datrie.BaseTrie, datrie.Trie])
+def test_write_reports_flush_failure(trie_type):
+    if sys.platform != 'linux':
+        pytest.skip('/dev/full is a Linux write-error fixture')
+    trie = trie_type('abc')
+    trie['ab'] = 42
+    with open('/dev/full', 'wb', buffering=0) as f:
+        with pytest.raises(IOError):
+            trie.write(f)
+        assert not f.closed
+        # A failed native write must leave the caller's descriptor open too.
+        import os
+        os.fstat(f.fileno())
+    with pytest.raises(IOError):
+        trie.save('/dev/full')
